@@ -8,21 +8,11 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-colors={"wind" : "b",
-        "solar" : "y",
-        "nucl" : "r",
-        "wind-solar" : "g",
-        "wind+solar" : "g",
-        "CCGT" : "orange",
-        "OCGT" : "wheat",
-        "battery storage" : "gray",
-        "coal" : "k",
-        "lign" : "brown",
-        "transmission" : "gray",
-        "hydrogen storage" : "m",
-        "shed" : "pink"}
 
-def plot_used():
+clean_techs = snakemake.config['ci']['clean_techs']
+tech_colors = snakemake.config['tech_colors']
+
+def used():
 
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
@@ -42,11 +32,58 @@ def plot_used():
                 transparent=True)
 
 
+def ci_capacity():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    ldf = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
+
+    ldf.T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("CI capacity [MW]")
+
+    ax.grid()
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","ci_capacity.pdf"),
+                transparent=True)
+
+
+def ci_generation():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    ldf = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
+
+    ldf.T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("CI generation [GWh]")
+
+    ax.grid()
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
+                transparent=True)
+
+
+
 if __name__ == "__main__":
 
     df = pd.read_csv(snakemake.input.summary,
                      index_col=0)
 
-    print(df)
+    used()
 
-    plot_used()
+    ci_capacity()
+
+    ci_generation()

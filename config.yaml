@@ -55,3 +55,9 @@ solving:
     AggFill: 0
     PreDual: 0
     GURO_PAR_BARDENSETHRESH: 200
+
+
+tech_colors:
+  "green hydrogen OCGT" : "g"
+  "onwind" : "b"
+  "solar" : "y"
