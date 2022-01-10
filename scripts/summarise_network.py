@@ -51,6 +51,18 @@ def summarise_network(n):
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
+    total_cost = 0.
+    for tech in clean_techs:
+        results['ci_capital_cost_' + tech] = results['ci_cap_' + tech]*n.generators.at[name + " " + tech,"capital_cost"]
+        results['ci_marginal_cost_' + tech] = results['ci_generation_' + tech]*n.generators.at[name + " " + tech,"marginal_cost"]
+        cost =  results['ci_capital_cost_' + tech] + results['ci_marginal_cost_' + tech]
+        results['ci_cost_' + tech] = cost
+        total_cost += cost
+
+    results["ci_total_cost"] = total_cost
+
+    results["ci_average cost"] = results['ci_total_cost']/results['ci_demand_total']
+
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
     results["co2_price"] = n.global_constraints.at["CO2Limit","mu"]

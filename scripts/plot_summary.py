@@ -75,6 +75,26 @@ def ci_generation():
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
                 transparent=True)
 
+def ci_cost():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    ldf = df.loc[["ci_cost_" + t for t in clean_techs]].rename({"ci_cost_" + t : t for t in clean_techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
+
+    ldf.T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("CI average cost [EUR/MWh]")
+
+    ax.grid()
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
+                transparent=True)
 
 
 if __name__ == "__main__":
@@ -87,3 +107,5 @@ if __name__ == "__main__":
     ci_capacity()
 
     ci_generation()
+
+    ci_cost()
