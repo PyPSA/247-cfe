@@ -27,7 +27,8 @@ rule make_summary:
 
 rule solve_network:
     output:
-        network=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.nc"
+        network=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.nc",
+	grid_cfe=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.csv"
     log:
         solver=config['results_dir'] + "/" + config['run'] + "/logs/{policy}_solver.log",
         python=config['results_dir'] + "/" + config['run'] + "/logs/{policy}_python.log",
@@ -38,7 +39,8 @@ rule solve_network:
 
 rule summarise_network:
     input:
-        network=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.nc"
+        network=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.nc",
+	grid_cfe=config['results_dir'] + "/" + config['run'] + "/networks/{policy}.csv"
     output:
         yaml=config['results_dir'] + "/" + config['run'] + "/summaries/{policy}.yaml"
     threads: 2

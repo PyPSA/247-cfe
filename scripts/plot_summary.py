@@ -17,9 +17,13 @@ def used():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
+    typ = ["local","grid"]
 
-    df.loc['ci_fraction_clean_used'].plot(kind="bar",
-                                          ax=ax)
+    ldf = df.loc[[f"ci_fraction_clean_used_{t}" for t in typ]].rename({f"ci_fraction_clean_used_{t}" : t for t in typ})
+
+    ldf.T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
 
     ax.set_xlabel("scenario")
     ax.set_ylabel("fraction CFE [per unit]")
@@ -80,7 +84,9 @@ def ci_cost():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    ldf = df.loc[["ci_cost_" + t for t in clean_techs]].rename({"ci_cost_" + t : t for t in clean_techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
+    techs = clean_techs + ["grid"]
+
+    ldf = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,

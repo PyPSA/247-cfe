@@ -17,10 +17,18 @@ override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output",
 
 
 def summarise_network(n):
-
+    policy = snakemake.wildcards.policy[:3]
     name = snakemake.config['ci']['name']
+    node = snakemake.config['ci']['node']
     clean_techs = snakemake.config['ci']['clean_techs']
     clean_gens = [name + " " + g for g in clean_techs]
+
+    if policy == "res":
+        n_iterations = 1
+    elif policy == "cfe":
+        n_iterations = snakemake.config['solving']['options']['n_iterations']
+
+    grid_cfe = grid_cfe_df[f"iteration {n_iterations}"]
 
     results = {}
 
@@ -33,16 +41,22 @@ def summarise_network(n):
     excess = p_diff.copy()
     excess[excess < 0] = 0.
 
-    used = p_clean - excess
+    used_local = p_clean - excess
+
+    used_grid = (-n.links_t.p1[name + " import"].multiply(n.snapshot_weightings["generators"],axis=0))*grid_cfe
 
     results['ci_clean_total']  = p_clean.sum()
-    results['ci_clean_used_total']  = used.sum()
+    results['ci_clean_used_local_total']  = used_local.sum()
+    results['ci_clean_used_grid_total']  = used_grid.sum()
+    results['ci_clean_used_total']  = used_grid.sum() + used_local.sum()
     results['ci_clean_excess_total']  = excess.sum()
     results['ci_demand_total']  = p_demand.sum()
 
-    results['ci_fraction_clean'] = p_clean.sum()/p_demand.sum()
-    results['ci_fraction_clean_used'] = used.sum()/p_demand.sum()
-    results['ci_fraction_clean_excess'] = excess.sum()/p_demand.sum()
+    results['ci_fraction_clean'] = p_clean.sum()/results['ci_demand_total']
+    results['ci_fraction_clean_used_local'] = results['ci_clean_used_local_total']/results['ci_demand_total']
+    results['ci_fraction_clean_used_grid'] = results['ci_clean_used_grid_total']/results['ci_demand_total']
+    results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
+    results['ci_fraction_clean_excess'] = excess.sum()/results['ci_demand_total']
 
 
     for tech in clean_techs:
@@ -58,6 +72,13 @@ def summarise_network(n):
         cost =  results['ci_capital_cost_' + tech] + results['ci_marginal_cost_' + tech]
         results['ci_cost_' + tech] = cost
         total_cost += cost
+
+    results['ci_capital_cost_grid'] = 0
+    results['ci_marginal_cost_grid'] = (n.links_t.p0[name + " import"]*n.snapshot_weightings["generators"]*n.buses_t.marginal_price[node]).sum()
+    cost =  results['ci_capital_cost_grid'] + results['ci_marginal_cost_grid']
+    results['ci_cost_grid'] = cost
+    total_cost += cost
+
 
     results["ci_total_cost"] = total_cost
 
@@ -98,4 +119,8 @@ if __name__ == "__main__":
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
+    grid_cfe_df = pd.read_csv(snakemake.input.grid_cfe,
+                              index_col=0,
+                              parse_dates=True)
+    print(grid_cfe_df)
     summarise_network(n)

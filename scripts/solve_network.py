@@ -112,15 +112,34 @@ def add_ci(n):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
+def calculate_grid_cfe(n):
+
+    name = snakemake.config['ci']['name']
+
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+
+    grid_generators = n.generators.index[n.generators.bus.isin(grid_buses)]
+
+    grid_clean_techs = ["offwind","offwind-ac","offwind-dc","onwind","ror","solar","solar rooftop"]
+
+    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
+    grid_cfe = n.generators_t.p[grid_generators].groupby(n.generators.carrier,axis=1).sum()[grid_clean_techs].sum(axis=1)/n.loads_t.p[grid_loads].sum(axis=1)
+
+    print("Grid CFE has following stats:")
+    print(grid_cfe.describe())
+
+    return grid_cfe
+
 def solve_network(n, policy, penetration):
 
     name = snakemake.config['ci']['name']
 
     if policy == "res":
+        n_iterations = 1
         res_gens = [name + " " + g for g in snakemake.config['ci']['res_techs']]
     elif policy == "cfe":
-        # to replace with time-dependent grid CFE share
-        grid_cfe = pd.Series(0,index=n.snapshots)
+        n_iterations = snakemake.config['solving']['options']['n_iterations']
         clean_gens = [name + " " + g for g in snakemake.config['ci']['clean_techs']]
 
 
@@ -134,7 +153,7 @@ def solve_network(n, policy, penetration):
         gexport = get_var(n, "Link", "p")[name + " export"] # a series
         gimport = get_var(n, "Link", "p")[name + " import"] # a series
         grid_sum = join_exprs(linexpr((-n.snapshot_weightings["generators"],gexport),
-                                      (grid_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
+                                      (n.links.at[name + " import","efficiency"]*grid_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
 
         lhs = gen_sum + '\n' + grid_sum
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
@@ -167,16 +186,24 @@ def solve_network(n, policy, penetration):
 
     formulation = snakemake.config['solving']['options']['formulation']
     solver_options = snakemake.config['solving']['solver']
+    solver_name = solver_options.pop('name')
 
+    grid_cfe_df = pd.DataFrame(0.,index=n.snapshots,columns=[f"iteration {i}" for i in range(n_iterations+1)])
 
-    n.lopf(pyomo=False,
-           extra_functionality=extra_functionality,
-           formulation=formulation,
-           solver_name=solver_options.pop('name'),
-           solver_options=solver_options,
-           solver_logfile=snakemake.log.solver)
+    for i in range(n_iterations):
 
+        grid_cfe = grid_cfe_df[f"iteration {i}"]
 
+        n.lopf(pyomo=False,
+               extra_functionality=extra_functionality,
+               formulation=formulation,
+               solver_name=solver_name,
+               solver_options=solver_options,
+               solver_logfile=snakemake.log.solver)
+
+        grid_cfe_df[f"iteration {i+1}"] = calculate_grid_cfe(n)
+
+    grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing

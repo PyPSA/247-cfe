@@ -1,7 +1,7 @@
 logging_level: INFO
 
 results_dir: 'results'
-run: '220110-solar_H2'
+run: '220110-iterate'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
 network_file: 'data/elec_s_45_lv1.0__73H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
@@ -45,6 +45,7 @@ solving:
   #tmpdir: "path/to/tmp"
   options:
     formulation: kirchhoff
+    n_iterations: 3
   solver:
     name: gurobi
     threads: 4
@@ -61,3 +62,5 @@ tech_colors:
   "green hydrogen OCGT" : "g"
   "onwind" : "b"
   "solar" : "y"
+  "local" : "g"
+  "grid": "m"
