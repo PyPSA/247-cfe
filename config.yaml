@@ -1,7 +1,7 @@
 logging_level: INFO
 
 results_dir: 'results'
-run: '220110-test'
+run: '220110-solar_H2'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
 network_file: 'data/elec_s_45_lv1.0__73H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
@@ -33,8 +33,8 @@ ci:
   name: "google"
   node: "IE4 0"
   load: 1000.
-  clean_techs: ["clean", "onwind"]
-  res_techs: ["onwind"]
+  clean_techs: ["onwind","solar","green hydrogen OCGT"]
+  res_techs: ["onwind","solar","green hydrogen OCGT"]
 
 
 

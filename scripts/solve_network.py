@@ -87,24 +87,24 @@ def add_ci(n):
 
     #baseload clean energy generator
     n.add("Generator",
-          name + " clean",
-          carrier="clean",
+          name + " green hydrogen OCGT",
+          carrier="green hydrogen OCGT",
           bus=name,
           p_nom_extendable=True,
-          capital_cost=1,
-          marginal_cost=100)
+          capital_cost=40000, #based on OGT
+          marginal_cost=3/0.033/0.4) #hydrogen at 3 EUR/kg with 0.4 efficiency
 
     #RES generator
-    gen_template = node + " onwind"
-    carrier = "onwind"
-    n.add("Generator",
-          f"{name} {carrier}",
-          carrier=carrier,
-          bus=name,
-          p_nom_extendable=True,
-          p_max_pu=n.generators_t.p_max_pu[gen_template],
-          capital_cost=n.generators.at[gen_template,"capital_cost"],
-          marginal_cost=n.generators.at[gen_template,"marginal_cost"])
+    for carrier in ["onwind","solar"]:
+        gen_template = node + " " + carrier
+        n.add("Generator",
+              f"{name} {carrier}",
+              carrier=carrier,
+              bus=name,
+              p_nom_extendable=True,
+              p_max_pu=n.generators_t.p_max_pu[gen_template],
+              capital_cost=n.generators.at[gen_template,"capital_cost"],
+              marginal_cost=n.generators.at[gen_template,"marginal_cost"])
 
     n.add("Load",
           name + " load",
