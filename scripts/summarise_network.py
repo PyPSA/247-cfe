@@ -18,9 +18,10 @@ override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output",
 
 def summarise_network(n):
     policy = snakemake.wildcards.policy[:3]
-    name = snakemake.config['ci']['name']
-    node = snakemake.config['ci']['node']
-    clean_techs = snakemake.config['ci']['clean_techs']
+    ci = snakemake.config['ci']
+    name = ci['name']
+    node = ci['node']
+    clean_techs = ci['clean_techs']
     clean_gens = [name + " " + g for g in clean_techs]
 
     if policy == "res":
@@ -35,28 +36,29 @@ def summarise_network(n):
     results['objective'] = n.objective
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
+    p_storage = -n.links_t.p1[f"{name} battery discharger"] - n.links_t.p0[f"{name} battery charger"]
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
 
-    p_diff = p_clean - p_demand
+    p_diff = p_clean + p_storage - p_demand
     excess = p_diff.copy()
     excess[excess < 0] = 0.
 
-    used_local = p_clean - excess
+    used_local = p_clean + p_storage - excess
 
     used_grid = (-n.links_t.p1[name + " import"].multiply(n.snapshot_weightings["generators"],axis=0))*grid_cfe
 
-    results['ci_clean_total']  = p_clean.sum()
+    results['ci_clean_total']  = (p_clean + p_storage).sum()
     results['ci_clean_used_local_total']  = used_local.sum()
     results['ci_clean_used_grid_total']  = used_grid.sum()
     results['ci_clean_used_total']  = used_grid.sum() + used_local.sum()
     results['ci_clean_excess_total']  = excess.sum()
     results['ci_demand_total']  = p_demand.sum()
 
-    results['ci_fraction_clean'] = p_clean.sum()/results['ci_demand_total']
+    results['ci_fraction_clean'] = results['ci_clean_total']/results['ci_demand_total']
     results['ci_fraction_clean_used_local'] = results['ci_clean_used_local_total']/results['ci_demand_total']
     results['ci_fraction_clean_used_grid'] = results['ci_clean_used_grid_total']/results['ci_demand_total']
     results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
-    results['ci_fraction_clean_excess'] = excess.sum()/results['ci_demand_total']
+    results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
 
 
     for tech in clean_techs:
@@ -79,6 +81,39 @@ def summarise_network(n):
     results['ci_cost_grid'] = cost
     total_cost += cost
 
+    if "battery" in ci["storage_techs"]:
+        results['ci_capital_cost_battery_storage'] = n.stores.at[f"{name} battery","e_nom_opt"]*n.stores.at[f"{name} battery","capital_cost"]
+        results['ci_cost_battery_storage'] = results['ci_capital_cost_battery_storage']
+        total_cost += results['ci_cost_battery_storage']
+
+        results['ci_capital_cost_battery_inverter'] = n.links.at[f"{name} battery charger","p_nom_opt"]*n.links.at[f"{name} battery charger","capital_cost"]
+        results['ci_cost_battery_inverter'] = results['ci_capital_cost_battery_inverter']
+        total_cost += results['ci_cost_battery_inverter']
+    else:
+        results['ci_capital_cost_battery_storage'] = 0.
+        results['ci_cost_battery_storage'] = 0.
+        results['ci_capital_cost_battery_inverter'] = 0.
+        results['ci_cost_battery_inverter'] = 0.
+
+    if "hydrogen" in ci["storage_techs"]:
+        results['ci_capital_cost_hydrogen_storage'] = n.stores.at[f"{name} H2 Store","e_nom_opt"]*n.stores.at[f"{name} H2 Store","capital_cost"]
+        results['ci_cost_hydrogen_storage'] = results['ci_capital_cost_hydrogen_storage']
+        total_cost += results['ci_cost_hydrogen_storage']
+
+        results['ci_capital_cost_hydrogen_electrolysis'] = n.links.at[f"{name} H2 Electrolysis","p_nom_opt"]*n.links.at[f"{name} H2 Electrolysis","capital_cost"]
+        results['ci_cost_hydrogen_electrolysis'] = results['ci_capital_cost_hydrogen_electrolysis']
+        total_cost += results['ci_cost_hydrogen_electrolysis']
+
+        results['ci_capital_cost_hydrogen_fuel_cell'] = n.links.at[f"{name} H2 Fuel Cell","p_nom_opt"]*n.links.at[f"{name} H2 Fuel Cell","capital_cost"]
+        results['ci_cost_hydrogen_fuel_cell'] = results['ci_capital_cost_hydrogen_fuel_cell']
+        total_cost += results['ci_cost_hydrogen_fuel_cell']
+    else:
+        results['ci_capital_cost_hydrogen_storage'] = 0.
+        results['ci_cost_hydrogen_storage'] = 0.
+        results['ci_capital_cost_hydrogen_electrolysis'] = 0.
+        results['ci_cost_hydrogen_electrolysis'] = 0.
+        results['ci_capital_cost_hydrogen_fuel_cell'] = 0.
+        results['ci_cost_hydrogen_fuel_cell'] = 0.
 
     results["ci_total_cost"] = total_cost
 

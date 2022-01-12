@@ -84,7 +84,12 @@ def ci_cost():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    techs = clean_techs + ["grid"]
+    techs = clean_techs + ["grid",
+                           "battery_storage",
+                           "battery_inverter",
+                           "hydrogen_storage",
+                           "hydrogen_electrolysis",
+                           "hydrogen_fuel_cell"]
 
     ldf = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
 

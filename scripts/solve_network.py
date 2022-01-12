@@ -112,6 +112,81 @@ def add_ci(n):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
+    if "battery" in ci["storage_techs"]:
+        n.add("Bus",
+              f"{name} battery",
+              carrier="battery"
+              )
+
+        n.add("Store",
+              f"{name} battery",
+              bus=f"{name} battery",
+              e_cyclic=True,
+              e_nom_extendable=True,
+              carrier="battery",
+              capital_cost=n.stores.at[f"{node} battery", "capital_cost"],
+              lifetime=n.stores.at[f"{node} battery", "lifetime"]
+              )
+
+        n.add("Link",
+              f"{name} battery charger",
+              bus0=name,
+              bus1=f"{name} battery",
+              carrier="battery charger",
+              efficiency=n.links.at[f"{node} battery charger", "efficiency"],
+              capital_cost=n.links.at[f"{node} battery charger", "capital_cost"],
+              p_nom_extendable=True,
+              lifetime=n.links.at[f"{node} battery charger", "lifetime"]
+              )
+
+        n.add("Link",
+              f"{name} battery discharger",
+              bus0=f"{name} battery",
+              bus1=name,
+              carrier="battery discharger",
+              efficiency=n.links.at[f"{node} battery discharger", "efficiency"],
+              marginal_cost=n.links.at[f"{node} battery discharger", "marginal_cost"],
+              p_nom_extendable=True,
+              lifetime=n.links.at[f"{node} battery discharger", "lifetime"]
+              )
+
+    if "hydrogen" in ci["storage_techs"]:
+        n.add("Bus",
+              f"{name} H2",
+              carrier="H2"
+              )
+
+        n.add("Store",
+              f"{name} H2 Store",
+              bus=f"{name} H2",
+              e_cyclic=True,
+              e_nom_extendable=True,
+              carrier="H2 Store",
+              capital_cost=n.stores.at[f"{node} H2 Store", "capital_cost"],
+              lifetime=n.stores.at[f"{node} H2 Store", "lifetime"]
+              )
+
+        n.add("Link",
+              f"{name} H2 Electrolysis",
+              bus0=name,
+              bus1=f"{name} H2",
+              carrier="H2 Electrolysis",
+              efficiency=n.links.at[f"{node} H2 Electrolysis", "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Electrolysis", "capital_cost"],
+              p_nom_extendable=True,
+              lifetime=n.links.at[f"{node} H2 Electrolysis", "lifetime"]
+              )
+
+        n.add("Link",
+              f"{name} H2 Fuel Cell",
+              bus0=f"{name} H2",
+              bus1=name,
+              carrier="H2 Fuel Cell",
+              efficiency=n.links.at[f"{node} H2 Fuel Cell", "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Fuel Cell", "capital_cost"],
+              lifetime=n.links.at[f"{node} H2 Fuel Cell", "lifetime"]
+              )
+
 def calculate_grid_cfe(n):
 
     name = snakemake.config['ci']['name']
@@ -133,14 +208,17 @@ def calculate_grid_cfe(n):
 
 def solve_network(n, policy, penetration):
 
-    name = snakemake.config['ci']['name']
+    ci = snakemake.config['ci']
+    name = ci['name']
 
     if policy == "res":
         n_iterations = 1
-        res_gens = [name + " " + g for g in snakemake.config['ci']['res_techs']]
+        res_gens = [name + " " + g for g in ci['res_techs']]
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
-        clean_gens = [name + " " + g for g in snakemake.config['ci']['clean_techs']]
+        clean_gens = [name + " " + g for g in ci['clean_techs']]
+        storage_dischargers = [name + " " + g for g in ci['storage_dischargers']]
+        storage_chargers = [name + " " + g for g in ci['storage_chargers']]
 
 
     def cfe_constraints(n):
@@ -150,12 +228,22 @@ def solve_network(n, policy, penetration):
                                   columns = clean_gens)
         gen_sum = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[clean_gens]))) # single line sum
 
+        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],n.links.loc[storage_dischargers,"efficiency"]),
+                                  index = n.snapshots,
+                                  columns = storage_dischargers)
+        discharge_sum = join_exprs(linexpr((weightings, get_var(n, "Link", "p")[storage_dischargers])))
+
+        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(storage_chargers)),
+                                  index = n.snapshots,
+                                  columns = storage_chargers)
+        charge_sum = join_exprs(linexpr((-weightings, get_var(n, "Link", "p")[storage_chargers])))
+
         gexport = get_var(n, "Link", "p")[name + " export"] # a series
         gimport = get_var(n, "Link", "p")[name + " import"] # a series
         grid_sum = join_exprs(linexpr((-n.snapshot_weightings["generators"],gexport),
                                       (n.links.at[name + " import","efficiency"]*grid_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
 
-        lhs = gen_sum + '\n' + grid_sum
+        lhs = gen_sum + '\n' + discharge_sum  + '\n' + charge_sum + '\n' + grid_sum
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
         con = define_constraints(n, lhs, '>=', penetration*total_load, 'CFEconstraints','CFEtarget')
 
@@ -169,8 +257,27 @@ def solve_network(n, policy, penetration):
 
 
 
+    def add_battery_constraints(n):
+
+        chargers_b = n.links.carrier.str.contains("battery charger")
+        chargers = n.links.index[chargers_b & n.links.p_nom_extendable]
+        dischargers = chargers.str.replace("charger", "discharger")
+
+        if chargers.empty or ('Link', 'p_nom') not in n.variables.index:
+            return
+
+        link_p_nom = get_var(n, "Link", "p_nom")
+
+        lhs = linexpr((1,link_p_nom[chargers]),
+                      (-n.links.loc[dischargers, "efficiency"].values,
+                       link_p_nom[dischargers].values))
+
+        define_constraints(n, lhs, "=", 0, 'Link', 'charger_ratio')
+
 
     def extra_functionality(n, snapshots):
+
+        add_battery_constraints(n)
 
         if policy == "cfe":
             print("setting CFE target of",penetration)
