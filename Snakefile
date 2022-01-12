@@ -5,7 +5,8 @@ wildcard_constraints:
 
 rule plot_summary:
     input:
-        summary=config['results_dir'] + "/" + config['run'] + "/csvs/summary.csv"
+        summary=config['results_dir'] + "/" + config['run'] + "/csvs/summary.csv",
+        config=config['results_dir'] + "/" + config['run'] + '/configs/config.yaml'
     output:
         used=config['results_dir'] + "/" + config['run'] + "/plots/used.pdf"
     threads: 2
@@ -46,3 +47,9 @@ rule summarise_network:
     threads: 2
     resources: mem_mb=2000
     script: 'scripts/summarise_network.py'
+
+rule copy_config:
+    output: config['results_dir'] + "/" + config['run'] + '/configs/config.yaml'
+    threads: 1
+    resources: mem_mb=1000
+    script: "scripts/copy_config.py"
