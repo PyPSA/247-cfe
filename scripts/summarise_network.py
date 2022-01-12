@@ -23,6 +23,8 @@ def summarise_network(n):
     node = ci['node']
     clean_techs = ci['clean_techs']
     clean_gens = [name + " " + g for g in clean_techs]
+    clean_dischargers = [name + " " + g for g in ci['storage_dischargers']]
+    clean_chargers = [name + " " + g for g in ci['storage_chargers']]
 
     if policy == "res":
         n_iterations = 1
@@ -36,7 +38,7 @@ def summarise_network(n):
     results['objective'] = n.objective
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
-    p_storage = -n.links_t.p1[f"{name} battery discharger"] - n.links_t.p0[f"{name} battery charger"]
+    p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
 
     p_diff = p_clean + p_storage - p_demand

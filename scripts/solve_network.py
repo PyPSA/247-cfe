@@ -75,27 +75,30 @@ def add_ci(n):
           name + " export",
           bus0=name,
           bus1=node,
-          efficiency=0.99,
+          marginal_cost=1, #to stop link being used to destroy energy
           p_nom=1e6)
 
     n.add("Link",
           name + " import",
           bus0=node,
           bus1=name,
-          efficiency=0.99,
+          marginal_cost=1, #to stop link being used to destroy energy
           p_nom=1e6)
 
     #baseload clean energy generator
-    n.add("Generator",
-          name + " green hydrogen OCGT",
-          carrier="green hydrogen OCGT",
-          bus=name,
-          p_nom_extendable=True,
-          capital_cost=40000, #based on OGT
-          marginal_cost=3/0.033/0.4) #hydrogen at 3 EUR/kg with 0.4 efficiency
+    if "green hydrogen OCGT" in ci["clean_techs"]:
+        n.add("Generator",
+              name + " green hydrogen OCGT",
+              carrier="green hydrogen OCGT",
+              bus=name,
+              p_nom_extendable=True,
+              capital_cost=40000, #based on OGT
+              marginal_cost=3/0.033/0.4) #hydrogen at 3 EUR/kg with 0.4 efficiency
 
     #RES generator
     for carrier in ["onwind","solar"]:
+        if carrier not in ci["clean_techs"]:
+            continue
         gen_template = node + " " + carrier
         n.add("Generator",
               f"{name} {carrier}",
@@ -184,6 +187,7 @@ def add_ci(n):
               carrier="H2 Fuel Cell",
               efficiency=n.links.at[f"{node} H2 Fuel Cell", "efficiency"],
               capital_cost=n.links.at[f"{node} H2 Fuel Cell", "capital_cost"],
+              p_nom_extendable=True,
               lifetime=n.links.at[f"{node} H2 Fuel Cell", "lifetime"]
               )
 
@@ -195,7 +199,7 @@ def calculate_grid_cfe(n):
 
     grid_generators = n.generators.index[n.generators.bus.isin(grid_buses)]
 
-    grid_clean_techs = ["offwind","offwind-ac","offwind-dc","onwind","ror","solar","solar rooftop"]
+    grid_clean_techs = snakemake.config['global']['grid_clean_techs']
 
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
