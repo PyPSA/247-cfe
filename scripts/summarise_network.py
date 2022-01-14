@@ -123,7 +123,12 @@ def summarise_network(n):
 
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
-    results["co2_price"] = n.global_constraints.at["CO2Limit","mu"]
+    if snakemake.config['global']['policy_type'] == "co2 cap":
+        results["co2_price"] = n.global_constraints.at["CO2Limit","mu"]
+    elif snakemake.config['global']['policy_type'] == "co2 price":
+        results["co2_price"] = snakemake.config['global']['co2_price']
+    else:
+        results["co2_price"] = 0
 
     for k in results:
         results[k] = float(results[k])

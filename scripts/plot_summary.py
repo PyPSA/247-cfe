@@ -79,6 +79,25 @@ def ci_generation():
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
                 transparent=True)
 
+def global_emissions():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    (df/1e6).loc['emissions'].plot(kind="bar",
+                            ax=ax)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("global emissions [MtCO2/a]")
+
+    ax.grid()
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","emissions.pdf"),
+                transparent=True)
+
+
 def ci_cost():
 
     fig, ax = plt.subplots()
@@ -93,6 +112,9 @@ def ci_cost():
 
     ldf = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
 
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
                color=tech_colors)
@@ -102,11 +124,14 @@ def ci_cost():
 
     ax.grid()
 
+    ax.legend(loc="upper left",
+              prop={"size":4})
+
+
     fig.tight_layout()
 
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
                 transparent=True)
-
 
 if __name__ == "__main__":
 
@@ -120,3 +145,5 @@ if __name__ == "__main__":
     ci_generation()
 
     ci_cost()
+
+    global_emissions()

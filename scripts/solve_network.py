@@ -1,6 +1,7 @@
 
 import pypsa, numpy as np, pandas as pd
 from pypsa.linopt import get_var, linexpr, join_exprs, define_constraints
+from vresutils.costdata import annuity
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,6 +22,37 @@ override_component_attrs["Link"].loc["efficiency4"] = ["static or series","per u
 override_component_attrs["Link"].loc["p2"] = ["series","MW",0.,"2nd bus output","Output"]
 override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output","Output"]
 override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
+
+
+
+
+# TODO checkout PyPSA-Eur script
+def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
+
+    #set all asset costs and other parameters
+    costs = pd.read_csv(cost_file, index_col=[0,1]).sort_index()
+
+    #correct units to MW and EUR
+    costs.loc[costs.unit.str.contains("/kW"), "value"] *= 1e3
+    costs.loc[costs.unit.str.contains("USD"), "value"] *= USD_to_EUR
+
+    #min_count=1 is important to generate NaNs which are then filled by fillna
+    costs = costs.loc[:, "value"].unstack(level=1).groupby("technology").sum(min_count=1)
+    costs = costs.fillna({"CO2 intensity" : 0,
+                          "FOM" : 0,
+                          "VOM" : 0,
+                          "discount rate" : discount_rate,
+                          "efficiency" : 1,
+                          "fuel" : 0,
+                          "investment" : 0,
+                          "lifetime" : lifetime
+    })
+
+    annuity_factor = lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
+    costs["fixed"] = [annuity_factor(v) * v["investment"] * Nyears for i, v in costs.iterrows()]
+
+    return costs
+
 
 
 def strip_network(n):
@@ -57,10 +89,15 @@ def add_ci(n):
     #first deal with global policy environment
     gl_policy = snakemake.config['global']
     if gl_policy['policy_type'] == "co2 cap":
-        print(type(gl_policy['co2_baseline']),gl_policy['co2_baseline'])
         co2_cap = gl_policy['co2_share']*gl_policy['co2_baseline']
         print("Setting global CO2 cap to ",co2_cap)
         n.global_constraints.at["CO2Limit","constant"] = co2_cap
+    elif gl_policy['policy_type'] == "co2 price":
+        n.global_constraints.drop("CO2Limit",
+                                  inplace=True)
+        print("Setting CO2 price to",gl_policy['co2_price'])
+        for carrier in ["coal", "oil", "gas"]:
+            n.generators.at[f"EU {carrier}","marginal_cost"] += gl_policy['co2_price']*costs.at[carrier, 'CO2 intensity']
 
     #local C&I properties
     ci = snakemake.config['ci']
@@ -92,8 +129,8 @@ def add_ci(n):
               carrier="green hydrogen OCGT",
               bus=name,
               p_nom_extendable=True,
-              capital_cost=40000, #based on OGT
-              marginal_cost=3/0.033/0.4) #hydrogen at 3 EUR/kg with 0.4 efficiency
+              capital_cost=costs.at['OCGT', 'fixed'],
+              marginal_cost=costs.at['OCGT', 'VOM']  + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
 
     #RES generator
     for carrier in ["onwind","solar"]:
@@ -332,13 +369,22 @@ if __name__ == "__main__":
 
 
 
-    n = pypsa.Network(snakemake.config['network_file'],
+    n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
 
     print(f"solving network for policy {policy} and penetration {penetration}")
+
+
+    Nyears = 1 # years in simulation
+    costs = prepare_costs(snakemake.input.costs,
+                          snakemake.config['costs']['USD2013_to_EUR2013'],
+                          snakemake.config['costs']['discountrate'],
+                          Nyears,
+                          snakemake.config['costs']['lifetime'])
+
 
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
