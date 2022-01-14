@@ -27,6 +27,19 @@ Further information:
 - [Google's 24/7 CFE metrics and methodology](https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf)
 - [UN's 24/7 Carbon-free Energy Compact](https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy)
 
+
+## Requirements
+
+### Data
+
+The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2020/2030.
+
+Parallel to the repository you should also clone the [technology-data](https://github.com/PyPSA/technology-data) repository.
+
+### Software
+
+The code is known to work with PyPSA 0.18.1, pandas 1.2.4, numpy 1.19.0, vresutils 0.3.1 and gurobi 9.1.2.
+
 ## License
 
 
