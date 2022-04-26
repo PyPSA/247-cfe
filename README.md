@@ -32,7 +32,7 @@ Further information:
 
 ### Data
 
-The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2020/2030.
+The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2020/2030. To get started, you can download a [sample network](https://nworbmot.org/energy/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc).
 
 Parallel to the repository you should also clone the [technology-data](https://github.com/PyPSA/technology-data) repository.
 
