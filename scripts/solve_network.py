@@ -64,9 +64,8 @@ def strip_network(n):
 
     print("keeping nodes:",nodes_to_keep)
 
-    n.buses.drop(n.buses.index.symmetric_difference(nodes_to_keep),
-                 inplace=True)
-
+    n.mremove('Bus', n.buses.index.symmetric_difference(nodes_to_keep))
+    
     #make sure lines are kept
     n.lines.carrier = "AC"
 
@@ -79,8 +78,7 @@ def strip_network(n):
             location_boolean = c.df.bus.isin(nodes_to_keep)
         to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier_to_keep)]
         to_drop = c.df.index.symmetric_difference(to_keep)
-        c.df.drop(to_drop,
-                  inplace=True)
+        n.mremove(c.name, to_drop)
 
 
 def add_ci(n):
