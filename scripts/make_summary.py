@@ -18,8 +18,8 @@ def summarise_scalars():
     for fn in fns:
         policy = fn[fn.rfind("/")+1:-5]
         print(policy)
-        with open(fn) as f:
-            results = yaml.load(f)
+        with open(fn,'r') as f:
+            results = yaml.safe_load(f)
 
         float_keys = [k for k in results.keys() if isinstance(results[k],float)]
 
