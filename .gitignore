@@ -1,23 +1,20 @@
 .snakemake*
 .ipynb_checkpoints
+.vscode/
+
 __pycache__
 gurobi.log
 
+/data
 /results
 /logs
 
 *.org
-
 *.nc
-
 *~
-
 *.pdf
-
 *.ipynb
-
 *.csv
-
 *.pyc
 
 old/
