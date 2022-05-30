@@ -141,18 +141,10 @@ def summarise_network(n):
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
-        from vresutils.snakemake import MockSnakemake, Dict
-        snakemake = MockSnakemake(
-            path='',
-            wildcards=dict(policy='co2120-trans-storage-wind1040-sola510-nuclNone-lCCSNone',parameter="0"),
-            output=dict(network="results/test/0after.nc"),
-            log=dict(solver="results/test/log_0after.log")
-        )
-        import yaml
-        with open('config.yaml') as f:
-            snakemake.config = yaml.load(f)
+        from _helpers import mock_snakemake
+        snakemake = mock_snakemake('summarise_network', policy="cfe80")
 
-
+    # When running via snakemake
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
 

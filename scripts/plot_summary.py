@@ -5,12 +5,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-
 import numpy as np
 
-
-clean_techs = snakemake.config['ci']['clean_techs']
-tech_colors = snakemake.config['tech_colors']
 
 def used():
 
@@ -134,6 +130,14 @@ def ci_cost():
                 transparent=True)
 
 if __name__ == "__main__":
+    # Detect running outside of snakemake and mock snakemake for testing
+    if 'snakemake' not in globals():
+        from _helpers import mock_snakemake
+        snakemake = mock_snakemake('plot_summary')
+
+    # When running via snakemake
+    clean_techs = snakemake.config['ci']['clean_techs']
+    tech_colors = snakemake.config['tech_colors']
 
     df = pd.read_csv(snakemake.input.summary,
                      index_col=0)

@@ -28,5 +28,10 @@ def summarise_scalars():
     df.to_csv(snakemake.output["summary"])
 
 if __name__ == "__main__":
-
+    # Detect running outside of snakemake and mock snakemake for testing
+    if 'snakemake' not in globals():
+        from _helpers import mock_snakemake
+        snakemake = mock_snakemake('make_summary')    
+    
+    # When running via snakemake
     summarise_scalars()

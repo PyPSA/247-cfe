@@ -54,7 +54,6 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
     return costs
 
 
-
 def strip_network(n):
     nodes_to_keep = snakemake.config['basenodes_to_keep'][:]
     for b in snakemake.config['basenodes_to_keep']:
@@ -82,6 +81,7 @@ def strip_network(n):
         to_drop = c.df.index.symmetric_difference(to_keep)
         c.df.drop(to_drop,
                   inplace=True)
+
 
 def add_ci(n):
     """Add C&I at its own node"""
@@ -228,6 +228,7 @@ def add_ci(n):
               lifetime=n.links.at[f"{node} H2 Fuel Cell", "lifetime"]
               )
 
+
 def calculate_grid_cfe(n):
 
     name = snakemake.config['ci']['name']
@@ -246,6 +247,7 @@ def calculate_grid_cfe(n):
     print(grid_cfe.describe())
 
     return grid_cfe
+
 
 def solve_network(n, policy, penetration):
 
@@ -288,15 +290,15 @@ def solve_network(n, policy, penetration):
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
         con = define_constraints(n, lhs, '>=', penetration*total_load, 'CFEconstraints','CFEtarget')
 
+
     def res_constraints(n):
+        
         weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(res_gens)),
                                   index = n.snapshots,
                                   columns = res_gens)
         lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[res_gens]))) # single line sum
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
         con = define_constraints(n, lhs, '>=', penetration*total_load, 'RESconstraints','REStarget')
-
-
 
     def add_battery_constraints(n):
 
@@ -353,22 +355,14 @@ def solve_network(n, policy, penetration):
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
+
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
-        from vresutils.snakemake import MockSnakemake, Dict
-        snakemake = MockSnakemake(
-            path='',
-            wildcards=dict(policy='co2120-trans-storage-wind1040-sola510-nuclNone-lCCSNone',parameter="0"),
-            output=dict(network="results/test/0after.nc"),
-            log=dict(solver="results/test/log_0after.log")
-        )
-        import yaml
-        with open('config.yaml') as f:
-            snakemake.config = yaml.load(f)
+        from _helpers import mock_snakemake
+        snakemake = mock_snakemake('solve_network', policy="cfe80")
 
-
-
+    # When running via snakemake
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
