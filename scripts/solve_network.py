@@ -25,7 +25,6 @@ override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output",
 
 
 
-
 # TODO checkout PyPSA-Eur script
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
@@ -81,6 +80,10 @@ def strip_network(n):
         n.mremove(c.name, to_drop)
 
 
+def shutdown_lineexp(n):
+    n.lines.s_nom_extendable = False
+
+
 def add_ci(n):
     """Add C&I at its own node"""
 
@@ -134,7 +137,7 @@ def add_ci(n):
     for carrier in ["onwind","solar"]:
         if carrier not in ci["clean_techs"]:
             continue
-        gen_template = node + " " + carrier
+        gen_template = node + " " + carrier+"-2030" #"-2030" fix for a pypsa-eur-sec brownfield 2030 network
         n.add("Generator",
               f"{name} {carrier}",
               carrier=carrier,
@@ -162,8 +165,8 @@ def add_ci(n):
               e_cyclic=True,
               e_nom_extendable=True,
               carrier="battery",
-              capital_cost=n.stores.at[f"{node} battery", "capital_cost"],
-              lifetime=n.stores.at[f"{node} battery", "lifetime"]
+              capital_cost=n.stores.at[f"{node} battery"+"-2030", "capital_cost"],
+              lifetime=n.stores.at[f"{node} battery"+"-2030", "lifetime"]
               )
 
         n.add("Link",
@@ -171,10 +174,10 @@ def add_ci(n):
               bus0=name,
               bus1=f"{name} battery",
               carrier="battery charger",
-              efficiency=n.links.at[f"{node} battery charger", "efficiency"],
-              capital_cost=n.links.at[f"{node} battery charger", "capital_cost"],
-              p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} battery charger", "lifetime"]
+              efficiency=n.links.at[f"{node} battery charger"+"-2030", "efficiency"],
+              capital_cost=n.links.at[f"{node} battery charger"+"-2030", "capital_cost"],
+              p_nom_extendable=True, 
+              lifetime=n.links.at[f"{node} battery charger"+"-2030", "lifetime"] 
               )
 
         n.add("Link",
@@ -182,10 +185,10 @@ def add_ci(n):
               bus0=f"{name} battery",
               bus1=name,
               carrier="battery discharger",
-              efficiency=n.links.at[f"{node} battery discharger", "efficiency"],
-              marginal_cost=n.links.at[f"{node} battery discharger", "marginal_cost"],
+              efficiency=n.links.at[f"{node} battery discharger"+"-2030", "efficiency"],
+              marginal_cost=n.links.at[f"{node} battery discharger"+"-2030", "marginal_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} battery discharger", "lifetime"]
+              lifetime=n.links.at[f"{node} battery discharger"+"-2030", "lifetime"]
               )
 
     if "hydrogen" in ci["storage_techs"]:
@@ -200,19 +203,22 @@ def add_ci(n):
               e_cyclic=True,
               e_nom_extendable=True,
               carrier="H2 Store",
-              capital_cost=n.stores.at[f"{node} H2 Store", "capital_cost"],
-              lifetime=n.stores.at[f"{node} H2 Store", "lifetime"]
-              )
+              # in pypsa-eur-sec network in IE 'H2 store', while in DE 'H2-store-2030 
+              capital_cost=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["capital_cost"],
+              lifetime=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["lifetime"]
+              #capital_cost=n.stores.at[f"{node} H2 Store", "capital_cost"],
+              #lifetime=n.stores.at[f"{node} H2 Store", "lifetime"]
+              )        
 
         n.add("Link",
               f"{name} H2 Electrolysis",
               bus0=name,
               bus1=f"{name} H2",
               carrier="H2 Electrolysis",
-              efficiency=n.links.at[f"{node} H2 Electrolysis", "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Electrolysis", "capital_cost"],
+              efficiency=n.links.at[f"{node} H2 Electrolysis"+"-2030", "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Electrolysis"+"-2030", "capital_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} H2 Electrolysis", "lifetime"]
+              lifetime=n.links.at[f"{node} H2 Electrolysis"+"-2030", "lifetime"] 
               )
 
         n.add("Link",
@@ -220,10 +226,10 @@ def add_ci(n):
               bus0=f"{name} H2",
               bus1=name,
               carrier="H2 Fuel Cell",
-              efficiency=n.links.at[f"{node} H2 Fuel Cell", "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Fuel Cell", "capital_cost"],
+              efficiency=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "capital_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} H2 Fuel Cell", "lifetime"]
+              lifetime=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "lifetime"]
               )
 
 
@@ -381,6 +387,7 @@ if __name__ == "__main__":
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
         strip_network(n)
+        shutdown_lineexp(n)
 
         add_ci(n)
 
