@@ -82,6 +82,7 @@ def strip_network(n):
 
 def shutdown_lineexp(n):
     n.lines.s_nom_extendable = False
+    n.links[n.links.carrier=='DC'].p_nom_extendable = False
 
 
 def add_ci(n):
