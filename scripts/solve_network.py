@@ -246,6 +246,7 @@ def calculate_grid_cfe(n):
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
     grid_cfe = n.generators_t.p[grid_generators].groupby(n.generators.carrier,axis=1).sum()[grid_clean_techs].sum(axis=1)/n.loads_t.p[grid_loads].sum(axis=1)
+    grid_cfe[grid_cfe > 1] = 1.
 
     print("Grid CFE has following stats:")
     print(grid_cfe.describe())
@@ -347,6 +348,7 @@ def solve_network(n, policy, penetration):
     for i in range(n_iterations):
 
         grid_cfe = grid_cfe_df[f"iteration {i}"]
+        grid_cfe[grid_cfe > 1] = 1.
 
         n.lopf(pyomo=False,
                extra_functionality=extra_functionality,
