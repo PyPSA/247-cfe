@@ -3,25 +3,26 @@ logging_level: INFO
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: '220530-benchmark'
+run: '6-37n-DE-withNuc'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
-network_file: 'data/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
-
+# network_file: 'data/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
+network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep: ["GB4 0","IE4 0"]
+basenodes_to_keep: ["GB5 0", "IE5 0"] #["DE1 0", "PL1 0"]
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery"]
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
                   "AC", #lines
                   "DC", #links
-                  "gas","OCGT","CCGT","oil","coal","H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
+                  "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
+                  "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
                   "home battery charger","home battery discharger","battery charger","battery discharger",
                   "electricity distribution grid",
                   "H2 Store","co2","co2 stored","battery","home battery", #Stores
-                  "electricity","industry electricity"]  #Loads
-additional_nodes: ["EU oil","EU gas","EU coal","co2 atmosphere","co2 stored"]
+                  "electricity"]  #Loads "industry electricity"
+additional_nodes: ["EU oil","EU gas","EU coal", "EU uranium", "co2 atmosphere","co2 stored"]
 
 #global policy
 global:
@@ -34,17 +35,17 @@ global:
 #data center
 ci:
   name: "google"
-  node: "IE4 0"
+  node:  "IE5 0" #"DE1 0"
   load: 1000.
-  clean_techs: ["onwind","solar","green hydrogen OCGT"] # implemented: ["onwind","solar","green hydrogen OCGT"]
+  clean_techs: ["onwind","solar"] # implemented: ["onwind","solar","green hydrogen OCGT"]
   res_techs: ["onwind","solar"]
-  storage_techs: ["battery"] # implemented: ["hydrogen","battery"]
-  storage_chargers: ["battery charger"] # implemented: ["battery charger","H2 Electrolysis"]
-  storage_dischargers: ["battery discharger"] # implemented: ["battery discharger","H2 Fuel Cell"]
+  storage_techs: ["battery", "hydrogen"] # implemented: ["hydrogen","battery"]
+  storage_chargers: ["battery charger","H2 Electrolysis"] # implemented: ["battery charger","H2 Electrolysis"]
+  storage_dischargers: ["battery discharger","H2 Fuel Cell"] # implemented: ["battery discharger","H2 Fuel Cell"]
 
 
 scenario:
-  policy: ["cfe80","cfe90","cfe95","cfe100","res100"]
+  policy: ["cfe80", "cfe90", "cfe95", "cfe100", "res100"]
 
 costs:
   projection_year: 2030
