@@ -47,6 +47,19 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
                           "lifetime" : lifetime
     })
 
+    # Advanced nuclear
+    new_row = pd.Series({'CO2 intensity': 0, 
+            'FOM': costs.loc['nuclear']['FOM'], 
+            'VOM': costs.loc['nuclear']['VOM'], 
+            'discount rate': costs.loc['nuclear']['discount rate'],
+            'efficiency': 0.37,             #higher than nuclear, see data
+            'fuel': costs.loc['nuclear']['fuel'],
+            'investment': snakemake.config['costs']['adv_nuclear_overnight'] * 1e3 * USD_to_EUR,
+            'lifetime': 40.0
+            }, name="adv_nuclear")
+            
+    costs = costs.append(new_row, ignore_index=False)
+
     annuity_factor = lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
     costs["fixed"] = [annuity_factor(v) * v["investment"] * Nyears for i, v in costs.iterrows()]
 
@@ -133,6 +146,18 @@ def add_ci(n):
               p_nom_extendable=True,
               capital_cost=costs.at['OCGT', 'fixed'],
               marginal_cost=costs.at['OCGT', 'VOM']  + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
+
+    #baseload clean energy generator
+    if "adv_nuclear" in ci["clean_techs"]:      
+        n.add("Generator",
+              f"{name} adv_nuclear",
+              bus = name,
+              carrier = 'nuclear',
+              capital_cost = costs.loc['adv_nuclear']['fixed'],
+              marginal_cost= costs.loc['adv_nuclear']['VOM']  + costs.loc['adv_nuclear']['fuel']/costs.loc['adv_nuclear']['efficiency'],
+              p_nom_extendable = True,
+              lifetime = costs.loc['adv_nuclear']['lifetime']
+              )
 
     #RES generator
     for carrier in ["onwind","solar"]:
@@ -367,7 +392,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80")
+        snakemake = mock_snakemake('solve_network', policy="res100")
 
     # When running via snakemake
     n = pypsa.Network(snakemake.input.network,
