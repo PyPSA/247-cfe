@@ -37,7 +37,22 @@ def ci_capacity():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    ldf = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
+    gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
+    discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
+    charge_inv = df.loc[["ci_cap_" + t for t in clean_chargers]].rename({"ci_cap_" + t : t for t in clean_chargers})
+    charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger cap
+    
+    ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
+
+    rename_capacity = {
+        'onwind': 'onwind',
+        'solar': 'solar',
+        'battery_discharger': 'battery_inverter',
+        'H2_Electrolysis': 'hydrogen_electrolysis',
+        'H2_Fuel_Cell': 'hydrogen_fuel_cell'
+    }
+
+    ldf.index = ldf.index.map(rename_capacity)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -47,6 +62,8 @@ def ci_capacity():
     ax.set_ylabel("CI capacity [MW]")
 
     ax.grid()
+    ax.legend(loc="upper left",
+              prop={"size":5})
 
     fig.tight_layout()
 
@@ -121,7 +138,7 @@ def ci_cost():
     ax.grid()
 
     ax.legend(loc="upper left",
-              prop={"size":4})
+              prop={"size":5})
 
 
     fig.tight_layout()
@@ -136,7 +153,15 @@ if __name__ == "__main__":
         snakemake = mock_snakemake('plot_summary')
 
     # When running via snakemake
-    clean_techs = snakemake.config['ci']['clean_techs']
+    ci = snakemake.config['ci']
+    name = ci['name']
+    node = ci['node']
+    clean_techs = ci['clean_techs']
+
+    clean_chargers = [g for g in ci['storage_chargers']]
+    clean_chargers = [item.replace(' ', '_') for item in clean_chargers]
+    clean_dischargers = [g for g in ci['storage_dischargers']]
+    clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
     tech_colors = snakemake.config['tech_colors']
 
     df = pd.read_csv(snakemake.input.summary,

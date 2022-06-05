@@ -69,6 +69,12 @@ def summarise_network(n):
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
+    for charger in ci['storage_chargers']:
+        results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]
+
+    for discharger in ci['storage_dischargers']:
+        results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]
+
     total_cost = 0.
     for tech in clean_techs:
         results['ci_capital_cost_' + tech] = results['ci_cap_' + tech]*n.generators.at[name + " " + tech,"capital_cost"]
@@ -142,7 +148,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80")
+        snakemake = mock_snakemake('summarise_network', policy="cfe100")
 
     # When running via snakemake
     policy = snakemake.wildcards.policy[:3]
