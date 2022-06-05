@@ -62,12 +62,9 @@ def summarise_network(n):
     results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
     results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
 
-
+    # Storing invested capacities at CI node
     for tech in clean_techs:
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
-
-    for tech in clean_techs:
-        results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
     for charger in ci['storage_chargers']:
         results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]
@@ -75,6 +72,14 @@ def summarise_network(n):
     for discharger in ci['storage_dischargers']:
         results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]
 
+    # Storing generation at CI node    
+    for tech in clean_techs:
+        results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
+
+    for discharger in ci['storage_dischargers']:
+        results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
+
+    # Storing costs at CI node
     total_cost = 0.
     for tech in clean_techs:
         results['ci_capital_cost_' + tech] = results['ci_cap_' + tech]*n.generators.at[name + " " + tech,"capital_cost"]
@@ -124,9 +129,9 @@ def summarise_network(n):
         results['ci_cost_hydrogen_fuel_cell'] = 0.
 
     results["ci_total_cost"] = total_cost
-
     results["ci_average cost"] = results['ci_total_cost']/results['ci_demand_total']
 
+    # Storing system emissions and co2 price
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
     if snakemake.config['global']['policy_type'] == "co2 cap":
@@ -136,6 +141,7 @@ def summarise_network(n):
     else:
         results["co2_price"] = 0
 
+    # Saving resutls as ../summaries/{}.yaml
     for k in results:
         results[k] = float(results[k])
 
@@ -163,4 +169,5 @@ if __name__ == "__main__":
                               index_col=0,
                               parse_dates=True)
     print(grid_cfe_df)
+    
     summarise_network(n)

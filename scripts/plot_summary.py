@@ -44,15 +44,7 @@ def ci_capacity():
     
     ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
 
-    rename_capacity = {
-        'onwind': 'onwind',
-        'solar': 'solar',
-        'battery_discharger': 'battery_inverter',
-        'H2_Electrolysis': 'hydrogen_electrolysis',
-        'H2_Fuel_Cell': 'hydrogen_fuel_cell'
-    }
-
-    ldf.index = ldf.index.map(rename_capacity)
+    ldf.index = ldf.index.map(rename_techs)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -76,7 +68,12 @@ def ci_generation():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    ldf = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
+    generation = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
+    discharge = df.loc[["ci_generation_" + t for t in clean_dischargers]].rename({"ci_generation_" + t : t for t in clean_dischargers})/1000.
+
+    ldf = pd.concat([generation, discharge])
+
+    ldf.index = ldf.index.map(rename_techs)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -86,6 +83,8 @@ def ci_generation():
     ax.set_ylabel("CI generation [GWh]")
 
     ax.grid()
+    ax.legend(loc="upper left",
+              prop={"size":5})
 
     fig.tight_layout()
 
@@ -163,6 +162,14 @@ if __name__ == "__main__":
     clean_dischargers = [g for g in ci['storage_dischargers']]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
     tech_colors = snakemake.config['tech_colors']
+
+    rename_techs = {
+        'onwind': 'onwind',
+        'solar': 'solar',
+        'battery_discharger': 'battery_inverter',
+        'H2_Electrolysis': 'hydrogen_electrolysis',
+        'H2_Fuel_Cell': 'hydrogen_fuel_cell'
+    }
 
     df = pd.read_csv(snakemake.input.summary,
                      index_col=0)
