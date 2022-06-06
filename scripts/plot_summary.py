@@ -21,10 +21,13 @@ def used():
                ax=ax,
                color=tech_colors)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("fraction CFE [per unit]")
-
-    ax.grid()
+    ax.legend(loc="lower left",
+              prop={"size":8})
 
     fig.tight_layout()
 
@@ -50,10 +53,11 @@ def ci_capacity():
                ax=ax,
                color=tech_colors)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI capacity [MW]")
-
-    ax.grid()
     ax.legend(loc="upper left",
               prop={"size":5})
 
@@ -79,10 +83,11 @@ def ci_generation():
                ax=ax,
                color=tech_colors)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI generation [GWh]")
-
-    ax.grid()
     ax.legend(loc="upper left",
               prop={"size":5})
 
@@ -99,10 +104,11 @@ def global_emissions():
     (df/1e6).loc['emissions'].plot(kind="bar",
                             ax=ax)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("global emissions [MtCO2/a]")
-
-    ax.grid()
 
     fig.tight_layout()
 
@@ -131,11 +137,11 @@ def ci_cost():
                ax=ax,
                color=tech_colors)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI average cost [EUR/MWh]")
-
-    ax.grid()
-
     ax.legend(loc="upper left",
               prop={"size":5})
 
@@ -164,10 +170,11 @@ def system_capacity():
                ax=ax,
                color=tech_colors)
 
+    ax.grid()
+    ax.set_axisbelow(True)
+
     ax.set_xlabel("scenario")
     ax.set_ylabel("System capacity inv. [MW]")
-
-    ax.grid()
     ax.legend(loc="upper left",
               prop={"size":5})
 
@@ -242,3 +249,18 @@ if __name__ == "__main__":
     global_emissions()
 
     system_capacity()
+
+
+from PyPDF2 import PdfFileMerger, PdfFileReader
+import os
+
+# Call the PdfFileMerger
+mergedObject = PdfFileMerger()
+
+# I had 116 files in the folder that had to be merged into a single document
+# Loop through all of them and append their pages
+for file in os.listdir(snakemake.output[0][:-8]):
+    mergedObject.append(PdfFileReader(snakemake.output[0][:-8]+f'{file}', 'rb'))
+
+# Write all the files into a file which is named as shown below
+mergedObject.write(snakemake.output[0][:-8]+"/"+"merged_plots.pdf")
