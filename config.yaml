@@ -3,14 +3,14 @@ logging_level: INFO
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: '12-nucs-check'
+run: '13-scenarios'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
 # network_file: 'data/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
 network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep: ["DE1 0", "PL1 0"] # ["GB5 0", "IE5 0"]
+basenodes_to_keep: ["GB5 0", "IE5 0"] #["DE1 0", "PL1 0"] #
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery"]
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
@@ -36,7 +36,7 @@ global:
 #data center
 ci:
   name: "google"
-  node:  "DE1 0" #"IE5 0"
+  node:  "IE5 0" # "DE1 0" 
   load: 1000.
   clean_techs: ["onwind", "solar"] # implemented: ["onwind","solar","green hydrogen OCGT", "adv_nuclear"]
   res_techs: ["onwind","solar"]
@@ -48,10 +48,10 @@ ci:
 exp_generators: ['offwind-ac-2030', 'offwind-dc-2030', 'onwind-2030', 'solar-2030', 'solar rooftop-2030']
 exp_links: ['OCGT-2030']
 exp_chargers: ["battery charger-2030", "H2 Electrolysis-2030"]
-exp_dischargers: ["battery discharger-2030", "H2 Fuel Cell-2030"]
+exp_dischargers: ["battery dischargere-2030", "H2 Fuel Cell-2030"]
 
 scenario:
-  policy: ["cfe80", "cfe90", "cfe95", "cfe100", "res100"] 
+  policy: ["res100", "cfe80", "cfe90", "cfe95", "cfe98", "cfe100"] 
 
 costs:
   projection_year: 2030
