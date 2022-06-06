@@ -25,6 +25,10 @@ def summarise_network(n):
     clean_gens = [name + " " + g for g in clean_techs]
     clean_dischargers = [name + " " + g for g in ci['storage_dischargers']]
     clean_chargers = [name + " " + g for g in ci['storage_chargers']]
+    exp_generators = snakemake.config['exp_generators']
+    exp_links = snakemake.config['exp_links']
+    exp_chargers = snakemake.config['exp_chargers']
+    exp_dischargers = snakemake.config['exp_dischargers']
 
     if policy == "res":
         n_iterations = 1
@@ -34,6 +38,7 @@ def summarise_network(n):
     grid_cfe = grid_cfe_df[f"iteration {n_iterations}"]
 
     results = {}
+    temp = {}
 
     results['objective'] = n.objective
 
@@ -62,6 +67,7 @@ def summarise_network(n):
     results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
     results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
 
+
     # Storing invested capacities at CI node
     for tech in clean_techs:
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
@@ -72,12 +78,71 @@ def summarise_network(n):
     for discharger in ci['storage_dischargers']:
         results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]
 
+
     # Storing generation at CI node    
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
     for discharger in ci['storage_dischargers']:
         results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
+
+
+    # Storing invested capacities in the rest of energy system
+    # Generators
+    gen_expandable = n.generators[n.generators.p_nom_extendable == True] #all gens that can be expanded
+    
+    for g in snakemake.config['additional_nodes']: # drop additional nodes
+        if g in gen_expandable.index:
+            gen_expandable = gen_expandable.drop(g)
+
+    system_gens = gen_expandable[~gen_expandable.index.str.contains('google')] # drop google gens
+
+    for gen in exp_generators:
+        temp['system_optcap_' + gen] = system_gens.loc[system_gens.index.str.contains(f'{gen}'), 'p_nom_opt'].sum()
+        results['system_inv_' + gen.replace(' ', '_')] = temp['system_optcap_' + gen] - system_gens.loc[system_gens.index.str.contains(f'{gen}'), 'p_nom'].sum()
+
+    #Links
+    for link in exp_links:
+        system_links = n.links[n.links.index.str.contains(f'{link}')]
+
+    for link in exp_links:
+        temp['system_optcap_' + link] = system_links.loc[system_links.index.str.contains(f'{link}'), 'p_nom_opt'].sum()
+        temp['eff_' + link] = system_links.loc[system_links.index.str.contains(f'{link}'), 'efficiency'][0]
+        results['system_inv_' + link] = temp['system_optcap_' + link] - system_links.loc[system_links.index.str.contains(f'{link}'), 'p_nom'].sum()
+        # capacity of PyPSA-eur-sec links are in MWth. Converting MWth -> MWel.
+        results['system_inv_' + link] *= temp['eff_' + link]
+
+    #Chargers & Dischargers
+    HV_links = n.links
+    for l in n.links[n.links.index.str.contains("home battery")].index:
+        HV_links = HV_links.drop(l) #remove low voltage batteries 
+
+    if "battery charger-2030" in exp_chargers:
+        batteries = HV_links[HV_links.index.str.contains(f"battery charger-2030")]
+    if "H2 Electrolysis-2030" in exp_chargers:
+        electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis-2030")]
+    system_chargers = pd.concat([batteries, electrolysis])
+
+    if "battery discharger-2030" in exp_dischargers:
+        inverters = HV_links[HV_links.index.str.contains(f"battery discharger-2030")]
+    if "H2 Fuel Cell-2030" in exp_dischargers:
+        fuelcells = HV_links[HV_links.index.str.contains(f"H2 Fuel Cell-2030")]
+    system_dischargers = pd.concat([inverters, fuelcells])
+
+    for charger in exp_chargers:
+        temp['system_optcap_' + charger] = system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'p_nom_opt'].sum()
+        temp['eff_' + charger] = system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'efficiency'][0]
+        results['system_inv_' + charger.replace(' ', '_')] = temp['system_optcap_' + charger] - system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'p_nom'].sum()
+        #print(temp['eff_' + charger])
+        results['system_inv_' + charger.replace(' ', '_')] *= temp['eff_' + charger]
+
+    for discharger in exp_dischargers:
+        temp['system_optcap_' + discharger] = system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'p_nom_opt'].sum()
+        temp['eff_' + discharger] = system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'efficiency'][0]
+        results['system_inv_' + discharger.replace(' ', '_')] = temp['system_optcap_' + discharger] - system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'p_nom'].sum()
+        #print(temp['eff_' + discharger])
+        results['system_inv_' + discharger.replace(' ', '_')] *= temp['eff_' + discharger]
+
 
     # Storing costs at CI node
     total_cost = 0.
