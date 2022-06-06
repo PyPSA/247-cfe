@@ -8,6 +8,18 @@ RDIR = os.path.join(config['results_dir'], config['run'])
 CDIR = config['costs_dir']
 
 
+rule merge_plots:
+    input:
+        used=RDIR + "/plots/used.pdf",
+        config=RDIR + '/configs/config.yaml'
+    output:
+        final=RDIR + "/plots/SUMMARY.pdf"
+    threads: 2
+    resources: mem_mb=2000
+    script:
+        'scripts/merge_plots.py'
+
+
 rule plot_summary:
     input:
         summary=RDIR + "/csvs/summary.csv",
