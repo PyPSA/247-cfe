@@ -15,9 +15,9 @@ dependencies:
   - brotli-bin=1.0.9=h166bdaf_7
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0
-  - ca-certificates=2021.10.8=ha878542_0
+  - ca-certificates=2022.5.18.1=ha878542_0
   - cartopy=0.20.2=py38h51d8e34_4
-  - certifi=2021.10.8=py38h578d9bd_2
+  - certifi=2022.5.18.1=py38h578d9bd_0
   - cftime=1.6.0=py38h3ec907f_0
   - curl=7.83.0=h2283fc2_0
   - cycler=0.11.0=pyhd8ed1ab_0
@@ -109,6 +109,7 @@ dependencies:
   - pygments=2.12.0=pyhd8ed1ab_0
   - pyomo=6.4.0=py38hfa26641_1
   - pyparsing=3.0.8=pyhd8ed1ab_0
+  - pypdf2=1.28.4=pyhd8ed1ab_0
   - pyproj=3.3.1=py38h5b5ac8f_0
   - pypsa=0.18.1=pyhd8ed1ab_0
   - pyshp=2.2.0=pyhd8ed1ab_0
