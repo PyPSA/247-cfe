@@ -97,6 +97,11 @@ def shutdown_lineexp(n):
     n.lines.s_nom_extendable = False
     n.links[n.links.carrier=='DC'].p_nom_extendable = False
 
+def nuclear_policy(n):
+    for node in snakemake.config['nodes_with_nucsban']:
+        if node in snakemake.config['basenodes_to_keep']:
+            n.links.p_nom[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear'))] = 0
+
 
 def add_ci(n):
     """Add C&I at its own node"""
@@ -416,6 +421,7 @@ if __name__ == "__main__":
 
         strip_network(n)
         shutdown_lineexp(n)
+        nuclear_policy(n)
 
         add_ci(n)
 
