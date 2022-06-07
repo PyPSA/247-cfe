@@ -327,6 +327,19 @@ def solve_network(n, policy, penetration):
         con = define_constraints(n, lhs, '>=', penetration*total_load, 'CFEconstraints','CFEtarget')
 
 
+    def excess_constraints(n):
+        
+        gexport = get_var(n, "Link", "p")[name + " export"] # a series
+        
+        excess = linexpr((n.snapshot_weightings["generators"], gexport)).sum(axis=0)
+        lhs = excess
+
+        total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum()
+        rhs = (penetration - 0.8) * total_load
+
+        con = define_constraints(n, lhs, '<=', rhs, 'Excess_constraint')
+
+
     def res_constraints(n):
         
         weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(res_gens)),
@@ -335,6 +348,7 @@ def solve_network(n, policy, penetration):
         lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[res_gens]))) # single line sum
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
         con = define_constraints(n, lhs, '>=', penetration*total_load, 'RESconstraints','REStarget')
+
 
     def add_battery_constraints(n):
 
@@ -361,6 +375,7 @@ def solve_network(n, policy, penetration):
         if policy == "cfe":
             print("setting CFE target of",penetration)
             cfe_constraints(n)
+            excess_constraints(n)
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
@@ -397,7 +412,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe98")
+        snakemake = mock_snakemake('solve_network', policy="cfe95")
 
     # When running via snakemake
     n = pypsa.Network(snakemake.input.network,
