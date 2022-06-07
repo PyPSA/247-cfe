@@ -173,7 +173,7 @@ def system_capacity():
 
     ax.set_xlabel("scenario")
     ax.set_ylabel("System capacity inv. [MW]")
-    ax.legend(loc="upper left",
+    ax.legend(loc="upper right",
               prop={"size":5})
 
     fig.tight_layout()
@@ -218,7 +218,8 @@ if __name__ == "__main__":
         'solar': 'solar',
         'battery_discharger': 'battery_inverter',
         'H2_Electrolysis': 'hydrogen_electrolysis',
-        'H2_Fuel_Cell': 'hydrogen_fuel_cell'
+        'H2_Fuel_Cell': 'hydrogen_fuel_cell',
+        'adv_nuclear': 'adv_nuclear'
     }
 
     rename_system_techs = {
