@@ -125,6 +125,11 @@ def add_ci(n):
     node = ci['node']
     load = ci['load']
 
+    # update capital costs of utterly expensive H2 steel tanks 
+    new_cost = 4117 * 0.25
+    cost_update = lambda x: new_cost if x>=4000 else x
+    n.stores.capital_cost[n.stores.index.str.contains('H2')] = n.stores.capital_cost[n.stores.index.str.contains('H2')].map(cost_update)
+
     n.add("Bus",
           name)
 
