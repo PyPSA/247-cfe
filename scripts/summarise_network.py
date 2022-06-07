@@ -201,6 +201,21 @@ def summarise_network(n):
     # Storing system emissions and co2 price
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
+    #Compute weighted average grid CFE
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
+    def weighted_avg(cfe, weights):
+        weighted_sum = []
+        for value, weight in zip(cfe, weights):
+            weighted_sum.append(value * weight)
+        return sum(weighted_sum) / sum(weights) 
+    
+    system_grid_cfe_wavg = weighted_avg(grid_cfe, n.loads_t.p[grid_loads].sum(axis=1))
+    results['system_grid_cfe_wavg'] = system_grid_cfe_wavg
+    #print(system_grid_cfe_wavg)
+    #print(grid_cfe.mean())
+
     if snakemake.config['global']['policy_type'] == "co2 cap":
         results["co2_price"] = n.global_constraints.at["CO2Limit","mu"]
     elif snakemake.config['global']['policy_type'] == "co2 price":
