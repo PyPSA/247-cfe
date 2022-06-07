@@ -73,10 +73,12 @@ def summarise_network(n):
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
 
     for charger in ci['storage_chargers']:
-        results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]
-
+        temp['eff_' + charger] = n.links.loc[n.links.index.str.contains(f'{charger}'), 'efficiency'][0]
+        results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]*temp['eff_' + charger] 
+       
     for discharger in ci['storage_dischargers']:
-        results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]
+        temp['eff_' + discharger] = n.links.loc[n.links.index.str.contains(f'{discharger}'), 'efficiency'][0]
+        results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]*temp['eff_' + discharger] 
 
 
     # Storing generation at CI node    
