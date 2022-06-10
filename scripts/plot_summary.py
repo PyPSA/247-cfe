@@ -149,6 +149,45 @@ def ci_cost():
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
                 transparent=True)
 
+def ci_costandrev():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    techs = clean_techs + ["grid",
+                           "battery_storage",
+                           "battery_inverter",
+                           "hydrogen_storage",
+                           "hydrogen_electrolysis",
+                           "hydrogen_fuel_cell"]
+
+    costs = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
+    to_drop = costs.index[(costs < 0.1).all(axis=1)]
+    costs.drop(to_drop, inplace=True)
+
+    revenues = - df.loc[["ci_average_revenue"]]
+    revenues.index = revenues.index.map({'ci_average_revenue': 'revenue'})
+
+    ldf = pd.concat([costs, revenues])
+
+    ldf.T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.grid()
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("CI average cost [EUR/MWh]")
+    ax.legend(loc="upper left",
+              prop={"size":5})
+
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","ci_costandrev.pdf"),
+                transparent=True)
+
 def system_capacity():
 
     fig, ax = plt.subplots()
@@ -244,6 +283,7 @@ if __name__ == "__main__":
     ci_generation()
 
     ci_cost()
+    ci_costandrev()
 
     global_emissions()
 

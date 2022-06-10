@@ -1,16 +1,21 @@
 logging_level: INFO
+solve_network: solve  #solve, skip
 
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: '14-scenarios'
+run: 'test'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
 # network_file: 'data/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
 network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep: ["GB5 0", "IE5 0"] #["DE1 0", "PL1 0"] #
+basenodes_to_keep: ["GB5 0", "IE5 0"] #Ireland
+                   # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Denmark
+                   # ["GB5 0", "IE5 0"] #Ireland
+                   # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
+                   
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery"]
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
@@ -18,7 +23,8 @@ carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","o
                   "DC", #links
                   "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
                   "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
-                  "home battery charger","home battery discharger","battery charger","battery discharger",
+                  "home battery charger","home battery discharger",
+                  "battery charger","battery discharger",
                   "electricity distribution grid",
                   "H2 Store","co2","co2 stored","battery","home battery", #Stores
                   "electricity"]  #Loads "industry electricity"
@@ -30,19 +36,19 @@ global:
   policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
   co2_share: 0.5 #pu  - rough target for 2030
-  co2_price: 50 #EUR/tCO2
-  grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind","ror","solar","solar rooftop"]
+  co2_price: 130 #EUR/tCO2
+  grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop"]
 
 #data center
 ci:
   name: "google"
-  node:  "IE5 0" # "DE1 0" 
+  node:  "IE5 0" 
   load: 1000.
-  clean_techs: ["onwind", "solar"] # implemented: ["onwind","solar","green hydrogen OCGT", "adv_nuclear"]
+  clean_techs: ["onwind", "solar"]  #clean_techs: ["onwind", "solar", "adv_nuclear"] # "green hydrogen OCGT"
   res_techs: ["onwind","solar"]
-  storage_techs: ["battery" , "hydrogen"] # implemented: ["hydrogen","battery"]
-  storage_chargers: ["battery charger","H2 Electrolysis"] # implemented: ["battery charger","H2 Electrolysis"]
-  storage_dischargers: ["battery discharger","H2 Fuel Cell"] # implemented: ["battery discharger","H2 Fuel Cell"]
+  storage_techs: ["battery" , "hydrogen"]
+  storage_chargers: ["battery charger","H2 Electrolysis"]
+  storage_dischargers: ["battery discharger","H2 Fuel Cell"]
 
 # for easier computation of system expantion beyond CI node in pypsa-eur-sec 2030 brownfield network
 exp_generators: ['offwind-ac-2030', 'offwind-dc-2030', 'onwind-2030', 'solar-2030', 'solar rooftop-2030']
@@ -51,7 +57,7 @@ exp_chargers: ["battery charger-2030", "H2 Electrolysis-2030"]
 exp_dischargers: ["battery discharger-2030", "H2 Fuel Cell-2030"]
 
 scenario:
-  policy: ["res100", "cfe80", "cfe90", "cfe95", "cfe98", "cfe100"] 
+  policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
 
 costs:
   projection_year: 2030
@@ -86,6 +92,7 @@ tech_colors:
   "solar" : "y"
   "local" : "g"
   "grid": "m"
+  "revenue": "g"
   "adv_nuclear": "r"
   "battery_inverter": "#444444"
   "battery_storage": "#666666"

@@ -43,30 +43,33 @@ rule make_summary:
     script: 'scripts/make_summary.py'
 
 
-rule solve_network:
-    input:
-        network=config['network_file'],
-        costs=CDIR + "/costs_{}.csv".format(config['costs']['projection_year'])
-    output:
-        network=RDIR + "/networks/{policy}.nc",
-	grid_cfe=RDIR + "/networks/{policy}.csv"
-    log:
-        solver=RDIR + "/logs/{policy}_solver.log",
-        python=RDIR + "/logs/{policy}_python.log",
-        memory=RDIR + "/logs/{policy}_memory.log"
-    threads: 4
-    resources: mem=6000
-    script: "scripts/solve_network.py"
+if config['solve_network'] == 'solve':
+    rule solve_network:
+        input:
+            network=config['network_file'],
+            costs=CDIR + "/costs_{}.csv".format(config['costs']['projection_year'])
+        output:
+            network=RDIR + "/networks/{policy}.nc",
+            grid_cfe=RDIR + "/networks/{policy}.csv"
+        log:
+            solver=RDIR + "/logs/{policy}_solver.log",
+            python=RDIR + "/logs/{policy}_python.log",
+            memory=RDIR + "/logs/{policy}_memory.log"
+        threads: 4
+        resources: mem=6000
+        script: "scripts/solve_network.py"
+
 
 rule summarise_network:
     input:
         network=RDIR + "/networks/{policy}.nc",
-	grid_cfe=RDIR + "/networks/{policy}.csv"
+	    grid_cfe=RDIR + "/networks/{policy}.csv"
     output:
         yaml=RDIR + "/summaries/{policy}.yaml"
     threads: 2
     resources: mem_mb=2000
     script: 'scripts/summarise_network.py'
+
 
 rule copy_config:
     output: RDIR + '/configs/config.yaml'
