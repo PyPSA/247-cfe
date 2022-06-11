@@ -281,7 +281,10 @@ def calculate_grid_cfe(n):
 
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
-    grid_cfe = n.generators_t.p[grid_generators].groupby(n.generators.carrier,axis=1).sum()[grid_clean_techs].sum(axis=1)/n.loads_t.p[grid_loads].sum(axis=1)
+    grid_res = n.generators_t.p[grid_generators].groupby(n.generators.carrier,axis=1).sum()[grid_clean_techs].sum(axis=1)
+    #nuclear brownfield fleet is modelled as links | p1 is in MWhel 
+    grid_nucs = (- n.links_t.p1.filter(like='nuclear').sum(axis=1))
+    grid_cfe = (grid_res + grid_nucs) / n.loads_t.p[grid_loads].sum(axis=1)
     grid_cfe[grid_cfe > 1] = 1.
 
     print("Grid CFE has following stats:")
