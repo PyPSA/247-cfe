@@ -29,6 +29,8 @@ def summarise_network(n):
     exp_links = snakemake.config['exp_links']
     exp_chargers = snakemake.config['exp_chargers']
     exp_dischargers = snakemake.config['exp_dischargers']
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
     if policy == "res":
         n_iterations = 1
@@ -66,6 +68,38 @@ def summarise_network(n):
     results['ci_fraction_clean_used_grid'] = results['ci_clean_used_grid_total']/results['ci_demand_total']
     results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
     results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
+
+
+    # compute grid average emission rate
+    generation = {} #MWhth
+    emis_rate = {}
+    emissions = {}
+    link_gen = n.links_t.p1.groupby(n.links.carrier,axis=1).sum()
+    emitters = ["CCGT", "OCGT", "coal", "lignite", "oil"]
+
+    for tech in emitters:
+        if tech in link_gen.columns:
+            generation[f'{tech}'] = n.links_t.p0.groupby(n.links.carrier,axis=1).sum()[f'{tech}'].sum()
+            emis_rate[f'{tech}'] = n.links.loc[n.links.index.str.contains(f'{tech}')].efficiency2[0]
+            emissions[f'{tech}'] = generation[f'{tech}'] * emis_rate[f'{tech}']
+    
+    # both nominator and denominator are not scaled by snapshots
+    results['system_emission_rate'] = sum(emissions.values()) / n.loads_t.p[grid_loads].sum(axis=1).sum()
+
+    # compute emissions rate of 24/7 participating C&I
+    generation_h = pd.DataFrame() #MWhth
+    gen_emissions_h = pd.DataFrame()
+
+    for tech in emitters:
+        if tech in link_gen.columns:
+            generation_h[f'{tech}'] = (n.links_t.p0.groupby(n.links.carrier,axis=1).sum())[f'{tech}']
+            gen_emissions_h[f'{tech}'] = generation_h[f'{tech}'] * emis_rate[f'{tech}']
+    
+    system_emissions_h = gen_emissions_h.sum(axis=1)
+    # both nominator and denominator are not scaled by snapshots
+    system_erate_h = system_emissions_h / n.loads_t.p[grid_loads].sum(axis=1)
+    ci_imported_co2_h = system_erate_h * (-n.links_t.p1[name + " import"].multiply(n.snapshot_weightings["generators"],axis=0))
+    results['ci_emission_rate'] = ci_imported_co2_h.sum() / p_demand.sum()
 
 
     # Storing invested capacities at CI node
@@ -206,9 +240,6 @@ def summarise_network(n):
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
     #Compute weighted average grid CFE
-    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
-    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-
     def weighted_avg(cfe, weights):
         weighted_sum = []
         for value, weight in zip(cfe, weights):
