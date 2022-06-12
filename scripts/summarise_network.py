@@ -86,6 +86,7 @@ def summarise_network(n):
     # both nominator and denominator are not scaled by snapshots
     results['system_emission_rate'] = sum(emissions.values()) / n.loads_t.p[grid_loads].sum(axis=1).sum()
 
+
     # compute emissions rate of 24/7 participating C&I
     generation_h = pd.DataFrame() #MWhth
     gen_emissions_h = pd.DataFrame()
@@ -121,6 +122,22 @@ def summarise_network(n):
 
     for discharger in ci['storage_dischargers']:
         results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
+
+
+    # Storing RES share at node where CI locates:
+    # both nominator and denominator are not scaled by snapshots as we compute a share
+    node_generators = n.generators.index[n.generators.bus.isin([node])]
+    res_gen = n.generators_t.p[node_generators].groupby(n.generators.carrier,axis=1).sum().sum(axis=0)
+    
+    disp = ["CCGT", "OCGT", "coal", "lignite", "oil", "nuclear"]
+    link_gens = n.links_t.p1.filter(like=f'{node}').groupby(n.links.carrier,axis=1).sum()
+    per_link_gen = pd.DataFrame()
+    for tech in disp:
+        if tech in link_gens.columns:
+            per_link_gen[f'{tech}'] = link_gens[f'{tech}']
+    disp_gen = -per_link_gen.sum()
+    
+    results['node_whereCI_RESshareGen'] = res_gen.sum() / (res_gen.sum() + disp_gen.sum())
 
 
     # Storing invested capacities in the rest of energy system
