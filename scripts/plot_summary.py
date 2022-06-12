@@ -113,6 +113,25 @@ def global_emissions():
     fig.savefig(snakemake.output.used.replace("used.pdf","emissions.pdf"),
                 transparent=True)
 
+def ci_emisrate():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    (df).loc['ci_emission_rate'].plot(kind="bar",
+                            ax=ax)
+
+    ax.grid()
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("Emission rate of 24/7 CI [t/MWh]")
+    #ax.yaxis.label.set_size(6)
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","ci_emisrate.pdf"),
+                transparent=True)
 
 def ci_cost():
 
@@ -286,5 +305,6 @@ if __name__ == "__main__":
     ci_costandrev()
 
     global_emissions()
+    ci_emisrate()
 
     system_capacity()
