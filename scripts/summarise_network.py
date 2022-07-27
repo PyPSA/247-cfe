@@ -16,26 +16,50 @@ override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output",
 override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
 
 
-def summarise_network(n):
-    policy = snakemake.wildcards.policy[:3]
-    ci = snakemake.config['ci']
-    name = ci['name']
-    node = ci['node']
-    clean_techs = ci['clean_techs']
-    clean_gens = [name + " " + g for g in clean_techs]
-    clean_dischargers = [name + " " + g for g in ci['storage_dischargers']]
-    clean_chargers = [name + " " + g for g in ci['storage_chargers']]
-    exp_generators = snakemake.config['exp_generators']
-    exp_links = snakemake.config['exp_links']
-    exp_chargers = snakemake.config['exp_chargers']
-    exp_dischargers = snakemake.config['exp_dischargers']
-    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
-    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+def summarise_network(n, policy, tech_palette):
+
+    #tech_palette options
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery"]
+        storage_chargers = ["battery charger"]
+        storage_dischargers = ["battery discharger"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    else: 
+        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
 
     if policy == "res":
         n_iterations = 2
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
+
+    ci = snakemake.config['ci']
+    name = ci['name']
+    node = ci['node']
+
+    clean_techs = clean_techs
+    clean_gens = [name + " " + g for g in clean_techs]
+    clean_dischargers = [name + " " + g for g in storage_dischargers]
+    clean_chargers = [name + " " + g for g in storage_chargers]
+
+    exp_generators = snakemake.config['exp_generators']
+    exp_links = snakemake.config['exp_links']
+    exp_chargers = snakemake.config['exp_chargers']
+    exp_dischargers = snakemake.config['exp_dischargers']
+
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
 
     grid_cfe = grid_cfe_df[f"iteration {n_iterations-1}"]
 
@@ -124,14 +148,14 @@ def summarise_network(n):
     for tech in clean_techs:
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
 
-    for charger in ci['storage_chargers']:
+    for charger in storage_chargers:
         temp['eff_' + charger] = n.links.loc[n.links.index.str.contains(f'{charger}'), 'efficiency'][0]
         if name + " " + charger in n.links.index:
             results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]*temp['eff_' + charger]
         else:
             results['ci_cap_' + charger.replace(' ', '_')] = 0.
 
-    for discharger in ci['storage_dischargers']:
+    for discharger in storage_dischargers:
         temp['eff_' + discharger] = n.links.loc[n.links.index.str.contains(f'{discharger}'), 'efficiency'][0]
         if name + " " + discharger in n.links.index:
             results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]*temp['eff_' + discharger]
@@ -143,7 +167,7 @@ def summarise_network(n):
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
-    for discharger in ci['storage_dischargers']:
+    for discharger in storage_dischargers:
         if name + " " + discharger in n.links.index:
             results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
         else:
@@ -220,7 +244,7 @@ def summarise_network(n):
     results['ci_revenue_grid'] = (n.links_t.p0[name + " export"]*n.snapshot_weightings["generators"]*n.buses_t.marginal_price[node]).sum()
     results['ci_average_revenue'] =  results['ci_revenue_grid'] / results['ci_demand_total']
 
-    if "battery" in ci["storage_techs"] and policy == "cfe":
+    if "battery" in storage_techs and policy == "cfe":
         results['ci_capital_cost_battery_storage'] = n.stores.at[f"{name} battery","e_nom_opt"]*n.stores.at[f"{name} battery","capital_cost"]
         results['ci_cost_battery_storage'] = results['ci_capital_cost_battery_storage']
         total_cost += results['ci_cost_battery_storage']
@@ -234,7 +258,7 @@ def summarise_network(n):
         results['ci_capital_cost_battery_inverter'] = 0.
         results['ci_cost_battery_inverter'] = 0.
 
-    if "hydrogen" in ci["storage_techs"] and policy == "cfe":
+    if "hydrogen" in storage_techs and policy == "cfe":
         results['ci_capital_cost_hydrogen_storage'] = n.stores.at[f"{name} H2 Store","e_nom_opt"]*n.stores.at[f"{name} H2 Store","capital_cost"]
         results['ci_cost_hydrogen_storage'] = results['ci_capital_cost_hydrogen_storage']
         total_cost += results['ci_cost_hydrogen_storage']
@@ -292,13 +316,18 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80")
+        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p2')
 
     # When running via snakemake
+
+    #Wildcards
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
-
     print(f"summarising network for policy {policy} and penetration {penetration}")
+
+    tech_palette = snakemake.wildcards.palette
+    print(f"summarising network for palette {tech_palette}")
+
 
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
@@ -308,4 +337,4 @@ if __name__ == "__main__":
                               parse_dates=True)
     print(grid_cfe_df)
     
-    summarise_network(n)
+    summarise_network(n, policy, tech_palette)

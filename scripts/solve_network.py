@@ -124,6 +124,21 @@ def add_ci(n):
     node = ci['node']
     load = ci['load']
 
+    #tech_palette options
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery", "hydrogen"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_techs = ["battery", "hydrogen"]
+    else: 
+        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
+
+
     n.add("Bus",
           name)
 
@@ -142,7 +157,7 @@ def add_ci(n):
           p_nom=1e6)
 
     #baseload clean energy generator
-    if "green hydrogen OCGT" in ci["clean_techs"]:
+    if "green hydrogen OCGT" in clean_techs:
         n.add("Generator",
               name + " green hydrogen OCGT",
               carrier="green hydrogen OCGT",
@@ -152,7 +167,7 @@ def add_ci(n):
               marginal_cost=costs.at['OCGT', 'VOM']  + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
 
     #baseload clean energy generator
-    if "adv_nuclear" in ci["clean_techs"]:      
+    if "adv_nuclear" in clean_techs:      
         n.add("Generator",
               f"{name} adv_nuclear",
               bus = name,
@@ -165,7 +180,7 @@ def add_ci(n):
 
     #RES generator
     for carrier in ["onwind","solar"]:
-        if carrier not in ci["clean_techs"]:
+        if carrier not in clean_techs:
             continue
         gen_template = node + " " + carrier+"-2030" #"-2030" fix for a pypsa-eur-sec brownfield 2030 network
         n.add("Generator",
@@ -183,7 +198,7 @@ def add_ci(n):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
-    if "battery" in ci["storage_techs"] and policy == "cfe":
+    if "battery" in storage_techs and policy == "cfe":
         n.add("Bus",
               f"{name} battery",
               carrier="battery"
@@ -221,7 +236,7 @@ def add_ci(n):
               lifetime=n.links.at[f"{node} battery discharger"+"-2030", "lifetime"]
               )
 
-    if "hydrogen" in ci["storage_techs"] and policy == "cfe":
+    if "hydrogen" in storage_techs and policy == "cfe":
         n.add("Bus",
               f"{name} H2",
               carrier="H2"
@@ -293,20 +308,35 @@ def calculate_grid_cfe(n):
     return grid_cfe
 
 
-def solve_network(n, policy, penetration):
+def solve_network(n, policy, penetration, tech_palette):
 
     ci = snakemake.config['ci']
     name = ci['name']
+
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_chargers = ["battery charger"]
+        storage_dischargers = ["battery discharger"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    else: 
+        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
 
     if policy == "res":
         n_iterations = 1
         res_gens = [name + " " + g for g in ci['res_techs']]
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
-        clean_gens = [name + " " + g for g in ci['clean_techs']]
-        storage_dischargers = [name + " " + g for g in ci['storage_dischargers']]
-        storage_chargers = [name + " " + g for g in ci['storage_chargers']]
-
+        clean_gens = [name + " " + g for g in clean_techs]
+        storage_dischargers = [name + " " + g for g in storage_dischargers]
+        storage_chargers = [name + " " + g for g in storage_chargers]
 
     def cfe_constraints(n):
 
@@ -448,7 +478,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80")
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p2')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -457,12 +487,17 @@ if __name__ == "__main__":
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
+    #Wildcards
+
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
-
     print(f"solving network for policy {policy} and penetration {penetration}")
 
+    tech_palette = snakemake.wildcards.palette
+    print(f"solving network for palette {tech_palette}")
 
+
+    # Compute technology costs
     Nyears = 1 # years in simulation
     costs = prepare_costs(snakemake.input.costs,
                           snakemake.config['costs']['USD2013_to_EUR2013'],
@@ -479,7 +514,7 @@ if __name__ == "__main__":
 
         add_ci(n)
 
-        solve_network(n, policy, penetration)
+        solve_network(n, policy, penetration, tech_palette)
 
         n.export_to_netcdf(snakemake.output.network)
 

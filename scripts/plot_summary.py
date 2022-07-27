@@ -45,7 +45,7 @@ def ci_capacity():
     
     ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
 
-    ldf.index = ldf.index.map(rename_ci_techs)
+    ldf.index = ldf.index.map(rename_ci)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -75,7 +75,7 @@ def ci_generation():
 
     ldf = pd.concat([generation, discharge])
 
-    ldf.index = ldf.index.map(rename_ci_techs)
+    ldf.index = ldf.index.map(rename_ci)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -150,6 +150,8 @@ def ci_cost():
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
     ldf.drop(to_drop, inplace=True)
 
+    ldf.index = ldf.index.map(rename_ci)
+
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
                color=tech_colors)
@@ -188,6 +190,8 @@ def ci_costandrev():
     revenues.index = revenues.index.map({'ci_average_revenue': 'revenue'})
 
     ldf = pd.concat([costs, revenues])
+
+    ldf.index = ldf.index.map(rename_ci)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -244,40 +248,66 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary')
+        snakemake = mock_snakemake('plot_summary', palette='p1')
 
     # When running via snakemake
     ci = snakemake.config['ci']
     name = ci['name']
     node = ci['node']
-    clean_techs = ci['clean_techs']
 
-    clean_chargers = [g for g in ci['storage_chargers']]
+    
+    tech_palette = snakemake.wildcards.palette
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery"]
+        storage_chargers = ["battery charger"]
+        storage_dischargers = ["battery discharger"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    else: 
+        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
+
+    #clean_techs = ci['clean_techs']
+
+    clean_chargers = [g for g in storage_chargers]
     clean_chargers = [item.replace(' ', '_') for item in clean_chargers]
 
-    clean_dischargers = [g for g in ci['storage_dischargers']]
+    clean_dischargers = [g for g in storage_dischargers]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
 
     exp_generators = snakemake.config['exp_generators']
     exp_generators = [item.replace(' ', '_') for item in exp_generators]
-
     exp_links = snakemake.config['exp_links']
-
     exp_chargers = snakemake.config['exp_chargers']
     exp_chargers = [item.replace(' ', '_') for item in exp_chargers]
-    
     exp_dischargers = snakemake.config['exp_dischargers']
     exp_dischargers = [item.replace(' ', '_') for item in exp_dischargers]
 
     tech_colors = snakemake.config['tech_colors']
 
-    rename_ci_techs = {
+    rename_ci = {
         'onwind': 'onwind',
         'solar': 'solar',
         'battery_discharger': 'battery_inverter',
+        'battery_inverter': 'battery_inverter',
+        'battery_storage':  "battery_storage",
+        'hydrogen_electrolysis': 'hydrogen_electrolysis',
+        'hydrogen_fuel_cell': 'hydrogen_electrolysis',
         'H2_Electrolysis': 'hydrogen_electrolysis',
         'H2_Fuel_Cell': 'hydrogen_fuel_cell',
-        'adv_nuclear': 'adv_nuclear'
+        'hydrogen_storage': 'hydrogen_storage',
+        'adv_nuclear': 'advanced nuclear',
+        'grid': 'grid',
+        'revenue': "revenue"
     }
 
     rename_system_techs = {
