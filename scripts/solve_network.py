@@ -5,6 +5,7 @@ from vresutils.costdata import annuity
 
 import logging
 logger = logging.getLogger(__name__)
+import sys
 
 # Suppress logging of the slack bus choices
 pypsa.pf.logger.setLevel(logging.WARNING)
@@ -74,8 +75,6 @@ def strip_network(n):
 
     nodes_to_keep.extend(snakemake.config['additional_nodes'])
 
-    print("keeping nodes:",nodes_to_keep)
-
     n.mremove('Bus', n.buses.index.symmetric_difference(nodes_to_keep))
     
     #make sure lines are kept
@@ -124,11 +123,6 @@ def add_ci(n):
     name = ci['name']
     node = ci['node']
     load = ci['load']
-
-    # update capital costs of utterly expensive H2 steel tanks 
-    new_cost = 4117 * 0.25
-    cost_update = lambda x: new_cost if x>=4000 else x
-    n.stores.capital_cost[n.stores.index.str.contains('H2')] = n.stores.capital_cost[n.stores.index.str.contains('H2')].map(cost_update)
 
     n.add("Bus",
           name)
@@ -189,7 +183,7 @@ def add_ci(n):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
-    if "battery" in ci["storage_techs"]:
+    if "battery" in ci["storage_techs"] and policy == "cfe":
         n.add("Bus",
               f"{name} battery",
               carrier="battery"
@@ -227,7 +221,7 @@ def add_ci(n):
               lifetime=n.links.at[f"{node} battery discharger"+"-2030", "lifetime"]
               )
 
-    if "hydrogen" in ci["storage_techs"]:
+    if "hydrogen" in ci["storage_techs"] and policy == "cfe":
         n.add("Bus",
               f"{name} H2",
               carrier="H2"
@@ -239,11 +233,10 @@ def add_ci(n):
               e_cyclic=True,
               e_nom_extendable=True,
               carrier="H2 Store",
-              # in pypsa-eur-sec network in IE 'H2 store', while in DE 'H2-store-2030 
-              capital_cost=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["capital_cost"],
-              lifetime=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["lifetime"]
-              #capital_cost=n.stores.at[f"{node} H2 Store", "capital_cost"],
-              #lifetime=n.stores.at[f"{node} H2 Store", "lifetime"]
+              capital_cost=costs.at["hydrogen storage underground","fixed"],
+              lifetime=costs.at["hydrogen storage underground","lifetime"],
+              #capital_cost=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["capital_cost"],
+              #lifetime=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["lifetime"]
               )        
 
         n.add("Link",
@@ -271,20 +264,27 @@ def add_ci(n):
 
 def calculate_grid_cfe(n):
 
-    name = snakemake.config['ci']['name']
+    #name = snakemake.config['ci']['name']
+    #grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+    grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['nodes_for_cfe'])]
 
-    grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
+    grid_clean_techs = pd.Index(snakemake.config['global']['grid_clean_techs'])
 
-    grid_generators = n.generators.index[n.generators.bus.isin(grid_buses)]
+    clean_grid_generators = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_clean_techs)]
+    clean_grid_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_clean_techs)]
+    clean_grid_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_clean_techs)]
 
-    grid_clean_techs = snakemake.config['global']['grid_clean_techs']
+    logger.info(f"clean generators are {clean_grid_generators}")
+    logger.info(f"clean links are {clean_grid_links}")
+    logger.info(f"clean storage units are {clean_grid_storage_units}")
 
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
-    grid_res = n.generators_t.p[grid_generators].groupby(n.generators.carrier,axis=1).sum()[grid_clean_techs].sum(axis=1)
-    #nuclear brownfield fleet is modelled as links | p1 is in MWhel 
-    grid_nucs = (- n.links_t.p1.filter(like='nuclear').sum(axis=1))
-    grid_cfe = (grid_res + grid_nucs) / n.loads_t.p[grid_loads].sum(axis=1)
+    clean_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
+    clean_links = (- n.links_t.p1[clean_grid_links].sum(axis=1))
+    clean_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
+    grid_cfe = (clean_gens + clean_links + clean_sus) / n.loads_t.p[grid_loads].sum(axis=1)
+
     grid_cfe[grid_cfe > 1] = 1.
 
     print("Grid CFE has following stats:")
@@ -354,8 +354,34 @@ def solve_network(n, policy, penetration):
                                   index = n.snapshots,
                                   columns = res_gens)
         lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[res_gens]))) # single line sum
+
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
-        con = define_constraints(n, lhs, '>=', penetration*total_load, 'RESconstraints','REStarget')
+
+        # (lhs '>=' penetration*total_load) ??
+        con = define_constraints(n, lhs, '=', penetration*total_load, 'RESconstraints','REStarget')
+
+
+    def country_res_constraints(n):
+
+        grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['country_nodes'])]
+
+        grid_res_techs = snakemake.config['global']['grid_res_techs']
+
+        grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
+        country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
+
+
+        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
+                                  index = n.snapshots,
+                                  columns = country_res_gens)
+
+        lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[country_res_gens]))) # single line sum
+        total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+
+        logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
+
+        con = define_constraints(n, lhs, '=', snakemake.config["country_res_target"]*total_load, 'countryRESconstraints','countryREStarget')
 
 
     def add_battery_constraints(n):
@@ -380,6 +406,8 @@ def solve_network(n, policy, penetration):
 
         add_battery_constraints(n)
 
+        country_res_constraints(n)
+
         if policy == "cfe":
             print("setting CFE target of",penetration)
             cfe_constraints(n)
@@ -395,7 +423,7 @@ def solve_network(n, policy, penetration):
 
     formulation = snakemake.config['solving']['options']['formulation']
     solver_options = snakemake.config['solving']['solver']
-    solver_name = solver_options.pop('name')
+    solver_name = solver_options['algo']
 
     grid_cfe_df = pd.DataFrame(0.,index=n.snapshots,columns=[f"iteration {i}" for i in range(n_iterations+1)])
 
@@ -420,7 +448,10 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe95")
+        snakemake = mock_snakemake('solve_network', policy="cfe80")
+
+    logging.basicConfig(filename=snakemake.log.python,
+                    level=snakemake.config['logging_level'])
 
     # When running via snakemake
     n = pypsa.Network(snakemake.input.network,
@@ -453,3 +484,4 @@ if __name__ == "__main__":
         n.export_to_netcdf(snakemake.output.network)
 
     logger.info("Maximum memory usage: {}".format(mem.mem_usage))
+

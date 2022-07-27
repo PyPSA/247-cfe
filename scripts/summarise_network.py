@@ -33,11 +33,11 @@ def summarise_network(n):
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
     if policy == "res":
-        n_iterations = 1
+        n_iterations = 2
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
 
-    grid_cfe = grid_cfe_df[f"iteration {n_iterations}"]
+    grid_cfe = grid_cfe_df[f"iteration {n_iterations-1}"]
 
     results = {}
     temp = {}
@@ -45,7 +45,10 @@ def summarise_network(n):
     results['objective'] = n.objective
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
-    p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
+    if policy == "cfe":
+        p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
+    else:
+        p_storage = pd.Series(0.,n.snapshots)   
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
 
     p_diff = p_clean + p_storage - p_demand
@@ -97,10 +100,24 @@ def summarise_network(n):
             gen_emissions_h[f'{tech}'] = generation_h[f'{tech}'] * emis_rate[f'{tech}']
     
     system_emissions_h = gen_emissions_h.sum(axis=1)
-    # both nominator and denominator are not scaled by snapshots
     system_erate_h = system_emissions_h / n.loads_t.p[grid_loads].sum(axis=1)
     ci_imported_co2_h = system_erate_h * (-n.links_t.p1[name + " import"].multiply(n.snapshot_weightings["generators"],axis=0))
     results['ci_emission_rate'] = ci_imported_co2_h.sum() / p_demand.sum()
+
+    # ci_emission_rate_new should be equal to ci_emission_rate
+    fossil_links = n.links.index[n.links.carrier.isin(emitters)]
+    hourly_emissions = n.links_t.p0[fossil_links].multiply(n.links.efficiency2[fossil_links],axis=1).sum(axis=1)
+    load = n.loads_t.p[grid_loads].sum(axis=1)
+    emissions_factor = hourly_emissions/load
+    results['ci_emission_rate_new'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
+
+    country_fossil_links = n.links.index[n.links.carrier.isin(emitters) & n.links.bus1.isin(snakemake.config["country_nodes"])]
+    country_loads = n.loads.index[n.loads.index.isin(snakemake.config["country_nodes"])]
+    country_hourly_emissions = n.links_t.p0[country_fossil_links].multiply(n.links.efficiency2[country_fossil_links],axis=1).sum(axis=1)
+    load = n.loads_t.p[country_loads].sum(axis=1)
+    emissions_factor = country_hourly_emissions/load
+    results['ci_emission_rate_local'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
+    results['system_emissions_local'] = (country_hourly_emissions*n.snapshot_weightings["generators"]).sum()
 
 
     # Storing invested capacities at CI node
@@ -109,11 +126,17 @@ def summarise_network(n):
 
     for charger in ci['storage_chargers']:
         temp['eff_' + charger] = n.links.loc[n.links.index.str.contains(f'{charger}'), 'efficiency'][0]
-        results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]*temp['eff_' + charger] 
-       
+        if name + " " + charger in n.links.index:
+            results['ci_cap_' + charger.replace(' ', '_')] = n.links.at[name + " " + charger, "p_nom_opt"]*temp['eff_' + charger]
+        else:
+            results['ci_cap_' + charger.replace(' ', '_')] = 0.
+
     for discharger in ci['storage_dischargers']:
         temp['eff_' + discharger] = n.links.loc[n.links.index.str.contains(f'{discharger}'), 'efficiency'][0]
-        results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]*temp['eff_' + discharger] 
+        if name + " " + discharger in n.links.index:
+            results['ci_cap_' + discharger.replace(' ', '_')] = n.links.at[name + " " + discharger, "p_nom_opt"]*temp['eff_' + discharger]
+        else:
+            results['ci_cap_' + discharger.replace(' ', '_')] = 0.
 
 
     # Storing generation at CI node    
@@ -121,23 +144,10 @@ def summarise_network(n):
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
     for discharger in ci['storage_dischargers']:
-        results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
-
-
-    # Storing RES share at node where CI locates:
-    # both nominator and denominator are not scaled by snapshots as we compute a share
-    node_generators = n.generators.index[n.generators.bus.isin([node])]
-    res_gen = n.generators_t.p[node_generators].groupby(n.generators.carrier,axis=1).sum().sum(axis=0)
-    
-    disp = ["CCGT", "OCGT", "coal", "lignite", "oil", "nuclear"]
-    link_gens = n.links_t.p1.filter(like=f'{node}').groupby(n.links.carrier,axis=1).sum()
-    per_link_gen = pd.DataFrame()
-    for tech in disp:
-        if tech in link_gens.columns:
-            per_link_gen[f'{tech}'] = link_gens[f'{tech}']
-    disp_gen = -per_link_gen.sum()
-    
-    results['node_whereCI_RESshareGen'] = res_gen.sum() / (res_gen.sum() + disp_gen.sum())
+        if name + " " + discharger in n.links.index:
+            results['ci_generation_' + discharger.replace(' ', '_')] = - n.links_t.p1[name + " " + discharger].multiply(n.snapshot_weightings["generators"],axis=0).sum()
+        else:
+            results['ci_generation_' + discharger.replace(' ', '_')] = 0.
 
 
     # Storing invested capacities in the rest of energy system
@@ -170,30 +180,24 @@ def summarise_network(n):
     for l in n.links[n.links.index.str.contains("home battery")].index:
         HV_links = HV_links.drop(l) #remove low voltage batteries 
 
-    if "battery charger-2030" in exp_chargers:
-        batteries = HV_links[HV_links.index.str.contains(f"battery charger-2030")]
-    if "H2 Electrolysis-2030" in exp_chargers:
-        electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis-2030")]
+    batteries = HV_links[HV_links.index.str.contains(f"battery charger-2030")]
+    electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis-2030")]
     system_chargers = pd.concat([batteries, electrolysis])
 
-    if "battery discharger-2030" in exp_dischargers:
-        inverters = HV_links[HV_links.index.str.contains(f"battery discharger-2030")]
-    if "H2 Fuel Cell-2030" in exp_dischargers:
-        fuelcells = HV_links[HV_links.index.str.contains(f"H2 Fuel Cell-2030")]
+    inverters = HV_links[HV_links.index.str.contains(f"battery discharger-2030")]
+    fuelcells = HV_links[HV_links.index.str.contains(f"H2 Fuel Cell-2030")]
     system_dischargers = pd.concat([inverters, fuelcells])
 
     for charger in exp_chargers:
         temp['system_optcap_' + charger] = system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'p_nom_opt'].sum()
         temp['eff_' + charger] = system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'efficiency'][0]
         results['system_inv_' + charger.replace(' ', '_')] = temp['system_optcap_' + charger] - system_chargers.loc[system_chargers.index.str.contains(f'{charger}'), 'p_nom'].sum()
-        #print(temp['eff_' + charger])
         results['system_inv_' + charger.replace(' ', '_')] *= temp['eff_' + charger]
 
     for discharger in exp_dischargers:
         temp['system_optcap_' + discharger] = system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'p_nom_opt'].sum()
         temp['eff_' + discharger] = system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'efficiency'][0]
         results['system_inv_' + discharger.replace(' ', '_')] = temp['system_optcap_' + discharger] - system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'p_nom'].sum()
-        #print(temp['eff_' + discharger])
         results['system_inv_' + discharger.replace(' ', '_')] *= temp['eff_' + discharger]
 
 
@@ -216,7 +220,7 @@ def summarise_network(n):
     results['ci_revenue_grid'] = (n.links_t.p0[name + " export"]*n.snapshot_weightings["generators"]*n.buses_t.marginal_price[node]).sum()
     results['ci_average_revenue'] =  results['ci_revenue_grid'] / results['ci_demand_total']
 
-    if "battery" in ci["storage_techs"]:
+    if "battery" in ci["storage_techs"] and policy == "cfe":
         results['ci_capital_cost_battery_storage'] = n.stores.at[f"{name} battery","e_nom_opt"]*n.stores.at[f"{name} battery","capital_cost"]
         results['ci_cost_battery_storage'] = results['ci_capital_cost_battery_storage']
         total_cost += results['ci_cost_battery_storage']
@@ -230,7 +234,7 @@ def summarise_network(n):
         results['ci_capital_cost_battery_inverter'] = 0.
         results['ci_cost_battery_inverter'] = 0.
 
-    if "hydrogen" in ci["storage_techs"]:
+    if "hydrogen" in ci["storage_techs"] and policy == "cfe":
         results['ci_capital_cost_hydrogen_storage'] = n.stores.at[f"{name} H2 Store","e_nom_opt"]*n.stores.at[f"{name} H2 Store","capital_cost"]
         results['ci_cost_hydrogen_storage'] = results['ci_capital_cost_hydrogen_storage']
         total_cost += results['ci_cost_hydrogen_storage']
@@ -288,7 +292,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="res100")
+        snakemake = mock_snakemake('summarise_network', policy="cfe80")
 
     # When running via snakemake
     policy = snakemake.wildcards.policy[:3]
