@@ -4,6 +4,7 @@ import numpy as np
 #allow plotting without Xwindows
 import matplotlib
 matplotlib.use('Agg')
+from solve_network import palette
 
 
 def used():
@@ -254,36 +255,20 @@ if __name__ == "__main__":
     ci = snakemake.config['ci']
     name = ci['name']
     node = ci['node']
-
-    
     tech_palette = snakemake.wildcards.palette
-    if tech_palette == 'p1':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery"]
-        storage_chargers = ["battery charger"]
-        storage_dischargers = ["battery discharger"]
-    elif tech_palette == 'p2':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    else: 
-        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
-        sys.exit()
 
-    #clean_techs = ci['clean_techs']
+    #tech_palette options
+    clean_techs = palette(tech_palette)[0]
+    storage_techs = palette(tech_palette)[1]
+    storage_chargers = palette(tech_palette)[2]
+    storage_dischargers = palette(tech_palette)[3]
 
+    #renaming technologies for plotting
     clean_chargers = [g for g in storage_chargers]
     clean_chargers = [item.replace(' ', '_') for item in clean_chargers]
-
     clean_dischargers = [g for g in storage_dischargers]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
-
+    
     exp_generators = snakemake.config['exp_generators']
     exp_generators = [item.replace(' ', '_') for item in exp_generators]
     exp_links = snakemake.config['exp_links']
@@ -292,6 +277,7 @@ if __name__ == "__main__":
     exp_dischargers = snakemake.config['exp_dischargers']
     exp_dischargers = [item.replace(' ', '_') for item in exp_dischargers]
 
+    #Assign colors
     tech_colors = snakemake.config['tech_colors']
 
     rename_ci = {
@@ -326,15 +312,10 @@ if __name__ == "__main__":
                      index_col=0)
 
     used()
-
     ci_capacity()
-
     ci_generation()
-
     ci_cost()
     ci_costandrev()
-
     global_emissions()
     ci_emisrate()
-
     system_capacity()

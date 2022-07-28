@@ -25,8 +25,6 @@ override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output",
 override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
 
 
-
-# TODO checkout PyPSA-Eur script
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
     #set all asset costs and other parameters
@@ -96,10 +94,36 @@ def shutdown_lineexp(n):
     n.lines.s_nom_extendable = False
     n.links[n.links.carrier=='DC'].p_nom_extendable = False
 
+
 def nuclear_policy(n):
     for node in snakemake.config['nodes_with_nucsban']:
         if node in snakemake.config['basenodes_to_keep']:
             n.links.p_nom[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear'))] = 0
+
+
+def palette(tech_palette):
+    """Define technology palette based on wildcard value"""
+
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery"]
+        storage_chargers = ["battery charger"]
+        storage_dischargers = ["battery discharger"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    else: 
+        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
+
+    return clean_techs, storage_techs, storage_chargers, storage_dischargers
 
 
 def add_ci(n):
@@ -125,18 +149,8 @@ def add_ci(n):
     load = ci['load']
 
     #tech_palette options
-    if tech_palette == 'p1':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery"]
-    elif tech_palette == 'p2':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery", "hydrogen"]
-    elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
-        storage_techs = ["battery", "hydrogen"]
-    else: 
-        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
-        sys.exit()
+    clean_techs = palette(tech_palette)[0]
+    storage_techs = palette(tech_palette)[1]
 
 
     n.add("Bus",
@@ -313,21 +327,10 @@ def solve_network(n, policy, penetration, tech_palette):
     ci = snakemake.config['ci']
     name = ci['name']
 
-    if tech_palette == 'p1':
-        clean_techs = ["onwind", "solar"]
-        storage_chargers = ["battery charger"]
-        storage_dischargers = ["battery discharger"]
-    elif tech_palette == 'p2':
-        clean_techs = ["onwind", "solar"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    else: 
-        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
-        sys.exit()
+    clean_techs = palette(tech_palette)[0]
+    storage_techs = palette(tech_palette)[1]
+    storage_chargers = palette(tech_palette)[2]
+    storage_dischargers = palette(tech_palette)[3]
 
     if policy == "res":
         n_iterations = 1

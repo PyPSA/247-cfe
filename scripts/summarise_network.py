@@ -1,7 +1,7 @@
 
 import pypsa, numpy as np, pandas as pd
-
 import yaml
+from solve_network import palette
 
 # from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
 override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
@@ -19,24 +19,10 @@ override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output",
 def summarise_network(n, policy, tech_palette):
 
     #tech_palette options
-    if tech_palette == 'p1':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery"]
-        storage_chargers = ["battery charger"]
-        storage_dischargers = ["battery discharger"]
-    elif tech_palette == 'p2':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    else: 
-        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
-        sys.exit()
+    clean_techs = palette(tech_palette)[0]
+    storage_techs = palette(tech_palette)[1]
+    storage_chargers = palette(tech_palette)[2]
+    storage_dischargers = palette(tech_palette)[3]
 
     if policy == "res":
         n_iterations = 2
