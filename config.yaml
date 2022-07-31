@@ -4,11 +4,11 @@ solve_network: solve  #solve, skip
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-PaletteWildcard'
+run: 'test-Biomass'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
-# network_file: 'data/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc'
-network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
+#network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
+network_file: 'data/elec_s_37_lv1.0__3h-H-B-solar+p3_2030.nc'
 
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
@@ -18,19 +18,24 @@ scenario:
             ]
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep:  ["GB5 0", "IE5 0", "GB0 0"] #Ireland
+basenodes_to_keep: ["DE1 0"]
+                  #  ["GB5 0", "IE5 0", "GB0 0"] #Ireland
                   # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
 
 
-country_nodes:  ["IE5 0"] 
-              # ["DK1 0", "DK2 0"]
+country_nodes: ["DE1 0"]
+               # ["IE5 0"] 
+               # ["DK1 0", "DK2 0"]
 country_res_target: 0.8
 
-nodes_for_cfe:    ["IE5 0"] #["GB5 0", "IE5 0", "GB0 0"] 
+nodes_for_cfe:  ["DE1 0"]
+                # ["IE5 0"] #["GB5 0", "IE5 0", "GB0 0"] 
                 # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
 
 
-node_suffixes_to_keep: ["H2","battery","low voltage","home battery"]
+node_suffixes_to_keep: ["H2","battery","low voltage","home battery", 
+                        #"urban central heat", # to add heating profile for CHP
+                        ]
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
                   "AC", #lines
@@ -41,8 +46,11 @@ carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","o
                   "battery charger","battery discharger",
                   "electricity distribution grid",
                   "H2 Store","co2","co2 stored","battery","home battery", #Stores
-                  "electricity"]  #Loads "industry electricity"
-additional_nodes: ["EU oil","EU gas","EU coal", "EU uranium", "co2 atmosphere","co2 stored"]
+                  "electricity",  #Loads | "industry electricity" 
+                  "urban central solid biomass CHP" #BIOMASS
+                    ]  
+additional_nodes: ["EU oil","EU gas","EU coal", "EU uranium", "co2 atmosphere","co2 stored",
+                   "EU solid biomass"] #BIOMASS
 nodes_with_nucsban: ["DE1 0"]
 
 
@@ -59,7 +67,7 @@ global:
 #data center
 ci:
   name: "google"
-  node:  "IE5 0"
+  node: "DE1 0"  #"IE5 0"
   load: 1000.
   #clean_techs: ["onwind", "solar"]  #clean_techs: ["onwind", "solar", "adv_nuclear"] # "green hydrogen OCGT"
   res_techs: ["onwind","solar"]
