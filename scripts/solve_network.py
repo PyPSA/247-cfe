@@ -293,33 +293,85 @@ def add_ci(n):
 
 def calculate_grid_cfe(n):
 
-    #name = snakemake.config['ci']['name']
-    #grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
-    grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['nodes_for_cfe'])]
+    name = snakemake.config['ci']['name']
+    country = snakemake.config['ci']['node']
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
+    country_buses = n.buses.index[n.buses.index.str.contains(country)]
 
-    grid_clean_techs = pd.Index(snakemake.config['global']['grid_clean_techs'])
+    #grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['nodes_for_cfe'])]
 
-    clean_grid_generators = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_clean_techs)]
-    clean_grid_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_clean_techs)]
-    clean_grid_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_clean_techs)]
+    clean_techs = pd.Index(snakemake.config['global']['grid_clean_techs'])
+    emitters = pd.Index(snakemake.config['global']['emitters'])
 
-    logger.info(f"clean generators are {clean_grid_generators}")
-    logger.info(f"clean links are {clean_grid_links}")
-    logger.info(f"clean storage units are {clean_grid_storage_units}")
+    clean_grid_generators = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(clean_techs)]
+    clean_grid_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(clean_techs)]
+    clean_grid_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(clean_techs)]
+    dirty_grid_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(emitters)]
 
-    grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+    logger.info(f"clean grid generators are {clean_grid_generators}")
+    logger.info(f"clean grid links are {clean_grid_links}")
+    logger.info(f"clean grid storage units are {clean_grid_storage_units}")
+    logger.info(f"dirty grid links are {dirty_grid_links}")
 
-    clean_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
-    clean_links = (- n.links_t.p1[clean_grid_links].sum(axis=1))
-    clean_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
-    grid_cfe = (clean_gens + clean_links + clean_sus) / n.loads_t.p[grid_loads].sum(axis=1)
+    clean_country_generators = n.generators.index[n.generators.bus.isin(country_buses) & n.generators.carrier.isin(clean_techs)]
+    clean_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(clean_techs)]
+    clean_country_storage_units = n.storage_units.index[n.storage_units.bus.isin(country_buses) & n.storage_units.carrier.isin(clean_techs)]
+    dirty_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(emitters)]
 
-    grid_cfe[grid_cfe > 1] = 1.
+    logger.info(f"clean country generators are {clean_country_generators}")
+    logger.info(f"clean country links are {clean_country_links}")
+    logger.info(f"clean country storage units are {clean_country_storage_units}")
+    logger.info(f"dirty country links are {dirty_country_links}")
 
-    print("Grid CFE has following stats:")
-    print(grid_cfe.describe())
+    #grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+    country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
 
-    return grid_cfe
+    clean_grid_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
+    clean_grid_ls = (- n.links_t.p1[clean_grid_links].sum(axis=1))
+    clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
+    clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
+    
+    dirty_grid_resouces = (- n.links_t.p1[dirty_grid_links].sum(axis=1))
+
+    #grid_cfe =  clean_grid_resources / n.loads_t.p[grid_loads].sum(axis=1)
+    #grid_cfe[grid_cfe > 1] = 1.
+
+    import_cfe =  clean_grid_resources / (clean_grid_resources + dirty_grid_resouces)
+
+    clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
+    clean_country_ls = (- n.links_t.p1[clean_country_links].sum(axis=1))
+    clean_country_sus = n.storage_units_t.p[clean_country_storage_units].sum(axis=1)
+    clean_country_resouces = clean_country_gens + clean_country_ls + clean_country_sus
+
+    dirty_country_resouces = (- n.links_t.p1[dirty_country_links].sum(axis=1))
+
+    ##################
+    # Country imports | 
+    # NB lines and links are bidirectional, thus we track imports for both subsets 
+    # of interconnectors: where [country] node is bus0 and bus1. Subsets are exclusive.
+    
+    line_imp_subsetA = n.lines_t.p1.loc[:,n.lines.bus0.str.contains(country)].sum(axis=1)
+    line_imp_subsetB = n.lines_t.p0.loc[:,n.lines.bus1.str.contains(country)].sum(axis=1)
+    line_imp_subsetA[line_imp_subsetA < 0] = 0.
+    line_imp_subsetB[line_imp_subsetB < 0] = 0.
+
+    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(country) & 
+                        (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
+    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(country) & 
+                        (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
+    links_imp_subsetA[links_imp_subsetA < 0] = 0.
+    links_imp_subsetB[links_imp_subsetB < 0] = 0.
+
+    country_import =   line_imp_subsetA + line_imp_subsetB + links_imp_subsetA + links_imp_subsetB
+
+    grid_supply_cfe = (clean_country_resouces + country_import * import_cfe) / \
+                    (clean_country_resouces + dirty_country_resouces + country_import)
+# resources
+
+    print("Grid_supply_CFE has following stats:")
+    print(grid_supply_cfe.describe())
+
+    return grid_supply_cfe
 
 
 def solve_network(n, policy, penetration, tech_palette):
@@ -333,7 +385,7 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_dischargers = palette(tech_palette)[3]
 
     if policy == "res":
-        n_iterations = 1
+        n_iterations = 2
         res_gens = [name + " " + g for g in ci['res_techs']]
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
@@ -361,7 +413,7 @@ def solve_network(n, policy, penetration, tech_palette):
         gexport = get_var(n, "Link", "p")[name + " export"] # a series
         gimport = get_var(n, "Link", "p")[name + " import"] # a series
         grid_sum = join_exprs(linexpr((-n.snapshot_weightings["generators"],gexport),
-                                      (n.links.at[name + " import","efficiency"]*grid_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
+                                      (n.links.at[name + " import","efficiency"]*grid_supply_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
 
         lhs = gen_sum + '\n' + discharge_sum  + '\n' + charge_sum + '\n' + grid_sum
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
@@ -462,8 +514,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
     for i in range(n_iterations):
 
-        grid_cfe = grid_cfe_df[f"iteration {i}"]
-        grid_cfe[grid_cfe > 1] = 1.
+        grid_supply_cfe = grid_cfe_df[f"iteration {i}"]
 
         n.lopf(pyomo=False,
                extra_functionality=extra_functionality,
@@ -473,6 +524,7 @@ def solve_network(n, policy, penetration, tech_palette):
                solver_logfile=snakemake.log.solver)
 
         grid_cfe_df[f"iteration {i+1}"] = calculate_grid_cfe(n)
+        #print(grid_cfe_df)
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
@@ -481,7 +533,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p2')
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])

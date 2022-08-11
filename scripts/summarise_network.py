@@ -47,8 +47,9 @@ def summarise_network(n, policy, tech_palette):
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
 
+    #grid_cfe = grid_cfe_df[f"iteration {n_iterations}"]
     grid_cfe = grid_cfe_df[f"iteration {n_iterations-1}"]
-
+ 
     results = {}
     temp = {}
 
@@ -88,7 +89,7 @@ def summarise_network(n, policy, tech_palette):
     emis_rate = {}
     emissions = {}
     link_gen = n.links_t.p1.groupby(n.links.carrier,axis=1).sum()
-    emitters = ["CCGT", "OCGT", "coal", "lignite", "oil"]
+    emitters = snakemake.config['global']['emitters']
 
     for tech in emitters:
         if tech in link_gen.columns:
@@ -323,4 +324,6 @@ if __name__ == "__main__":
                               parse_dates=True)
     print(grid_cfe_df)
     
+
     summarise_network(n, policy, tech_palette)
+

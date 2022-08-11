@@ -4,12 +4,10 @@ solve_network: solve  #solve, skip
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-Biomass'
+run: 'test-CFE-DK-newnetwork'
 
 # from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
-#network_file: 'data/elec_s_37_lv1.5__Co2L0-3H-solar+p3_2030.nc'
-network_file: 'data/elec_s_37_lv1.0__3h-H-B-solar+p3_2030.nc'
-
+network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
@@ -18,24 +16,23 @@ scenario:
             ]
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep: ["DE1 0"]
-                  #  ["GB5 0", "IE5 0", "GB0 0"] #Ireland
+basenodes_to_keep: ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
+                  # ["DE1 0"]
+                  # ["GB5 0", "IE5 0", "GB0 0"] #Ireland
                   # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
 
 
-country_nodes: ["DE1 0"]
-               # ["IE5 0"] 
-               # ["DK1 0", "DK2 0"]
-country_res_target: 0.8
+country_nodes:  ["DK1 0", "DK2 0"] # ["IE5 0"] # 
+country_res_target: 1.2
 
-nodes_for_cfe:  ["DE1 0"]
+#nodes_for_cfe:  ["IE5 0"]
                 # ["IE5 0"] #["GB5 0", "IE5 0", "GB0 0"] 
                 # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
 
 
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery", 
                         #"urban central heat", # to add heating profile for CHP
-                        ]
+                        ]                  
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
                   "AC", #lines
@@ -62,18 +59,15 @@ global:
   co2_price: 130 #EUR/tCO2
   grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop", "hydro"]
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop","nuclear", "hydro"]
-
+  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"] #add biomass when ready
 
 #data center
 ci:
   name: "google"
-  node: "DE1 0"  #"IE5 0"
-  load: 1000.
-  #clean_techs: ["onwind", "solar"]  #clean_techs: ["onwind", "solar", "adv_nuclear"] # "green hydrogen OCGT"
+  node: "DK1 0"  #"IE5 0"
+  load: 250.
   res_techs: ["onwind","solar"]
-  #storage_techs: ["battery", "hydrogen"]
-  #storage_chargers: ["battery charger", "H2 Electrolysis"]
-  #storage_dischargers: ["battery discharger", "H2 Fuel Cell"]
+
 
 # for calculation of system expansion beyond CI node in pypsa-eur-sec 2030 brownfield network
 exp_generators: ['offwind-ac-2030', 'offwind-dc-2030', 'onwind-2030', 'solar-2030', 'solar rooftop-2030']
