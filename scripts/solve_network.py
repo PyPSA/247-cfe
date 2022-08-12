@@ -102,7 +102,7 @@ def nuclear_policy(n):
 
 
 def palette(tech_palette):
-    """Define technology palette based on wildcard value"""
+    """Define technology palette at CI node based on wildcard value"""
 
     if tech_palette == 'p1':
         clean_techs = ["onwind", "solar"]
@@ -455,13 +455,30 @@ def solve_network(n, policy, penetration, tech_palette):
         grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
         country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
+        country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
+        country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
 
-
-        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
+        #res_gens = n.generators_t.p[country_res_gens].sum(axis=1)
+        #res_links = (- n.links_t.p1[country_res_links].sum(axis=1))
+        #res_sus = n.storage_units_t.p[country_res_storage_units].sum(axis=1)
+        
+        weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
                                   index = n.snapshots,
                                   columns = country_res_gens)
+        weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
+                                  index = n.snapshots,
+                                  columns = country_res_links)
+        weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
+                                  index = n.snapshots,
+                                  columns = country_res_storage_units)
 
-        lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[country_res_gens]))) # single line sum
+        gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
+        links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
+        sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
+        lhs_temp = pd.concat([gens, links, sus], axis=1)
+
+        lhs = join_exprs(lhs_temp)
+
         total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
 
         logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
