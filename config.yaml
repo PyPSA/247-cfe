@@ -4,10 +4,11 @@ solve_network: solve  #solve, skip
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-CFE-DK-newnetwork'
+run: 'test-DK-biomasstoclean'
 
-# from ../pypsa-eur-sec/results/220107-google/prenetworks-brownfield
+# from ../pypsa-eur-sec/results/.../prenetworks-brownfield
 network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
+
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
@@ -44,9 +45,10 @@ carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","o
                   "electricity distribution grid",
                   "H2 Store","co2","co2 stored","battery","home battery", #Stores
                   "electricity",  #Loads | "industry electricity" 
-                  "urban central solid biomass CHP" #BIOMASS
+                  "urban central solid biomass CHP",
+                  "solid biomass" #to keep store with biomass potentials
                     ]  
-additional_nodes: ["EU oil","EU gas","EU coal", "EU uranium", "co2 atmosphere","co2 stored",
+additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "co2 atmosphere","co2 stored",
                    "EU solid biomass"] #BIOMASS
 nodes_with_nucsban: ["DE1 0"]
 
@@ -58,8 +60,9 @@ global:
   co2_share: 0.5 #pu  - rough target for 2030
   co2_price: 130 #EUR/tCO2
   grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop", "hydro"]
-  grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop","nuclear", "hydro"]
-  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"] #add biomass when ready
+  grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop",
+                    "hydro", "nuclear", "urban central solid biomass CHP"]
+  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
 
 #data center
 ci:
