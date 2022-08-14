@@ -119,7 +119,7 @@ def ci_emisrate():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    (df).loc['ci_emission_rate'].plot(kind="bar",
+    (df).loc['ci_emission_rate_true'].plot(kind="bar",
                             ax=ax)
 
     ax.grid()

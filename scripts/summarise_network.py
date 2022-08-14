@@ -1,4 +1,5 @@
 
+from unittest import result
 import pypsa, numpy as np, pandas as pd
 import yaml
 from solve_network import palette
@@ -33,7 +34,6 @@ def summarise_network(n, policy, tech_palette):
     name = ci['name']
     node = ci['node']
 
-    clean_techs = clean_techs
     clean_gens = [name + " " + g for g in clean_techs]
     clean_dischargers = [name + " " + g for g in storage_dischargers]
     clean_chargers = [name + " " + g for g in storage_chargers]
@@ -45,9 +45,6 @@ def summarise_network(n, policy, tech_palette):
 
     grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-
-
-    #grid_cfe = grid_cfe_df[f"iteration {n_iterations}"]
     grid_cfe = grid_cfe_df[f"iteration {n_iterations-1}"]
  
     results = {}
@@ -55,9 +52,12 @@ def summarise_network(n, policy, tech_palette):
 
     results['objective'] = n.objective
 
+    # 1: Generation & imports at C&I node
+
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
     if policy == "cfe":
-        p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
+        p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) \
+                    - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
     else:
         p_storage = pd.Series(0.,n.snapshots)   
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
@@ -84,54 +84,94 @@ def summarise_network(n, policy, tech_palette):
     results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
 
 
-    # compute grid average emission rate
-    generation = {} #MWhth
-    emis_rate = {}
-    emissions = {}
-    link_gen = n.links_t.p1.groupby(n.links.carrier,axis=1).sum()
+    # 2: compute grid average emission rate
+
     emitters = snakemake.config['global']['emitters']
 
-    for tech in emitters:
-        if tech in link_gen.columns:
-            generation[f'{tech}'] = n.links_t.p0.groupby(n.links.carrier,axis=1).sum()[f'{tech}'].sum()
-            emis_rate[f'{tech}'] = n.links.loc[n.links.index.str.contains(f'{tech}')].efficiency2[0]
-            emissions[f'{tech}'] = generation[f'{tech}'] * emis_rate[f'{tech}']
-    
-    # both nominator and denominator are not scaled by snapshots
-    results['system_emission_rate'] = sum(emissions.values()) / n.loads_t.p[grid_loads].sum(axis=1).sum()
-
-
-    # compute emissions rate of 24/7 participating C&I
-    generation_h = pd.DataFrame() #MWhth
-    gen_emissions_h = pd.DataFrame()
-
-    for tech in emitters:
-        if tech in link_gen.columns:
-            generation_h[f'{tech}'] = (n.links_t.p0.groupby(n.links.carrier,axis=1).sum())[f'{tech}']
-            gen_emissions_h[f'{tech}'] = generation_h[f'{tech}'] * emis_rate[f'{tech}']
-    
-    system_emissions_h = gen_emissions_h.sum(axis=1)
-    system_erate_h = system_emissions_h / n.loads_t.p[grid_loads].sum(axis=1)
-    ci_imported_co2_h = system_erate_h * (-n.links_t.p1[name + " import"].multiply(n.snapshot_weightings["generators"],axis=0))
-    results['ci_emission_rate'] = ci_imported_co2_h.sum() / p_demand.sum()
-
-    # ci_emission_rate_new should be equal to ci_emission_rate
     fossil_links = n.links.index[n.links.carrier.isin(emitters)]
     hourly_emissions = n.links_t.p0[fossil_links].multiply(n.links.efficiency2[fossil_links],axis=1).sum(axis=1)
     load = n.loads_t.p[grid_loads].sum(axis=1)
-    emissions_factor = hourly_emissions/load
-    results['ci_emission_rate_new'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
 
-    country_fossil_links = n.links.index[n.links.carrier.isin(emitters) & n.links.bus1.isin(snakemake.config["country_nodes"])]
-    country_loads = n.loads.index[n.loads.index.isin(snakemake.config["country_nodes"])]
-    country_hourly_emissions = n.links_t.p0[country_fossil_links].multiply(n.links.efficiency2[country_fossil_links],axis=1).sum(axis=1)
-    load = n.loads_t.p[country_loads].sum(axis=1)
-    emissions_factor = country_hourly_emissions/load
-    results['ci_emission_rate_local'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
-    results['system_emissions_local'] = (country_hourly_emissions*n.snapshot_weightings["generators"]).sum()
+    results['system_emissions'] = hourly_emissions.sum() 
+    results['system_emission_rate'] = hourly_emissions.sum() / load.sum()
 
 
-    # Storing invested capacities at CI node
+    # 3: compute emissions & emission rates
+    
+    country = snakemake.config['ci']['node']
+    grid_clean_techs = snakemake.config['global']['grid_clean_techs']
+
+    #Careful: clean_techs (at C&I node) != grid_clean_techs (rest of system)
+    #3.1: ci_emission_rate based on Princeton (considering network congestions)
+
+    rest_system_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
+    country_buses = n.buses.index[n.buses.index.str.contains(country)]
+
+    clean_grid_generators = n.generators.index[n.generators.bus.isin(rest_system_buses) & n.generators.carrier.isin(grid_clean_techs)]
+    clean_grid_links = n.links.index[n.links.bus1.isin(rest_system_buses) & n.links.carrier.isin(grid_clean_techs)]
+    clean_grid_storage_units = n.storage_units.index[n.storage_units.bus.isin(rest_system_buses) & n.storage_units.carrier.isin(grid_clean_techs)]
+    dirty_grid_links = n.links.index[n.links.bus1.isin(rest_system_buses) & n.links.carrier.isin(emitters)]
+
+    clean_country_generators = n.generators.index[n.generators.bus.isin(country_buses) & n.generators.carrier.isin(grid_clean_techs)]
+    clean_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(grid_clean_techs)]
+    clean_country_storage_units = n.storage_units.index[n.storage_units.bus.isin(country_buses) & n.storage_units.carrier.isin(grid_clean_techs)]
+    dirty_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(emitters)]
+
+    country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
+
+    clean_grid_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
+    clean_grid_ls = (- n.links_t.p1[clean_grid_links].sum(axis=1))
+    clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
+    clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
+    dirty_grid_resources = (- n.links_t.p1[dirty_grid_links].sum(axis=1))
+    
+    clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
+    clean_country_ls = (- n.links_t.p1[clean_country_links].sum(axis=1))
+    clean_country_sus = n.storage_units_t.p[clean_country_storage_units].sum(axis=1)
+    clean_country_resources = clean_country_gens + clean_country_ls + clean_country_sus
+    dirty_country_resources = (- n.links_t.p1[dirty_country_links].sum(axis=1))
+
+    line_imp_subsetA = n.lines_t.p1.loc[:,n.lines.bus0.str.contains(country)].sum(axis=1)
+    line_imp_subsetB = n.lines_t.p0.loc[:,n.lines.bus1.str.contains(country)].sum(axis=1)
+    line_imp_subsetA[line_imp_subsetA < 0] = 0.
+    line_imp_subsetB[line_imp_subsetB < 0] = 0.
+
+    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(country) & 
+                        (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
+    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(country) & 
+                        (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
+    links_imp_subsetA[links_imp_subsetA < 0] = 0.
+    links_imp_subsetB[links_imp_subsetB < 0] = 0.
+
+    country_import =   line_imp_subsetA + line_imp_subsetB + links_imp_subsetA + links_imp_subsetB
+
+    grid_hourly_emissions = n.links_t.p0[dirty_grid_links].multiply(n.links.efficiency2[dirty_grid_links],axis=1).sum(axis=1)
+    
+    grid_emission_rate =  grid_hourly_emissions / (clean_grid_resources + dirty_grid_resources)
+
+    country_hourly_emissions = n.links_t.p0[dirty_country_links].multiply(n.links.efficiency2[dirty_country_links],axis=1).sum(axis=1)
+
+    grid_supply_emission_rate = (country_hourly_emissions + country_import*grid_emission_rate) / \
+                                (clean_country_resources + dirty_country_resources + country_import)
+
+    ci_emissions_t = n.links_t.p0["google import"]*grid_supply_emission_rate
+    
+    results['ci_emission_rate_true'] = ci_emissions_t.sum() / n.loads_t.p["google load"].sum()
+
+    #3.2: considering only country node(local bidding zone) 
+    country_load = n.loads_t.p[country_loads].sum(axis=1)
+    emissions_factor_local = country_hourly_emissions / country_load
+    results['ci_emission_rate_local'] = (n.links_t.p0["google import"]*emissions_factor_local).sum()/n.loads_t.p["google load"].sum()
+
+    #3.3: Our original ci_emission_rate (ignoring network congestions)
+    emissions_factor = hourly_emissions / load #global average emissions
+    results['ci_emission_rate_myopic'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
+    
+    #3.3: Total CO2 emissions for 24/7 participating customers
+    results['ci_emissions'] = (ci_emissions_t*n.snapshot_weightings["generators"]).sum()
+
+
+    # 4: Storing invested capacities at CI node
     for tech in clean_techs:
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
 
@@ -303,7 +343,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p2')
+        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1')
 
     # When running via snakemake
 

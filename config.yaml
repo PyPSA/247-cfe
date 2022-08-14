@@ -4,7 +4,7 @@ solve_network: solve  #solve, skip
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-DK-biomasstoclean'
+run: 'test-IE-CFEFIX'
 
 # from ../pypsa-eur-sec/results/.../prenetworks-brownfield
 network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
@@ -12,19 +12,19 @@ network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
-            "p2", # onwind + solar + battery + LDES
-            "p3", # onwind + solar + battery + LDES + clean dispatchable gen
+            #"p2", # onwind + solar + battery + LDES
+            #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
 
 #parameters for stripping sector-coupled network
-basenodes_to_keep: ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
+basenodes_to_keep:  ["GB5 0", "IE5 0", "GB0 0"] #Ireland
                   # ["DE1 0"]
                   # ["GB5 0", "IE5 0", "GB0 0"] #Ireland
                   # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
 
 
-country_nodes:  ["DK1 0", "DK2 0"] # ["IE5 0"] # 
-country_res_target: 1.2
+country_nodes:  ["IE5 0"] # ["DK1 0", "DK2 0"]
+country_res_target: 0.8
 
 #nodes_for_cfe:  ["IE5 0"]
                 # ["IE5 0"] #["GB5 0", "IE5 0", "GB0 0"] 
@@ -59,7 +59,7 @@ global:
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
   co2_share: 0.5 #pu  - rough target for 2030
   co2_price: 130 #EUR/tCO2
-  grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop", "hydro"]
+  grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop", "hydro","urban central solid biomass CHP"]
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar","solar rooftop",
                     "hydro", "nuclear", "urban central solid biomass CHP"]
   emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
@@ -67,8 +67,8 @@ global:
 #data center
 ci:
   name: "google"
-  node: "DK1 0"  #"IE5 0"
-  load: 250.
+  node:  "IE5 0"  # "DK1 0"  #"IE5 0"
+  load: 1000.
   res_techs: ["onwind","solar"]
 
 

@@ -331,19 +331,19 @@ def calculate_grid_cfe(n):
     clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
     clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
     
-    dirty_grid_resouces = (- n.links_t.p1[dirty_grid_links].sum(axis=1))
+    dirty_grid_resources = (- n.links_t.p1[dirty_grid_links].sum(axis=1))
 
     #grid_cfe =  clean_grid_resources / n.loads_t.p[grid_loads].sum(axis=1)
     #grid_cfe[grid_cfe > 1] = 1.
 
-    import_cfe =  clean_grid_resources / (clean_grid_resources + dirty_grid_resouces)
+    import_cfe =  clean_grid_resources / (clean_grid_resources + dirty_grid_resources)
 
     clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
     clean_country_ls = (- n.links_t.p1[clean_country_links].sum(axis=1))
     clean_country_sus = n.storage_units_t.p[clean_country_storage_units].sum(axis=1)
-    clean_country_resouces = clean_country_gens + clean_country_ls + clean_country_sus
+    clean_country_resources = clean_country_gens + clean_country_ls + clean_country_sus
 
-    dirty_country_resouces = (- n.links_t.p1[dirty_country_links].sum(axis=1))
+    dirty_country_resources = (- n.links_t.p1[dirty_country_links].sum(axis=1))
 
     ##################
     # Country imports | 
@@ -364,9 +364,9 @@ def calculate_grid_cfe(n):
 
     country_import =   line_imp_subsetA + line_imp_subsetB + links_imp_subsetA + links_imp_subsetB
 
-    grid_supply_cfe = (clean_country_resouces + country_import * import_cfe) / \
-                    (clean_country_resouces + dirty_country_resouces + country_import)
-# resources
+    grid_supply_cfe = (clean_country_resources + country_import * import_cfe) / \
+                    (clean_country_resources + dirty_country_resources + country_import)
+
 
     print("Grid_supply_CFE has following stats:")
     print(grid_supply_cfe.describe())
