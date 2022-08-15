@@ -68,7 +68,7 @@ def geoscope(zone):
         d['node'] = "IE5 0" 
     elif zone == 'Denmark':
         d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
-        d['country_nodes:'] = ["DK1 0", "DK2 0"]
+        d['country_nodes'] = ["DK1 0", "DK2 0"]
         d['country_res_target'] = 1.2
         d['node'] = "DK1 0"
     else: 
@@ -157,7 +157,7 @@ def nuclear_policy(n):
     '''
     for node in snakemake.config['nodes_with_nucsban']:
         if node in geoscope(zone)['basenodes_to_keep']:
-            nn.links.loc[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
+            n.links.loc[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
 
 
 def biomass_potential(n):
@@ -591,7 +591,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1')
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Ireland')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -608,7 +608,7 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     print(f"solving network for palette {tech_palette}")
 
-    zone = snakemake.config['scenario']['zone']
+    zone = snakemake.wildcards.zone
     print(f"solving network for bidding zone {zone}")
 
     # Compute technology costs

@@ -250,11 +250,11 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p1')
+        snakemake = mock_snakemake('plot_summary', palette='p2', zone='Ireland')
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
-    zone = snakemake.config['scenario']['zone']
+    zone = snakemake.wildcards.zone
     node = geoscope(zone)['node']
     name = snakemake.config['ci']['name']
 
@@ -320,3 +320,4 @@ if __name__ == "__main__":
     global_emissions()
     ci_emisrate()
     system_capacity()
+    

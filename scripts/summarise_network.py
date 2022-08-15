@@ -342,7 +342,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1')
+        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p2', zone='Ireland')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
@@ -352,7 +352,7 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     print(f"summarising network for palette {tech_palette}")
 
-    zone = snakemake.config['scenario']['zone']
+    zone = snakemake.wildcards.zone
     print(f"solving network for bidding zone {zone}")
 
     #Read data

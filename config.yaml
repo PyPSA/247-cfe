@@ -4,7 +4,7 @@ solve_network: solve  #'solve' or 'skip'
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-IE-scenarios'
+run: 'test-swildcard'
 
 # from ../pypsa-eur-sec/results/.../prenetworks-brownfield
 network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
@@ -13,10 +13,12 @@ network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
-            #"p2", # onwind + solar + battery + LDES
-            #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+            "p2", # onwind + solar + battery + LDES
+            "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: 'Ireland'
+  zone: ["Ireland",
+        "Denmark",
+        ]
 
 
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery"] 
