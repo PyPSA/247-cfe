@@ -1,13 +1,14 @@
 logging_level: INFO
-solve_network: solve  #solve, skip
+solve_network: solve  #'solve' or 'skip'
 
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
-run: 'test-IE-CFEFIX'
+run: 'test-IE-scenarios'
 
 # from ../pypsa-eur-sec/results/.../prenetworks-brownfield
 network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
+
 
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
@@ -15,25 +16,11 @@ scenario:
             #"p2", # onwind + solar + battery + LDES
             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-
-#parameters for stripping sector-coupled network
-basenodes_to_keep:  ["GB5 0", "IE5 0", "GB0 0"] #Ireland
-                  # ["DE1 0"]
-                  # ["GB5 0", "IE5 0", "GB0 0"] #Ireland
-                  # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"] #Nordic
+  zone: 'Ireland'
 
 
-country_nodes:  ["IE5 0"] # ["DK1 0", "DK2 0"]
-country_res_target: 0.8
-
-#nodes_for_cfe:  ["IE5 0"]
-                # ["IE5 0"] #["GB5 0", "IE5 0", "GB0 0"] 
-                # ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
-
-
-node_suffixes_to_keep: ["H2","battery","low voltage","home battery", 
-                        #"urban central heat", # to add heating profile for CHP
-                        ]                  
+node_suffixes_to_keep: ["H2","battery","low voltage","home battery"] 
+                        #+ "urban central heat" to add heating profile for CHP                               
 carrier_to_keep: ["offwind","offwind-ac","offwind-dc","solar","solar rooftop","onwind","ror", #generators
                   "PHS","hydro", #storage units
                   "AC", #lines
@@ -64,10 +51,10 @@ global:
                     "hydro", "nuclear", "urban central solid biomass CHP"]
   emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
 
+
 #data center
 ci:
   name: "google"
-  node:  "IE5 0"  # "DK1 0"  #"IE5 0"
   load: 1000.
   res_techs: ["onwind","solar"]
 
@@ -86,6 +73,7 @@ costs:
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
   price_green_hydrogen: 3 #EUR/kg
   adv_nuclear_overnight: 7138 # $/kW 2030 CAPEX
+
 
 solving:
   #tmpdir: "path/to/tmp"

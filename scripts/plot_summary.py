@@ -4,7 +4,8 @@ import numpy as np
 #allow plotting without Xwindows
 import matplotlib
 matplotlib.use('Agg')
-from solve_network import palette
+
+from solve_network import palette, geoscope
 
 
 def used():
@@ -251,11 +252,11 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', palette='p1')
 
-    # When running via snakemake
-    ci = snakemake.config['ci']
-    name = ci['name']
-    node = ci['node']
+    #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
+    zone = snakemake.config['scenario']['zone']
+    node = geoscope(zone)['node']
+    name = snakemake.config['ci']['name']
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]

@@ -25,6 +25,59 @@ override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output",
 override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
 
 
+def palette(tech_palette):
+    '''
+    Define technology palette at CI node based on wildcard value
+    '''
+
+    if tech_palette == 'p1':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery"]
+        storage_chargers = ["battery charger"]
+        storage_dischargers = ["battery discharger"]
+    elif tech_palette == 'p2':
+        clean_techs = ["onwind", "solar"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    elif tech_palette == 'p3':
+        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        storage_techs = ["battery", "hydrogen"]
+        storage_chargers = ["battery charger", "H2 Electrolysis"]
+        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+    else: 
+        print(f"'palette' wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
+        sys.exit()
+
+    return clean_techs, storage_techs, storage_chargers, storage_dischargers
+
+
+def geoscope(zone):
+    '''
+    basenodes_to_keep -> geographical scope of the model
+    country_nodes -> scope for national RES policy constraint
+    country_res_target -> value for national RES policy constraint
+    node -> zone where C&I load is located
+    '''
+    d = dict(); 
+
+    if zone == 'Ireland':
+        d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
+        d['country_nodes'] = ["IE5 0"]
+        d['country_res_target'] = 0.8
+        d['node'] = "IE5 0" 
+    elif zone == 'Denmark':
+        d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
+        d['country_nodes:'] = ["DK1 0", "DK2 0"]
+        d['country_res_target'] = 1.2
+        d['node'] = "DK1 0"
+    else: 
+        print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
+        sys.exit()
+    
+    return d
+
+
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
     #set all asset costs and other parameters
@@ -66,8 +119,8 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
 
 def strip_network(n):
-    nodes_to_keep = snakemake.config['basenodes_to_keep'][:]
-    for b in snakemake.config['basenodes_to_keep']:
+    nodes_to_keep = geoscope(zone)['basenodes_to_keep']
+    for b in geoscope(zone)['basenodes_to_keep']:
         for s in snakemake.config['node_suffixes_to_keep']:
             nodes_to_keep.append(b + " " + s)
 
@@ -103,7 +156,7 @@ def nuclear_policy(n):
     remove demand for solid biomass from industrial processes from overall biomass potential
     '''
     for node in snakemake.config['nodes_with_nucsban']:
-        if node in snakemake.config['basenodes_to_keep']:
+        if node in geoscope(zone)['basenodes_to_keep']:
             nn.links.loc[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
 
 
@@ -113,33 +166,6 @@ def biomass_potential(n):
     '''
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_nom'] *= 0.45
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_initial'] *= 0.45
-
-
-def palette(tech_palette):
-    '''
-    Define technology palette at CI node based on wildcard value
-    '''
-
-    if tech_palette == 'p1':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery"]
-        storage_chargers = ["battery charger"]
-        storage_dischargers = ["battery discharger"]
-    elif tech_palette == 'p2':
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-    else: 
-        print(f"`palette` wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
-        sys.exit()
-
-    return clean_techs, storage_techs, storage_chargers, storage_dischargers
 
 
 def add_ci(n):
@@ -159,10 +185,9 @@ def add_ci(n):
             n.generators.at[f"EU {carrier}","marginal_cost"] += gl_policy['co2_price']*costs.at[carrier, 'CO2 intensity']
 
     #local C&I properties
-    ci = snakemake.config['ci']
-    name = ci['name']
-    node = ci['node']
-    load = ci['load']
+    name = snakemake.config['ci']['name']
+    load = snakemake.config['ci']['load']
+    node = geoscope(zone)['node']
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]
@@ -310,7 +335,7 @@ def add_ci(n):
 def calculate_grid_cfe(n):
 
     name = snakemake.config['ci']['name']
-    country = snakemake.config['ci']['node']
+    country = geoscope(zone)['node'] 
     grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
     country_buses = n.buses.index[n.buses.index.str.contains(country)]
 
@@ -391,7 +416,7 @@ def calculate_grid_cfe(n):
 
 
 def solve_network(n, policy, penetration, tech_palette):
-
+    
     ci = snakemake.config['ci']
     name = ci['name']
 
@@ -464,7 +489,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
     def country_res_constraints(n):
 
-        grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['country_nodes'])]
+        grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone)['country_nodes'])]
 
         grid_res_techs = snakemake.config['global']['grid_res_techs']
 
@@ -494,12 +519,12 @@ def solve_network(n, policy, penetration, tech_palette):
         lhs_temp = pd.concat([gens, links, sus], axis=1)
 
         lhs = join_exprs(lhs_temp)
-
+        target = geoscope(zone)["country_res_target"]
         total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
 
         logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
 
-        con = define_constraints(n, lhs, '=', snakemake.config["country_res_target"]*total_load, 'countryRESconstraints','countryREStarget')
+        con = define_constraints(n, lhs, '=', target*total_load, 'countryRESconstraints','countryREStarget')
 
 
     def add_battery_constraints(n):
@@ -575,8 +600,7 @@ if __name__ == "__main__":
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
-    #Wildcards
-
+    #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
     print(f"solving network for policy {policy} and penetration {penetration}")
@@ -584,6 +608,8 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     print(f"solving network for palette {tech_palette}")
 
+    zone = snakemake.config['scenario']['zone']
+    print(f"solving network for bidding zone {zone}")
 
     # Compute technology costs
     Nyears = 1 # years in simulation

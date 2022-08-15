@@ -2,7 +2,7 @@
 from unittest import result
 import pypsa, numpy as np, pandas as pd
 import yaml
-from solve_network import palette
+from solve_network import palette, geoscope
 
 # from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
 override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
@@ -30,9 +30,8 @@ def summarise_network(n, policy, tech_palette):
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
 
-    ci = snakemake.config['ci']
-    name = ci['name']
-    node = ci['node']
+    name = snakemake.config['ci']['name']
+    node = geoscope(zone)['node']
 
     clean_gens = [name + " " + g for g in clean_techs]
     clean_dischargers = [name + " " + g for g in storage_dischargers]
@@ -98,7 +97,7 @@ def summarise_network(n, policy, tech_palette):
 
     # 3: compute emissions & emission rates
     
-    country = snakemake.config['ci']['node']
+    country = geoscope(zone)['node']
     grid_clean_techs = snakemake.config['global']['grid_clean_techs']
 
     #Careful: clean_techs (at C&I node) != grid_clean_techs (rest of system)
@@ -345,8 +344,6 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1')
 
-    # When running via snakemake
-
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
@@ -355,7 +352,10 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     print(f"summarising network for palette {tech_palette}")
 
+    zone = snakemake.config['scenario']['zone']
+    print(f"solving network for bidding zone {zone}")
 
+    #Read data
     n = pypsa.Network(snakemake.input.network,
                       override_component_attrs=override_component_attrs)
 
