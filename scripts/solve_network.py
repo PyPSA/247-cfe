@@ -91,26 +91,34 @@ def strip_network(n):
 
 
 def shutdown_lineexp(n):
+    '''
+    remove line expansion option
+    '''
     n.lines.s_nom_extendable = False
-    n.links[n.links.carrier=='DC'].p_nom_extendable = False
+    n.links.loc[n.links.carrier=='DC', 'p_nom_extendable'] = False
 
 
 def nuclear_policy(n):
+    '''
+    remove demand for solid biomass from industrial processes from overall biomass potential
+    '''
     for node in snakemake.config['nodes_with_nucsban']:
         if node in snakemake.config['basenodes_to_keep']:
-            n.links.p_nom[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear'))] = 0
+            nn.links.loc[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
 
 
 def biomass_potential(n):
     '''
-    remove demand for solid biomass from industrial processes from overall biomass potential
+    remove solid biomass demand for industrial processes from overall biomass potential
     '''
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_nom'] *= 0.45
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_initial'] *= 0.45
 
 
 def palette(tech_palette):
-    """Define technology palette at CI node based on wildcard value"""
+    '''
+    Define technology palette at CI node based on wildcard value
+    '''
 
     if tech_palette == 'p1':
         clean_techs = ["onwind", "solar"]
