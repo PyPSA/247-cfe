@@ -101,6 +101,14 @@ def nuclear_policy(n):
             n.links.p_nom[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear'))] = 0
 
 
+def biomass_potential(n):
+    '''
+    remove demand for solid biomass from industrial processes from overall biomass potential
+    '''
+    n.stores.loc[n.stores.index=='EU solid biomass', 'e_nom'] *= 0.45
+    n.stores.loc[n.stores.index=='EU solid biomass', 'e_initial'] *= 0.45
+
+
 def palette(tech_palette):
     """Define technology palette at CI node based on wildcard value"""
 
@@ -583,7 +591,7 @@ if __name__ == "__main__":
         strip_network(n)
         shutdown_lineexp(n)
         nuclear_policy(n)
-
+        biomass_potential(n)
         add_ci(n)
 
         solve_network(n, policy, penetration, tech_palette)
