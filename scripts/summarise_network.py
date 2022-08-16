@@ -307,6 +307,8 @@ def summarise_network(n, policy, tech_palette):
     results["ci_total_cost"] = total_cost
     results["ci_average cost"] = results['ci_total_cost']/results['ci_demand_total']
 
+    results['zone_average_marginal_price'] = n.buses_t.marginal_price[node].sum() / len(n.snapshots)
+    
     # Storing system emissions and co2 price
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
@@ -342,7 +344,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p2', zone='Ireland')
+        snakemake = mock_snakemake('summarise_network', policy="cfe90", palette='p3', zone='Ireland')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
