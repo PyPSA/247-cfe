@@ -56,7 +56,6 @@ def geoscope(zone):
     '''
     basenodes_to_keep -> geographical scope of the model
     country_nodes -> scope for national RES policy constraint
-    country_res_target -> value for national RES policy constraint
     node -> zone where C&I load is located
     '''
     d = dict(); 
@@ -64,12 +63,10 @@ def geoscope(zone):
     if zone == 'Ireland':
         d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
         d['country_nodes'] = ["IE5 0"]
-        d['country_res_target'] = 0.8
         d['node'] = "IE5 0" 
     elif zone == 'Denmark':
         d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
         d['country_nodes'] = ["DK1 0", "DK2 0"]
-        d['country_res_target'] = 1.2
         d['node'] = "DK1 0"
     else: 
         print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
@@ -77,6 +74,25 @@ def geoscope(zone):
     
     return d
 
+
+def timescope(zone, year):
+    '''
+    country_res_target -> value of national RES policy constraint for {year} and {zone}
+    '''
+    
+    d = dict(); 
+
+    if year == '2030':
+        if zone == 'Ireland':
+            d['country_res_target'] = 0.8
+        elif zone == 'Denmark':
+            d['country_res_target'] = 1.2
+    else: 
+        print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
+        print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
+        sys.exit()
+
+    return d
 
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
@@ -519,7 +535,7 @@ def solve_network(n, policy, penetration, tech_palette):
         lhs_temp = pd.concat([gens, links, sus], axis=1)
 
         lhs = join_exprs(lhs_temp)
-        target = geoscope(zone)["country_res_target"]
+        target = timescope(zone, year)["country_res_target"]
         total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
 
         logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
@@ -610,6 +626,9 @@ if __name__ == "__main__":
 
     zone = snakemake.wildcards.zone
     print(f"solving network for bidding zone {zone}")
+
+    year = snakemake.config['scenario']['year']
+    print(f"solving network year {year}")
 
     # Compute technology costs
     Nyears = 1 # years in simulation
