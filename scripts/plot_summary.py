@@ -222,7 +222,7 @@ def system_capacity():
     links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
     dischargers = df.loc[["system_inv_" + t for t in exp_dischargers]].rename({"system_inv_" + t : t for t in exp_dischargers})
     chargers = df.loc[["system_inv_" + t for t in exp_chargers]].rename({"system_inv_" + t : t for t in exp_chargers})
-    chargers = chargers.drop(['battery_charger-2030']) # display only battery discharger capacity
+    chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
 
     ldf = pd.concat([gens, links, dischargers, chargers])
 
@@ -257,6 +257,7 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     node = geoscope(zone)['node']
     name = snakemake.config['ci']['name']
+    year = snakemake.config['scenario']['year']
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]
@@ -270,12 +271,17 @@ if __name__ == "__main__":
     clean_dischargers = [g for g in storage_dischargers]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
     
-    exp_generators = snakemake.config['exp_generators']
+    exp_generators = ['offwind-ac-%s' % year, 
+                    'offwind-dc-%s' % year, 
+                    'onwind-%s' % year, 
+                    'solar-%s' % year, 
+                    'solar rooftop-%s' % year]
+    exp_links = ['OCGT-%s' % year]
+    exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
+    exp_dischargers = ['battery discharger-%s' % year, 'H2 Fuel Cell-%s' % year]
+
     exp_generators = [item.replace(' ', '_') for item in exp_generators]
-    exp_links = snakemake.config['exp_links']
-    exp_chargers = snakemake.config['exp_chargers']
     exp_chargers = [item.replace(' ', '_') for item in exp_chargers]
-    exp_dischargers = snakemake.config['exp_dischargers']
     exp_dischargers = [item.replace(' ', '_') for item in exp_dischargers]
 
     #Assign colors
@@ -298,15 +304,15 @@ if __name__ == "__main__":
     }
 
     rename_system_techs = {
-        'offwind-ac-2030': 'offwind-ac',
-        'offwind-dc-2030': 'offwind-dc',
-        'onwind-2030': 'onwind',
-        'solar-2030': 'solar',
-        'solar_rooftop-2030': 'solar_rooftop',
-        'OCGT-2030': 'OCGT',
-        'battery_discharger-2030': 'battery_inverter',
-        'H2_Fuel_Cell-2030': 'hydrogen_fuel_cell',
-        'H2_Electrolysis-2030': 'hydrogen_electrolysis'
+        'offwind-ac-%s' % year: 'offwind-ac',
+        'offwind-dc-%s' % year: 'offwind-dc',
+        'onwind-%s' % year: 'onwind',
+        'solar-%s' % year: 'solar',
+        'solar_rooftop-%s' % year: 'solar_rooftop',
+        'OCGT-%s' % year: 'OCGT',
+        'battery_discharger-%s' % year: 'battery_inverter',
+        'H2_Fuel_Cell-%s' % year: 'hydrogen_fuel_cell',
+        'H2_Electrolysis-%s' % year: 'hydrogen_electrolysis'
     }
 
     df = pd.read_csv(snakemake.input.summary,

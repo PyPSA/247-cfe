@@ -2,7 +2,7 @@
 from unittest import result
 import pypsa, numpy as np, pandas as pd
 import yaml
-from solve_network import palette, geoscope
+from solve_network import palette, geoscope, timescope
 
 # from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
 override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
@@ -37,10 +37,17 @@ def summarise_network(n, policy, tech_palette):
     clean_dischargers = [name + " " + g for g in storage_dischargers]
     clean_chargers = [name + " " + g for g in storage_chargers]
 
-    exp_generators = snakemake.config['exp_generators']
-    exp_links = snakemake.config['exp_links']
-    exp_chargers = snakemake.config['exp_chargers']
-    exp_dischargers = snakemake.config['exp_dischargers']
+
+# for calculation of system expansion beyond CI node in pypsa-eur-sec brownfield network for {year}
+    exp_generators = ['offwind-ac-%s' % year, 
+                    'offwind-dc-%s' % year, 
+                    'onwind-%s' % year, 
+                    'solar-%s' % year, 
+                    'solar rooftop-%s' % year]
+    exp_links = ['OCGT-%s' % year]
+    exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
+    exp_dischargers = ['battery discharger-%s' % year, 'H2 Fuel Cell-%s' % year]
+
 
     grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
@@ -49,8 +56,11 @@ def summarise_network(n, policy, tech_palette):
     results = {}
     temp = {}
 
-    results['objective'] = n.objective
 
+    # Processing, calculating and storing model results
+    
+    results['objective'] = n.objective
+    
     # 1: Generation & imports at C&I node
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
@@ -82,7 +92,6 @@ def summarise_network(n, policy, tech_palette):
     results['ci_fraction_clean_used'] = results['ci_clean_used_total']/results['ci_demand_total']
     results['ci_fraction_clean_excess'] = results['ci_clean_excess_total']/results['ci_demand_total']
 
-
     # 2: compute grid average emission rate
 
     emitters = snakemake.config['global']['emitters']
@@ -93,7 +102,6 @@ def summarise_network(n, policy, tech_palette):
 
     results['system_emissions'] = hourly_emissions.sum() 
     results['system_emission_rate'] = hourly_emissions.sum() / load.sum()
-
 
     # 3: compute emissions & emission rates
     
@@ -169,8 +177,8 @@ def summarise_network(n, policy, tech_palette):
     #3.3: Total CO2 emissions for 24/7 participating customers
     results['ci_emissions'] = (ci_emissions_t*n.snapshot_weightings["generators"]).sum()
 
-
     # 4: Storing invested capacities at CI node
+
     for tech in clean_techs:
         results['ci_cap_' + tech] = n.generators.at[name + " " + tech,"p_nom_opt"]
 
@@ -188,8 +196,8 @@ def summarise_network(n, policy, tech_palette):
         else:
             results['ci_cap_' + discharger.replace(' ', '_')] = 0.
 
-
-    # Storing generation at CI node    
+    # Storing generation at CI node  
+    
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
@@ -199,8 +207,8 @@ def summarise_network(n, policy, tech_palette):
         else:
             results['ci_generation_' + discharger.replace(' ', '_')] = 0.
 
+    # 5: Storing invested capacities in the rest of energy system
 
-    # Storing invested capacities in the rest of energy system
     # Generators
     gen_expandable = n.generators[n.generators.p_nom_extendable == True] #all gens that can be expanded
     
@@ -230,12 +238,12 @@ def summarise_network(n, policy, tech_palette):
     for l in n.links[n.links.index.str.contains("home battery")].index:
         HV_links = HV_links.drop(l) #remove low voltage batteries 
 
-    batteries = HV_links[HV_links.index.str.contains(f"battery charger-2030")]
-    electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis-2030")]
+    batteries = HV_links[HV_links.index.str.contains(f"battery charger"+"-{}".format(year))]
+    electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis"+"-{}".format(year))]
     system_chargers = pd.concat([batteries, electrolysis])
 
-    inverters = HV_links[HV_links.index.str.contains(f"battery discharger-2030")]
-    fuelcells = HV_links[HV_links.index.str.contains(f"H2 Fuel Cell-2030")]
+    inverters = HV_links[HV_links.index.str.contains(f"battery discharger"+"-{}".format(year))]
+    fuelcells = HV_links[HV_links.index.str.contains(f"H2 Fuel Cell"+"-{}".format(year))]
     system_dischargers = pd.concat([inverters, fuelcells])
 
     for charger in exp_chargers:
@@ -250,8 +258,8 @@ def summarise_network(n, policy, tech_palette):
         results['system_inv_' + discharger.replace(' ', '_')] = temp['system_optcap_' + discharger] - system_dischargers.loc[system_dischargers.index.str.contains(f'{discharger}'), 'p_nom'].sum()
         results['system_inv_' + discharger.replace(' ', '_')] *= temp['eff_' + discharger]
 
+    # 6: Storing costs at CI node
 
-    # Storing costs at CI node
     total_cost = 0.
     for tech in clean_techs:
         results['ci_capital_cost_' + tech] = results['ci_cap_' + tech]*n.generators.at[name + " " + tech,"capital_cost"]
@@ -307,6 +315,8 @@ def summarise_network(n, policy, tech_palette):
     results["ci_total_cost"] = total_cost
     results["ci_average cost"] = results['ci_total_cost']/results['ci_demand_total']
 
+    # 7: Other calculations
+
     results['zone_average_marginal_price'] = n.buses_t.marginal_price[node].sum() / len(n.snapshots)
     
     # Storing system emissions and co2 price
@@ -331,7 +341,8 @@ def summarise_network(n, policy, tech_palette):
     else:
         results["co2_price"] = 0
 
-    # Saving resutls as ../summaries/{}.yaml
+    # 8: Saving resutls as ../summaries/{}.yaml
+
     for k in results:
         results[k] = float(results[k])
 
@@ -340,11 +351,12 @@ def summarise_network(n, policy, tech_palette):
     with open(snakemake.output.yaml, 'w') as outfile:
         yaml.dump(results, outfile)
 
+
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe90", palette='p3', zone='Ireland')
+        snakemake = mock_snakemake('summarise_network', policy="res100", palette='p1', zone='Ireland')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
@@ -355,7 +367,9 @@ if __name__ == "__main__":
     print(f"summarising network for palette {tech_palette}")
 
     zone = snakemake.wildcards.zone
-    print(f"solving network for bidding zone {zone}")
+    year = snakemake.config['scenario']['year']
+    print(f"summarising network for bidding zone {zone} and year {year}")
+
 
     #Read data
     n = pypsa.Network(snakemake.input.network,

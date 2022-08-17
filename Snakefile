@@ -71,8 +71,10 @@ rule make_summary:
 if config['solve_network'] == 'solve':
     rule solve_network:
         input:
-            network=config['network_file'],
-            costs=CDIR + "/costs_{}.csv".format(config['costs']['projection_year'])
+            network2030 = config['n_2030'],
+            network2025 = config['n_2025'],
+            costs2030=CDIR + "/costs_2030.csv",
+            costs2025=CDIR + "/costs_2025.csv"
         output:
             network=RDIR + "/networks/{zone}/{palette}/{policy}.nc",
             grid_cfe=RDIR + "/networks/{zone}/{palette}/{policy}.csv"

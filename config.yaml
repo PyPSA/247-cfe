@@ -3,14 +3,18 @@ solve_network: solve  #'solve' or 'skip'
 
 results_dir: 'results'
 costs_dir: '../technology-data/outputs'
+# from ../pypsa-eur-sec/results/<run>/prenetworks-brownfield
+n_2025: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2025.nc'
+n_2030: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
 
-run: 'test-swildcard'
 
-# from ../pypsa-eur-sec/results/.../prenetworks-brownfield
-network_file: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
+###################
+# Scenario controls
+
+run: 'test-2025-timescen'
 
 scenario:
-  policy: ["res100", "cfe80"] #"cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
+  policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
             #"p2", # onwind + solar + battery + LDES
             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
@@ -18,8 +22,11 @@ scenario:
   zone: ["Ireland",
         #"Denmark",
         ]
-  year: '2030' #2025 or 2030 | controls both the brownfield fleet and costs
+  year: '2025' #2025 or 2030 | controls both the brownfield fleet and tech costs projection
 
+
+###################
+# Fixed settings
 
 node_suffixes_to_keep: ["H2","battery","low voltage","home battery"] 
                         #+ "urban central heat" to add heating profile for CHP                               
@@ -42,7 +49,6 @@ additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "co
 nodes_with_nucsban: ["DE1 0"]
 
 
-#global policy
 global:
   policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
@@ -61,15 +67,7 @@ ci:
   res_techs: ["onwind","solar"]
 
 
-# for calculation of system expansion beyond CI node in pypsa-eur-sec 2030 brownfield network
-exp_generators: ['offwind-ac-2030', 'offwind-dc-2030', 'onwind-2030', 'solar-2030', 'solar rooftop-2030']
-exp_links: ['OCGT-2030']
-exp_chargers: ["battery charger-2030", "H2 Electrolysis-2030"]
-exp_dischargers: ["battery discharger-2030", "H2 Fuel Cell-2030"]
-
-
-costs:
-  projection_year: 2030
+costs: 
   lifetime: 25 #default lifetime
   discountrate: 0.07  # From a Lion Hirth paper, also reflects average of Noothout et al 2016
   USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501

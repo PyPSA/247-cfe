@@ -82,11 +82,21 @@ def timescope(zone, year):
     
     d = dict(); 
 
+    # I wonder if this can be done more pythonic
     if year == '2030':
+        d['network_file']  = snakemake.input.network2030
+        d['costs_projection'] = snakemake.input.costs2030
         if zone == 'Ireland':
             d['country_res_target'] = 0.8
         elif zone == 'Denmark':
             d['country_res_target'] = 1.2
+    elif year == '2025':
+        d['network_file']  = snakemake.input.network2025
+        d['costs_projection'] = snakemake.input.costs2025
+        if zone == 'Ireland':
+            d['country_res_target'] = 0.5 #dummy value for now
+        elif zone == 'Denmark':
+            d['country_res_target'] = 0.8 #dummy value for now
     else: 
         print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
         print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
@@ -253,7 +263,7 @@ def add_ci(n):
     for carrier in ["onwind","solar"]:
         if carrier not in clean_techs:
             continue
-        gen_template = node + " " + carrier+"-2030" #"-2030" fix for a pypsa-eur-sec brownfield 2030 network
+        gen_template = node+" "+carrier+"-{}".format(year) #"-2030" fix for a pypsa-eur-sec brownfield 2030 network
         n.add("Generator",
               f"{name} {carrier}",
               carrier=carrier,
@@ -281,8 +291,8 @@ def add_ci(n):
               e_cyclic=True,
               e_nom_extendable=True,
               carrier="battery",
-              capital_cost=n.stores.at[f"{node} battery"+"-2030", "capital_cost"],
-              lifetime=n.stores.at[f"{node} battery"+"-2030", "lifetime"]
+              capital_cost=n.stores.at[f"{node} battery"+"-{}".format(year), "capital_cost"],
+              lifetime=n.stores.at[f"{node} battery"+"-{}".format(year), "lifetime"]
               )
 
         n.add("Link",
@@ -290,10 +300,10 @@ def add_ci(n):
               bus0=name,
               bus1=f"{name} battery",
               carrier="battery charger",
-              efficiency=n.links.at[f"{node} battery charger"+"-2030", "efficiency"],
-              capital_cost=n.links.at[f"{node} battery charger"+"-2030", "capital_cost"],
+              efficiency=n.links.at[f"{node} battery charger"+"-{}".format(year), "efficiency"],
+              capital_cost=n.links.at[f"{node} battery charger"+"-{}".format(year), "capital_cost"],
               p_nom_extendable=True, 
-              lifetime=n.links.at[f"{node} battery charger"+"-2030", "lifetime"] 
+              lifetime=n.links.at[f"{node} battery charger"+"-{}".format(year), "lifetime"] 
               )
 
         n.add("Link",
@@ -301,10 +311,10 @@ def add_ci(n):
               bus0=f"{name} battery",
               bus1=name,
               carrier="battery discharger",
-              efficiency=n.links.at[f"{node} battery discharger"+"-2030", "efficiency"],
-              marginal_cost=n.links.at[f"{node} battery discharger"+"-2030", "marginal_cost"],
+              efficiency=n.links.at[f"{node} battery discharger"+"-{}".format(year), "efficiency"],
+              marginal_cost=n.links.at[f"{node} battery discharger"+"-{}".format(year), "marginal_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} battery discharger"+"-2030", "lifetime"]
+              lifetime=n.links.at[f"{node} battery discharger"+"-{}".format(year), "lifetime"]
               )
 
     if "hydrogen" in storage_techs and policy == "cfe":
@@ -330,10 +340,10 @@ def add_ci(n):
               bus0=name,
               bus1=f"{name} H2",
               carrier="H2 Electrolysis",
-              efficiency=n.links.at[f"{node} H2 Electrolysis"+"-2030", "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Electrolysis"+"-2030", "capital_cost"],
+              efficiency=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "capital_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} H2 Electrolysis"+"-2030", "lifetime"] 
+              lifetime=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "lifetime"] 
               )
 
         n.add("Link",
@@ -341,10 +351,10 @@ def add_ci(n):
               bus0=f"{name} H2",
               bus1=name,
               carrier="H2 Fuel Cell",
-              efficiency=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "capital_cost"],
+              efficiency=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "efficiency"],
+              capital_cost=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "capital_cost"],
               p_nom_extendable=True,
-              lifetime=n.links.at[f"{node} H2 Fuel Cell"+"-2030", "lifetime"]
+              lifetime=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
               )
 
 
@@ -612,10 +622,6 @@ if __name__ == "__main__":
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
 
-    # When running via snakemake
-    n = pypsa.Network(snakemake.input.network,
-                      override_component_attrs=override_component_attrs)
-
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100
@@ -630,9 +636,13 @@ if __name__ == "__main__":
     year = snakemake.config['scenario']['year']
     print(f"solving network year {year}")
 
+    # When running via snakemake
+    n = pypsa.Network(timescope(zone, year)['network_file'],
+                      override_component_attrs=override_component_attrs)
+
     # Compute technology costs
     Nyears = 1 # years in simulation
-    costs = prepare_costs(snakemake.input.costs,
+    costs = prepare_costs(timescope(zone, year)['costs_projection'],
                           snakemake.config['costs']['USD2013_to_EUR2013'],
                           snakemake.config['costs']['discountrate'],
                           Nyears,
