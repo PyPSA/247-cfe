@@ -94,9 +94,9 @@ def timescope(zone, year):
         d['network_file']  = snakemake.input.network2025
         d['costs_projection'] = snakemake.input.costs2025
         if zone == 'Ireland':
-            d['country_res_target'] = 0.5 #dummy value for now
-        elif zone == 'Denmark':
             d['country_res_target'] = 0.8 #dummy value for now
+        elif zone == 'Denmark':
+            d['country_res_target'] = 1.2 #dummy value for now
     else: 
         print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
         print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
@@ -617,7 +617,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Ireland')
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Ireland', year='2025')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -633,7 +633,7 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     print(f"solving network for bidding zone {zone}")
 
-    year = snakemake.config['scenario']['year']
+    year = snakemake.wildcards.year
     print(f"solving network year {year}")
 
     # When running via snakemake

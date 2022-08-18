@@ -16,13 +16,13 @@ run: 'test-2025-timescen'
 scenario:
   policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
-            #"p2", # onwind + solar + battery + LDES
-            #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+            "p2", # onwind + solar + battery + LDES
+            "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
   zone: ["Ireland",
-        #"Denmark",
+        "Denmark",
         ]
-  year: '2025' #2025 or 2030 | controls both the brownfield fleet and tech costs projection
+  year: ['2025', '2030'] # controls both the brownfield fleet and tech costs projection
 
 
 ###################
