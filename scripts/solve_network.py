@@ -124,9 +124,9 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
             'FOM': costs.loc['nuclear']['FOM'], 
             'VOM': costs.loc['nuclear']['VOM'], 
             'discount rate': costs.loc['nuclear']['discount rate'],
-            'efficiency': 0.37,             #higher than nuclear, see data
+            'efficiency': 0.36,             #higher than nuclear, see data
             'fuel': costs.loc['nuclear']['fuel'],
-            'investment': snakemake.config['costs']['adv_nuclear_overnight'] * 1e3 * USD_to_EUR,
+            'investment': snakemake.config['costs']['adv_nuclear_overnight'] * 1e3 * snakemake.config['costs']['USD2021_to_EUR2021'],
             'lifetime': 40.0
             }, name="adv_nuclear")
             
