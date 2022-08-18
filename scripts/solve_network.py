@@ -75,23 +75,28 @@ def timescope(zone, year):
     if year == '2030':
         d['network_file']  = snakemake.input.network2030
         d['costs_projection'] = snakemake.input.costs2030
+        d['coal_phaseout'] = snakemake.config['policy_2030']
         if zone == 'Ireland':
             d['country_res_target'] = 0.8
         elif zone == 'Denmark':
             d['country_res_target'] = 1.2
+
     elif year == '2025':
         d['network_file']  = snakemake.input.network2025
         d['costs_projection'] = snakemake.input.costs2025
+        d['coal_phaseout'] = snakemake.config['policy_2025']
         if zone == 'Ireland':
             d['country_res_target'] = 0.8 #dummy value for now
         elif zone == 'Denmark':
             d['country_res_target'] = 1.2 #dummy value for now
+
     else: 
         print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
         print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
         sys.exit()
 
     return d
+
 
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
@@ -168,11 +173,22 @@ def shutdown_lineexp(n):
 
 def nuclear_policy(n):
     '''
-    remove demand for solid biomass from industrial processes from overall biomass potential
+    remove nuclear PPs fleet for countries with nuclear ban policy
     '''
     for node in snakemake.config['nodes_with_nucsban']:
-        if node in geoscope(zone)['basenodes_to_keep']:
-            n.links.loc[(n.links['bus1'] == f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
+            n.links.loc[n.links['bus1'].str.contains(f'{node}') & (n.links.index.str.contains('nuclear')), 'p_nom'] = 0
+
+
+def coal_policy(n):
+    '''
+    remove coal PPs fleet for countries with coal phase-out policy for {year}
+    '''
+   
+    countries = timescope(zone, year)['coal_phaseout']
+
+    for country in countries:
+        n.links.loc[n.links['bus1'].str.contains(f'{country}') & (n.links.index.str.contains('coal')), 'p_nom'] = 0
+        n.links.loc[n.links['bus1'].str.contains(f'{country}') & (n.links.index.str.contains('lignite')), 'p_nom'] = 0
 
 
 def biomass_potential(n):
@@ -610,7 +626,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Ireland', year='2025')
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Denmark', year='2030')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -647,6 +663,7 @@ if __name__ == "__main__":
 
         shutdown_lineexp(n)
         nuclear_policy(n)
+        coal_policy(n)
         biomass_potential(n)
         cost_parametrization(n)
 

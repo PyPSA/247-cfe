@@ -15,16 +15,16 @@ run: 'test'
 
 #wildcards
 scenario:
-  policy: ["res100", "cfe80"] #"cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
+  policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
-            #"p2", # onwind + solar + battery + LDES
-            #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+            "p2", # onwind + solar + battery + LDES
+            "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
   zone: ["Ireland",
-        #"Denmark",
+         "Denmark",
         ]
   year: ['2025', 
-         #'2030'
+         '2030'
          ] # controls both the brownfield fleet and tech costs projection
 
 
@@ -58,7 +58,6 @@ carrier_to_keep: [ #generators
                   "electricity"  
                     ]  
 additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
-nodes_with_nucsban: ["DE1 0"]
 
 
 global:
@@ -85,6 +84,15 @@ costs:
   # price_uranium = 1.7 EUR/MWhth -> default  is 2.6
   #source 1: https://2022.entsos-tyndp-scenarios.eu/download/
   #gas futures EU: https://www.powernext.com/futures-market-data
+
+
+#national policies
+nodes_with_nucsban: ["DE1 0"]
+#countries with coal phase-out policy before 2025 and 2030
+#countries with the plan year 2025 + 'DE' are in the 2030 bracket
+#source: https://beyond-coal.eu/europes-coal-exit/
+policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
+policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK', 'DE']
 
 
 solving:
