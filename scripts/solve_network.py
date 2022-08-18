@@ -196,7 +196,7 @@ def add_ci(n):
         n.global_constraints.drop("CO2Limit",
                                   inplace=True)
         print("Setting CO2 price to",gl_policy['co2_price'])
-        for carrier in ["coal", "oil", "gas"]:
+        for carrier in ["coal", "oil", "gas", "lignite"]:
             n.generators.at[f"EU {carrier}","marginal_cost"] += gl_policy['co2_price']*costs.at[carrier, 'CO2 intensity']
 
     #local C&I properties
