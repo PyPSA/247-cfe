@@ -194,4 +194,3 @@ dependencies:
     - vresutils==0.3.1
     - wrapt==1.14.1
     - yte==1.2.2
-prefix: /home/iegor/miniconda3/envs/247-cfe

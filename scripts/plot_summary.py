@@ -96,6 +96,7 @@ def ci_generation():
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
                 transparent=True)
 
+
 def global_emissions():
 
     fig, ax = plt.subplots()
@@ -114,6 +115,7 @@ def global_emissions():
 
     fig.savefig(snakemake.output.used.replace("used.pdf","emissions.pdf"),
                 transparent=True)
+
 
 def ci_emisrate():
 
@@ -134,6 +136,7 @@ def ci_emisrate():
 
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_emisrate.pdf"),
                 transparent=True)
+
 
 def ci_cost():
 
@@ -172,6 +175,7 @@ def ci_cost():
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
                 transparent=True)
 
+
 def ci_costandrev():
 
     fig, ax = plt.subplots()
@@ -207,11 +211,11 @@ def ci_costandrev():
     ax.legend(loc="upper left",
               prop={"size":5})
 
-
     fig.tight_layout()
 
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_costandrev.pdf"),
                 transparent=True)
+
 
 def system_capacity():
 

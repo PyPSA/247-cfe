@@ -1,20 +1,9 @@
 
-from unittest import result
+
 import pypsa, numpy as np, pandas as pd
 import yaml
 from solve_network import palette, geoscope, timescope
-
-# from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
-override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
-override_component_attrs["Link"].loc["bus2"] = ["string",np.nan,np.nan,"2nd bus","Input (optional)"]
-override_component_attrs["Link"].loc["bus3"] = ["string",np.nan,np.nan,"3rd bus","Input (optional)"]
-override_component_attrs["Link"].loc["bus4"] = ["string",np.nan,np.nan,"4th bus","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency2"] = ["static or series","per unit",1.,"2nd bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency3"] = ["static or series","per unit",1.,"3rd bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency4"] = ["static or series","per unit",1.,"4th bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["p2"] = ["series","MW",0.,"2nd bus output","Output"]
-override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output","Output"]
-override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
+from _helpers import override_component_attrs
 
 
 def summarise_network(n, policy, tech_palette):
@@ -38,7 +27,7 @@ def summarise_network(n, policy, tech_palette):
     clean_chargers = [name + " " + g for g in storage_chargers]
 
 
-# for calculation of system expansion beyond CI node in pypsa-eur-sec brownfield network for {year}
+    # for calculation of system expansion beyond CI node in pypsa-eur-sec brownfield network for {year}
     exp_generators = ['offwind-ac-%s' % year, 
                     'offwind-dc-%s' % year, 
                     'onwind-%s' % year, 
@@ -373,7 +362,7 @@ if __name__ == "__main__":
 
     #Read data
     n = pypsa.Network(snakemake.input.network,
-                      override_component_attrs=override_component_attrs)
+                      override_component_attrs=override_component_attrs())
 
     grid_cfe_df = pd.read_csv(snakemake.input.grid_cfe,
                               index_col=0,

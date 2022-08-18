@@ -11,18 +11,7 @@ import sys
 pypsa.pf.logger.setLevel(logging.WARNING)
 
 from vresutils.benchmark import memory_logger
-
-# from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
-override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
-override_component_attrs["Link"].loc["bus2"] = ["string",np.nan,np.nan,"2nd bus","Input (optional)"]
-override_component_attrs["Link"].loc["bus3"] = ["string",np.nan,np.nan,"3rd bus","Input (optional)"]
-override_component_attrs["Link"].loc["bus4"] = ["string",np.nan,np.nan,"4th bus","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency2"] = ["static or series","per unit",1.,"2nd bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency3"] = ["static or series","per unit",1.,"3rd bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["efficiency4"] = ["static or series","per unit",1.,"4th bus efficiency","Input (optional)"]
-override_component_attrs["Link"].loc["p2"] = ["series","MW",0.,"2nd bus output","Output"]
-override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output","Output"]
-override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
+from _helpers import override_component_attrs
 
 
 def palette(tech_palette):
@@ -263,7 +252,7 @@ def add_ci(n):
     for carrier in ["onwind","solar"]:
         if carrier not in clean_techs:
             continue
-        gen_template = node+" "+carrier+"-{}".format(year) #"-2030" fix for a pypsa-eur-sec brownfield 2030 network
+        gen_template = node+" "+carrier+"-{}".format(year)
         n.add("Generator",
               f"{name} {carrier}",
               carrier=carrier,
@@ -331,8 +320,6 @@ def add_ci(n):
               carrier="H2 Store",
               capital_cost=costs.at["hydrogen storage underground","fixed"],
               lifetime=costs.at["hydrogen storage underground","lifetime"],
-              #capital_cost=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["capital_cost"],
-              #lifetime=n.stores.filter(like=(f'{node}'+' '+'H2 Store'), axis=0)["lifetime"]
               )        
 
         n.add("Link",
@@ -365,8 +352,6 @@ def calculate_grid_cfe(n):
     grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
     country_buses = n.buses.index[n.buses.index.str.contains(country)]
 
-    #grid_buses = n.buses.index[n.buses.location.isin(snakemake.config['nodes_for_cfe'])]
-
     clean_techs = pd.Index(snakemake.config['global']['grid_clean_techs'])
     emitters = pd.Index(snakemake.config['global']['emitters'])
 
@@ -389,9 +374,6 @@ def calculate_grid_cfe(n):
     logger.info(f"clean country links are {clean_country_links}")
     logger.info(f"clean country storage units are {clean_country_storage_units}")
     logger.info(f"dirty country links are {dirty_country_links}")
-
-    #grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-    country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
 
     clean_grid_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
     clean_grid_ls = (- n.links_t.p1[clean_grid_links].sum(axis=1))
@@ -509,7 +491,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
 
-        # (lhs '>=' penetration*total_load) ??
+        # (lhs '>=' penetration*total_load) ?
         con = define_constraints(n, lhs, '=', penetration*total_load, 'RESconstraints','REStarget')
 
 
@@ -592,7 +574,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
     formulation = snakemake.config['solving']['options']['formulation']
     solver_options = snakemake.config['solving']['solver']
-    solver_name = solver_options['algo']
+    solver_name = solver_options['name']
 
     grid_cfe_df = pd.DataFrame(0.,index=n.snapshots,columns=[f"iteration {i}" for i in range(n_iterations+1)])
 
@@ -638,9 +620,8 @@ if __name__ == "__main__":
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
-                      override_component_attrs=override_component_attrs)
+                      override_component_attrs=override_component_attrs())
 
-    # Compute technology costs
     Nyears = 1 # years in simulation
     costs = prepare_costs(timescope(zone, year)['costs_projection'],
                           snakemake.config['costs']['USD2013_to_EUR2013'],
