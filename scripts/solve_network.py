@@ -183,6 +183,17 @@ def biomass_potential(n):
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_initial'] *= 0.45
 
 
+def cost_parametrization(n):
+    '''
+    overwrite default price assumptions for primary energy carriers
+    only for virtual generators located in 'EU {carrier}' buses
+    '''
+
+    for carrier in ['lignite', 'coal', 'gas']:
+        n.generators.loc[n.generators.index.str.contains(f'EU {carrier}'), 'marginal_cost'] = snakemake.config['costs'][f'price_{carrier}']
+    #n.generators[n.generators.index.str.contains('EU')].T
+
+
 def add_ci(n):
     """Add C&I at its own node"""
 
@@ -633,9 +644,12 @@ if __name__ == "__main__":
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
         strip_network(n)
+
         shutdown_lineexp(n)
         nuclear_policy(n)
         biomass_potential(n)
+        cost_parametrization(n)
+
         add_ci(n)
 
         solve_network(n, policy, penetration, tech_palette)
