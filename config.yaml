@@ -20,8 +20,8 @@ scenario:
             "p2", # onwind + solar + battery + LDES
             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: ["Ireland",
-         "Denmark",
+  zone: ["IE",
+         "DK",
         ]
   year: ['2025', 
          '2030'
@@ -97,6 +97,18 @@ nodes_with_nucsban: ["DE1 0"]
 #source: https://beyond-coal.eu/europes-coal-exit/
 policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
 policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK', 'DE']
+#source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
+#data for NL is dummy
+res_target_2025:
+  IE: 0.47
+  DK: 0.9
+  DE: 0.45
+  NL: 0.35
+res_target_2030:
+  IE: 0.7
+  DK: 1.1
+  DE: 0.65
+  NL: 0.5
 
 
 solving:

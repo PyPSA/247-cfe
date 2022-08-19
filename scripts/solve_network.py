@@ -49,16 +49,16 @@ def geoscope(zone):
     '''
     d = dict(); 
 
-    if zone == 'Ireland':
+    if zone == 'IE':
         d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
         d['country_nodes'] = ["IE5 0"]
         d['node'] = "IE5 0" 
-    elif zone == 'Denmark':
+    elif zone == 'DK':
         d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
         d['country_nodes'] = ["DK1 0", "DK2 0"]
         d['node'] = "DK1 0"
     else: 
-        print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
+        print(f"'zone' wildcard must be one of 'IE', 'DK'. Now is {zone}.")
         sys.exit()
     
     return d
@@ -67,31 +67,23 @@ def geoscope(zone):
 def timescope(zone, year):
     '''
     country_res_target -> value of national RES policy constraint for {year} and {zone}
+    coal_phaseout -> countries that implement coal phase-out policy until {year}
+    network_file -> input file with pypsa-eur-sec brownfield network for {year}
+    costs_projection -> input file with technology costs for {year}
     '''
     
     d = dict(); 
 
-    # I wonder if this can be done more pythonic
+    d['country_res_target'] = snakemake.config[f'res_target_{year}'][f'{zone}']
+    d['coal_phaseout'] = snakemake.config[f'policy_{year}']
+
     if year == '2030':
         d['network_file']  = snakemake.input.network2030
         d['costs_projection'] = snakemake.input.costs2030
-        d['coal_phaseout'] = snakemake.config['policy_2030']
-        if zone == 'Ireland':
-            d['country_res_target'] = 0.8
-        elif zone == 'Denmark':
-            d['country_res_target'] = 1.2
-
     elif year == '2025':
         d['network_file']  = snakemake.input.network2025
         d['costs_projection'] = snakemake.input.costs2025
-        d['coal_phaseout'] = snakemake.config['policy_2025']
-        if zone == 'Ireland':
-            d['country_res_target'] = 0.8 #dummy value for now
-        elif zone == 'Denmark':
-            d['country_res_target'] = 1.2 #dummy value for now
-
     else: 
-        print(f"'zone' wildcard must be one of 'Ireland', 'Denmark'. Now is {zone}.")
         print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
         sys.exit()
 
@@ -626,7 +618,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='Denmark', year='2030')
+        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='IE', year='2025')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])

@@ -345,7 +345,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1', zone='Ireland', year='2025')
+        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1', zone='IE', year='2025')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
