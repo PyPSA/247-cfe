@@ -20,7 +20,7 @@ def summarise_network(n, policy, tech_palette):
         n_iterations = snakemake.config['solving']['options']['n_iterations']
 
     name = snakemake.config['ci']['name']
-    node = geoscope(zone)['node']
+    node = geoscope(zone, area)['node']
 
     clean_gens = [name + " " + g for g in clean_techs]
     clean_dischargers = [name + " " + g for g in storage_dischargers]
@@ -94,7 +94,7 @@ def summarise_network(n, policy, tech_palette):
 
     # 3: compute emissions & emission rates
     
-    country = geoscope(zone)['node']
+    country = geoscope(zone, area)['node']
     grid_clean_techs = snakemake.config['global']['grid_clean_techs']
 
     #Careful: clean_techs (at C&I node) != grid_clean_techs (rest of system)
@@ -353,12 +353,14 @@ if __name__ == "__main__":
     print(f"summarising network for policy {policy} and penetration {penetration}")
 
     tech_palette = snakemake.wildcards.palette
-    print(f"summarising network for palette {tech_palette}")
+    print(f"summarising network for palette: {tech_palette}")
 
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    print(f"summarising network for bidding zone {zone} and year {year}")
+    print(f"summarising network for bidding zone: {zone} and year: {year}")
 
+    area = snakemake.config['area']
+    print(f"solving with geographcial scope: {area}")
 
     #Read data
     n = pypsa.Network(snakemake.input.network,

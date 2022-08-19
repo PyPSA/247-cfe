@@ -44,7 +44,7 @@ def palette(tech_palette):
     return clean_techs, storage_techs, storage_chargers, storage_dischargers
 
 
-def geoscope(zone):
+def geoscope(zone, area):
     '''
     basenodes_to_keep -> geographical scope of the model
     country_nodes -> scope for national RES policy constraint
@@ -74,9 +74,12 @@ def geoscope(zone):
         d['node'] = 'NL1 0'
 
     else: 
-        print(f"'zone' wildcard must be one of 'IE', 'DK'. Now is {zone}.")
+        print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL'. Now is {zone}.")
         sys.exit()
     
+    if area == 'EU': 
+        d['basenodes_to_keep'] = snakemake.config['nodes_all']
+
     return d
 
 
@@ -147,8 +150,8 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
 
 def strip_network(n):
-    nodes_to_keep = geoscope(zone)['basenodes_to_keep']
-    for b in geoscope(zone)['basenodes_to_keep']:
+    nodes_to_keep = geoscope(zone, area)['basenodes_to_keep']
+    for b in geoscope(zone, area)['basenodes_to_keep']:
         for s in snakemake.config['node_suffixes_to_keep']:
             nodes_to_keep.append(b + " " + s)
 
@@ -237,7 +240,7 @@ def add_ci(n):
     #local C&I properties
     name = snakemake.config['ci']['name']
     load = snakemake.config['ci']['load']
-    node = geoscope(zone)['node']
+    node = geoscope(zone, area)['node']
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]
@@ -383,7 +386,7 @@ def add_ci(n):
 def calculate_grid_cfe(n):
 
     name = snakemake.config['ci']['name']
-    country = geoscope(zone)['node'] 
+    country = geoscope(zone, area)['node'] 
     grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
     country_buses = n.buses.index[n.buses.index.str.contains(country)]
 
@@ -532,7 +535,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
     def country_res_constraints(n):
 
-        grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone)['country_nodes'])]
+        grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
 
         grid_res_techs = snakemake.config['global']['grid_res_techs']
 
@@ -645,13 +648,16 @@ if __name__ == "__main__":
     print(f"solving network for policy {policy} and penetration {penetration}")
 
     tech_palette = snakemake.wildcards.palette
-    print(f"solving network for palette {tech_palette}")
+    print(f"solving network for palette: {tech_palette}")
 
     zone = snakemake.wildcards.zone
-    print(f"solving network for bidding zone {zone}")
+    print(f"solving network for bidding zone: {zone}")
 
     year = snakemake.wildcards.year
-    print(f"solving network year {year}")
+    print(f"solving network year: {year}")
+
+    area = snakemake.config['area']
+    print(f"solving with geographcial scope: {area}")
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
