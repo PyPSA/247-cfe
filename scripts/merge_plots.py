@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from PyPDF2 import PdfFileMerger, PdfFileReader
+from PyPDF2 import PdfMerger, PdfReader
 
 
 if __name__ == "__main__":
@@ -10,12 +10,12 @@ if __name__ == "__main__":
         snakemake = mock_snakemake('merge_plots', palette='p1', zone='IE', year='2025')
 
 # Call the PdfFileMerger
-mergedObject = PdfFileMerger()
+mergedObject = PdfMerger()
 path = snakemake.output[0][:-11]
 
 # Loop through existing plots in output repository and append them
 for file in os.listdir(path):
-    mergedObject.append(PdfFileReader(path+f'{file}', 'rb'))
+    mergedObject.append(PdfReader(path+f'{file}', 'rb'))
 
 # Write merged pdf
 mergedObject.write(path+"/"+"SUMMARY.pdf")
