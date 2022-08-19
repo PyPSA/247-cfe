@@ -3,7 +3,7 @@
 
 Code explores impacts based on a brownfield network exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec).
 
-The methodology is the same as the [Princeton 24/7 Study](https://acee.princeton.edu/24-7/).
+The methodology is the same as in the [Princeton 24/7 Study](https://acee.princeton.edu/24-7/).
 
 Google sponsored both this project and the Princeton study.
 
@@ -32,7 +32,7 @@ Further information:
 
 ### Data
 
-The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2020/2030. To get started, you can download a [sample network](https://nworbmot.org/energy/elec_s_45_lv1.0__3H-T-H-B-I-solar+p3-offwind+p0.67-dist1-linemaxext10_2020.nc).
+The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2025/2030. To get started, you can download these sample networks: [pypsa-eur-sec-2025/2030](https://tubcloud.tu-berlin.de/s/YRbQZiygNeXJ5on).
 
 Parallel to the repository you should also clone the [technology-data](https://github.com/PyPSA/technology-data) repository.
 
@@ -44,7 +44,7 @@ The complete list of package requirements is in the [envs/environment.yml](envs/
 
 ```
 .../247-cfe % conda env create -f envs/environment.yml
-.../247-cfe % conda activate pypsa-eur
+.../247-cfe % conda activate 247-cfe
 ```
 
 If you have troubles with a slow [conda](https://docs.conda.io/en/latest/) installation, we recommend to install [mamba](https://mamba.readthedocs.io/en/latest/):
