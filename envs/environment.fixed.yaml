@@ -1,4 +1,4 @@
-name: 247-cfe
+name: 247-fixed
 channels:
   - gurobi
   - conda-forge

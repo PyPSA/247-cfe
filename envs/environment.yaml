@@ -1,0 +1,15 @@
+name: '247'
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - matplotlib
+  - numpy
+  - pandas
+  - jupyter
+  - pypsa
+  - yaml
+  - ca-certificates
+  - certifi
+  - openssl
+  - pypdf2=1.28.4
