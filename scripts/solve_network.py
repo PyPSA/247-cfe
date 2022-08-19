@@ -24,16 +24,19 @@ def palette(tech_palette):
         storage_techs = ["battery"]
         storage_chargers = ["battery charger"]
         storage_dischargers = ["battery discharger"]
+
     elif tech_palette == 'p2':
         clean_techs = ["onwind", "solar"]
         storage_techs = ["battery", "hydrogen"]
         storage_chargers = ["battery charger", "H2 Electrolysis"]
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+
     elif tech_palette == 'p3':
         clean_techs = ["onwind", "solar", "adv_nuclear"]
         storage_techs = ["battery", "hydrogen"]
         storage_chargers = ["battery charger", "H2 Electrolysis"]
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
+        
     else: 
         print(f"'palette' wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}.")
         sys.exit()
@@ -52,11 +55,24 @@ def geoscope(zone):
     if zone == 'IE':
         d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
         d['country_nodes'] = ["IE5 0"]
-        d['node'] = "IE5 0" 
+        d['node'] = "IE5 0"
+
     elif zone == 'DK':
         d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
         d['country_nodes'] = ["DK1 0", "DK2 0"]
         d['node'] = "DK1 0"
+
+    elif zone == 'DE':
+        d['basenodes_to_keep'] = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
+                                  'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']
+        d['country_nodes'] = ['DE1 0']
+        d['node'] = 'DE1 0'
+
+    elif zone == 'NL':
+        d['basenodes_to_keep'] = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
+        d['country_nodes'] = ['NL1 0']
+        d['node'] = 'NL1 0'
+
     else: 
         print(f"'zone' wildcard must be one of 'IE', 'DK'. Now is {zone}.")
         sys.exit()

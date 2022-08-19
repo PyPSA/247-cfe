@@ -20,8 +20,10 @@ scenario:
             "p2", # onwind + solar + battery + LDES
             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: ["IE",
-         "DK",
+  zone: [ "IE",
+          "DK",
+          "DE",
+          "NL"
         ]
   year: ['2025', 
          '2030'
