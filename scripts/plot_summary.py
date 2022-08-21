@@ -49,14 +49,14 @@ def ci_capacity():
     ldf.index = ldf.index.map(rename_ci)
     ldf.columns = ldf.columns.map(rename_scen)
 
-    ldf.T.plot(kind="bar",stacked=True,
+    (ldf/1e3).T.plot(kind="bar",stacked=True,
                ax=ax,
                color=tech_colors)
 
     ax.grid()
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
-    ax.set_ylabel("CI capacity [MW]")
+    ax.set_ylabel("CI capacity [GW]")
     ax.legend(loc="upper left",
               prop={"size":5})
 
@@ -228,19 +228,99 @@ def system_capacity():
     ldf.index = ldf.index.map(rename_system_techs)
     ldf.columns = ldf.columns.map(rename_scen)
 
-    ldf.T.plot(kind="bar",stacked=True,
+    (ldf/1e3).T.plot(kind="bar",stacked=True,
                ax=ax,
                color=tech_colors)
 
     ax.grid()
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
-    ax.set_ylabel("System capacity inv. [MW]")
+    ax.set_ylabel("System capacity inv. [GW]")
     ax.legend(loc="upper right",
               prop={"size":5})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity.pdf"),
+                transparent=True)
+
+
+def system_capacity_diff():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
+    links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
+    dischargers = df.loc[["system_inv_" + t for t in exp_dischargers]].rename({"system_inv_" + t : t for t in exp_dischargers})
+    chargers = df.loc[["system_inv_" + t for t in exp_chargers]].rename({"system_inv_" + t : t for t in exp_chargers})
+    chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
+
+    ldf = pd.concat([gens, links, dischargers, chargers])
+
+    ldf = ldf.sub(ldf.cfe00,axis=0)
+
+    ldf.index = ldf.index.map(rename_system_techs)
+    ldf.columns = ldf.columns.map(rename_scen)
+
+    (ldf/1e3).T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.grid()
+    ax.set_axisbelow(True)
+    ax.set_xlabel("scenario")
+    ax.set_ylabel(f"System capacity diff. [GW]")
+    ax.legend(loc="upper right",
+              prop={"size":5})
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity_diff.pdf"),
+                transparent=True)
+
+
+def total_capacity_diff():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    #system capacity
+    gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
+    links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
+    dischargers = df.loc[["system_inv_" + t for t in exp_dischargers]].rename({"system_inv_" + t : t for t in exp_dischargers})
+    chargers = df.loc[["system_inv_" + t for t in exp_chargers]].rename({"system_inv_" + t : t for t in exp_chargers})
+    chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
+
+    ldf_system = pd.concat([gens, links, dischargers, chargers])
+    ldf_system.index = ldf_system.index.map(rename_system_techs)
+    
+    #CI capacity
+    gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
+    discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
+    charge_inv = df.loc[["ci_cap_" + t for t in clean_chargers]].rename({"ci_cap_" + t : t for t in clean_chargers})
+    charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger capacity
+    
+    ldf_ci = pd.concat([gen_inv, charge_inv, discharge_inv])
+    ldf_ci.index = ldf_ci.index.map(rename_ci)
+
+    #Total system capacity
+    ldf = ldf_system.add(ldf_ci, fill_value=0)
+
+    ldf = ldf.sub(ldf.cfe00,axis=0)
+    ldf.columns = ldf.columns.map(rename_scen)
+
+    (ldf/1e3).T.plot(kind="bar",stacked=True,
+               ax=ax,
+               color=tech_colors)
+
+    ax.grid()
+    ax.set_axisbelow(True)
+    ax.set_xlabel("scenario")
+    ax.set_ylabel(f"Total capacity diff. [GW]")
+    ax.legend(loc="upper right",
+              prop={"size":5})
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.used.replace("used.pdf","total_capacity_diff.pdf"),
                 transparent=True)
 
 
@@ -252,7 +332,7 @@ def objective_rel():
     values = (df/1e9).loc['objective']
     
     #The first scenario in config is reference case -> by default cfe00
-    ref_i, ref = values.index[0], values[0]
+    ref = values[0]
     
     l, scens = [], {}
     
@@ -269,7 +349,7 @@ def objective_rel():
     ax.grid()
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
-    ax.set_ylabel(f"obj % increase rel. to {ref_i}")
+    ax.set_ylabel(f"obj % increase to {ldf.index[0]}")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_rel.pdf"),
@@ -289,7 +369,7 @@ def objective_abs():
     ax.grid()
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
-    ax.set_ylabel("Objective [EUR 10e9]")
+    ax.set_ylabel("Objective [EUR 1e9]")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_abs.pdf"),
@@ -393,5 +473,8 @@ if __name__ == "__main__":
     global_emissions()
     system_capacity()
     #objective_abs()
-    objective_rel()
     
+    #diffs to reference case
+    objective_rel()
+    #system_capacity_diff()
+    total_capacity_diff()
