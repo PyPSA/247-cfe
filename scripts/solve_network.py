@@ -480,6 +480,7 @@ def solve_network(n, policy, penetration, tech_palette):
         storage_dischargers = [name + " " + g for g in storage_dischargers]
         storage_chargers = [name + " " + g for g in storage_chargers]
 
+
     def cfe_constraints(n):
 
         weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(clean_gens)),
@@ -515,7 +516,8 @@ def solve_network(n, policy, penetration, tech_palette):
         lhs = excess
 
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum()
-        rhs = (penetration - 0.8) * total_load
+        share = max(0., penetration - 0.8)
+        rhs = share * total_load
 
         con = define_constraints(n, lhs, '<=', rhs, 'Excess_constraint')
 

@@ -15,7 +15,7 @@ run: 'test'
 
 #wildcards
 scenario:
-  policy: ["res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
+  policy: ["cfe00", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
             "p2", # onwind + solar + battery + LDES
             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
@@ -23,7 +23,7 @@ scenario:
   zone: [ "IE",
           "DK",
           "DE",
-          #"NL"
+          "NL"
         ]
   year: ['2025', 
          '2030'

@@ -16,6 +16,7 @@ def used():
     typ = ["local","grid"]
 
     ldf = df.loc[[f"ci_fraction_clean_used_{t}" for t in typ]].rename({f"ci_fraction_clean_used_{t}" : t for t in typ})
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -23,14 +24,12 @@ def used():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("fraction CFE [per unit]")
     ax.legend(loc="lower left",
               prop={"size":8})
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used,
                 transparent=True)
 
@@ -48,6 +47,7 @@ def ci_capacity():
     ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
 
     ldf.index = ldf.index.map(rename_ci)
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -55,14 +55,12 @@ def ci_capacity():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI capacity [MW]")
     ax.legend(loc="upper left",
               prop={"size":5})
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_capacity.pdf"),
                 transparent=True)
 
@@ -78,6 +76,7 @@ def ci_generation():
     ldf = pd.concat([generation, discharge])
 
     ldf.index = ldf.index.map(rename_ci)
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -85,14 +84,12 @@ def ci_generation():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI generation [GWh]")
     ax.legend(loc="upper left",
               prop={"size":5})
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
                 transparent=True)
 
@@ -102,17 +99,17 @@ def global_emissions():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    (df/1e6).loc['emissions'].plot(kind="bar",
-                            ax=ax)
+    ldf = (df/1e6).loc['emissions']
+    ldf.index = ldf.index.map(rename_scen)
+    
+    ldf.plot(kind="bar", ax=ax)  
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("global emissions [MtCO2/a]")
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","system_emissions.pdf"),
                 transparent=True)
 
@@ -122,18 +119,18 @@ def ci_emisrate():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    (df).loc['ci_emission_rate_true'].plot(kind="bar",
-                            ax=ax)
+    ldf = df.loc['ci_emission_rate_true']
+    ldf.index = ldf.index.map(rename_scen)
+   
+    ldf.plot(kind="bar", ax=ax)
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("Emission rate of 24/7 CI [t/MWh]")
     #ax.yaxis.label.set_size(6)
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_emisrate.pdf"),
                 transparent=True)
 
@@ -156,6 +153,7 @@ def ci_cost():
     ldf.drop(to_drop, inplace=True)
 
     ldf.index = ldf.index.map(rename_ci)
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -163,7 +161,6 @@ def ci_cost():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI average cost [EUR/MWh]")
     ax.legend(loc="upper left",
@@ -171,7 +168,6 @@ def ci_cost():
 
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
                 transparent=True)
 
@@ -198,6 +194,7 @@ def ci_costandrev():
     ldf = pd.concat([costs, revenues])
 
     ldf.index = ldf.index.map(rename_ci)
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -205,14 +202,12 @@ def ci_costandrev():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("CI average cost [EUR/MWh]")
     ax.legend(loc="upper left",
               prop={"size":5})
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_costandrev.pdf"),
                 transparent=True)
 
@@ -231,6 +226,7 @@ def system_capacity():
     ldf = pd.concat([gens, links, dischargers, chargers])
 
     ldf.index = ldf.index.map(rename_system_techs)
+    ldf.columns = ldf.columns.map(rename_scen)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax,
@@ -238,14 +234,12 @@ def system_capacity():
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("System capacity inv. [MW]")
     ax.legend(loc="upper right",
               prop={"size":5})
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity.pdf"),
                 transparent=True)
 
@@ -268,17 +262,16 @@ def objective_rel():
 
     ldf=pd.Series(l)
     ldf.index = ldf.index.map(scens)
+    ldf.index = ldf.index.map(rename_scen)
 
     ldf.plot(kind="bar", ax=ax)
     
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel(f"obj % increase rel. to {ref_i}")
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_rel.pdf"),
                 transparent=True)
 
@@ -288,16 +281,17 @@ def objective_abs():
     fig, ax = plt.subplots()
     fig.set_size_inches((4,3))
 
-    (df/1e9).loc['objective'].plot(kind="bar", ax=ax)
+    ldf = (df/1e9).loc['objective']
+    ldf.index = ldf.index.map(rename_scen)
+
+    ldf.plot(kind="bar", ax=ax)
 
     ax.grid()
     ax.set_axisbelow(True)
-
     ax.set_xlabel("scenario")
     ax.set_ylabel("Objective [EUR 10e9]")
 
     fig.tight_layout()
-
     fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_abs.pdf"),
                 transparent=True)
 
@@ -372,6 +366,17 @@ if __name__ == "__main__":
         'H2_Fuel_Cell-%s' % year: 'hydrogen_fuel_cell',
         'H2_Electrolysis-%s' % year: 'hydrogen_electrolysis'
     }
+
+    rename_scen = {'cfe00': 'no policy',
+                    'res100': 'res-100%',
+                    'cfe80': 'cfe-80%',
+                    'cfe85':'cfe-85%',
+                    'cfe90':'cfe-90%',
+                    'cfe95':'cfe-95%',
+                    'cfe98':'cfe-98%',
+                    'cfe100':'cfe-100%'
+                    }
+
 
     df = pd.read_csv(snakemake.input.summary,
                      index_col=0)
