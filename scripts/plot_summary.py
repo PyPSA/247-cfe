@@ -113,7 +113,7 @@ def global_emissions():
 
     fig.tight_layout()
 
-    fig.savefig(snakemake.output.used.replace("used.pdf","emissions.pdf"),
+    fig.savefig(snakemake.output.used.replace("used.pdf","system_emissions.pdf"),
                 transparent=True)
 
 
@@ -250,6 +250,59 @@ def system_capacity():
                 transparent=True)
 
 
+def objective_rel():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    values = (df/1e9).loc['objective']
+    
+    #The first scenario in config is reference case -> by default cfe00
+    ref_i, ref = values.index[0], values[0]
+    
+    l, scens = [], {}
+    
+    for count, (index, value) in enumerate(values.iteritems()):
+        scens[count] = f'{index}'
+        l.append((value - ref)/ref*100)
+
+    ldf=pd.Series(l)
+    ldf.index = ldf.index.map(scens)
+
+    ldf.plot(kind="bar", ax=ax)
+    
+    ax.grid()
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel(f"obj % increase rel. to {ref_i}")
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_rel.pdf"),
+                transparent=True)
+
+
+def objective_abs():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    (df/1e9).loc['objective'].plot(kind="bar", ax=ax)
+
+    ax.grid()
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel("scenario")
+    ax.set_ylabel("Objective [EUR 10e9]")
+
+    fig.tight_layout()
+
+    fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_abs.pdf"),
+                transparent=True)
+
+
+
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
@@ -323,12 +376,17 @@ if __name__ == "__main__":
     df = pd.read_csv(snakemake.input.summary,
                      index_col=0)
 
+    #ci
     used()
-    ci_capacity()
-    ci_generation()
     ci_cost()
     ci_costandrev()
-    global_emissions()
+    ci_capacity()
+    ci_generation()
     ci_emisrate()
+
+    #system
+    global_emissions()
     system_capacity()
+    #objective_abs()
+    objective_rel()
     
