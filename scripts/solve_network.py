@@ -151,10 +151,13 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
 
 def strip_network(n):
     nodes_to_keep = geoscope(zone, area)['basenodes_to_keep']
-    for b in geoscope(zone, area)['basenodes_to_keep']:
-        for s in snakemake.config['node_suffixes_to_keep']:
-            nodes_to_keep.append(b + " " + s)
+    new_nodes = []
 
+    for b in nodes_to_keep:
+        for s in snakemake.config['node_suffixes_to_keep']:
+            new_nodes.append(b + " " + s)
+
+    nodes_to_keep.extend(new_nodes)
     nodes_to_keep.extend(snakemake.config['additional_nodes'])
 
     n.mremove('Bus', n.buses.index.symmetric_difference(nodes_to_keep))
