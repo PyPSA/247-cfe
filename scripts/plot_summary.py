@@ -476,5 +476,5 @@ if __name__ == "__main__":
     
     #diffs to reference case
     objective_rel()
-    #system_capacity_diff()
+    system_capacity_diff()
     total_capacity_diff()
