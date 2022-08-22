@@ -78,7 +78,14 @@ def geoscope(zone, area):
         sys.exit()
     
     if area == 'EU': 
-        d['basenodes_to_keep'] = snakemake.config['nodes_all']
+        d['basenodes_to_keep'] = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
+            'CH1 0', 'CZ1 0',  'DE1 0',  'DK1 0',  'DK2 0', 
+            'EE6 0', 'ES1 0',  'ES4 0',  'FI2 0',  'FR1 0',
+            'GB0 0', 'GB5 0',  'GR1 0',  'HR1 0',  'HU1 0',
+            'IE5 0', 'IT1 0',  'IT3 0',  'LT6 0',  'LU1 0',
+            'LV6 0', 'ME1 0',  'MK1 0',  'NL1 0',  'NO2 0',
+            'PL1 0', 'PT1 0',  'RO1 0',  'RS1 0',  'SE2 0',
+            'SI1 0', 'SK1 0']
 
     return d
 
