@@ -381,12 +381,13 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p1', zone='IE', year='2025')
+        snakemake = mock_snakemake('plot_summary', palette='p1', zone='IE', year='2025', participation='10')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
     year = snakemake.wildcards.year
     zone = snakemake.wildcards.zone
+    participation = snakemake.wildcards.participation
     area = snakemake.config['area']
     name = snakemake.config['ci']['name']
     node = geoscope(zone, area)['node']

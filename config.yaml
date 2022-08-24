@@ -29,11 +29,14 @@ scenario:
   year: ['2025', 
          '2030'
          ] # controls both the brownfield fleet and tech costs projection
+  participation: ['10', 
+                  '25'
+                  ] #share [%] of CI load per zone following 247-CFE approach
 
 #data center
 ci:
   name: "google"
-  load: 1000.
+  #load: 1000.
   res_techs: ["onwind","solar"]
 
 #regional coverage of the model: "regions" or "EU"
@@ -91,6 +94,16 @@ costs:
   # price_uranium = 1.7 EUR/MWhth -> default  is 2.6
   #source 1: https://2022.entsos-tyndp-scenarios.eu/download/
   #gas futures EU: https://www.powernext.com/futures-market-data
+
+
+#~size of C&I electricity load per country
+#https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
+#https://ec.europa.eu/eurostat/databrowser/view/ten00128/default/table?lang=en
+ci_load: 
+  IE: 2200.
+  DK: 2240.
+  DE: 38410.
+  NL: 8140.
 
 
 #national policies

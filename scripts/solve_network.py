@@ -231,7 +231,7 @@ def cost_parametrization(n):
     #n.generators[n.generators.index.str.contains('EU')].T
 
 
-def add_ci(n):
+def add_ci(n, participation):
     """Add C&I at its own node"""
 
     #first deal with global policy environment
@@ -249,7 +249,9 @@ def add_ci(n):
 
     #local C&I properties
     name = snakemake.config['ci']['name']
-    load = snakemake.config['ci']['load']
+    #load = snakemake.config['ci']['load']
+    ci_load = snakemake.config['ci_load'][f'{zone}']
+    load = ci_load * float(participation)/100  #C&I baseload MW
     node = geoscope(zone, area)['node']
 
     #tech_palette options
@@ -649,7 +651,8 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network', policy="cfe80", palette='p1', zone='IE', year='2025')
+        snakemake = mock_snakemake('solve_network', 
+                                policy="cfe80", palette='p1', zone='IE', year='2025', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -670,6 +673,9 @@ if __name__ == "__main__":
 
     area = snakemake.config['area']
     print(f"solving with geographcial scope: {area}")
+
+    participation = snakemake.wildcards.participation
+    print(f"solving with participation: {participation}")
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
@@ -693,7 +699,7 @@ if __name__ == "__main__":
         biomass_potential(n)
         cost_parametrization(n)
 
-        add_ci(n)
+        add_ci(n, participation)
 
         solve_network(n, policy, penetration, tech_palette)
 

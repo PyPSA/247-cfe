@@ -342,7 +342,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="res100", palette='p3', zone='DE', year='2025')
+        snakemake = mock_snakemake('summarise_network', policy="res100", palette='p3', zone='DE', year='2025', participation='10')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
@@ -358,6 +358,9 @@ if __name__ == "__main__":
 
     area = snakemake.config['area']
     print(f"solving with geographcial scope: {area}")
+
+    participation = snakemake.wildcards.participation
+    print(f"solving with participation: {participation}")
 
     #Read data
     n = pypsa.Network(snakemake.input.network,
