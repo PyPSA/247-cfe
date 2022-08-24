@@ -292,7 +292,7 @@ def add_ci(n):
               carrier = 'nuclear',
               capital_cost = costs.loc['adv_nuclear']['fixed'],
               marginal_cost= costs.loc['adv_nuclear']['VOM']  + costs.loc['adv_nuclear']['fuel']/costs.loc['adv_nuclear']['efficiency'],
-              p_nom_extendable = True,
+              p_nom_extendable = True if policy == "cfe" else False,
               lifetime = costs.loc['adv_nuclear']['lifetime']
               )
 
@@ -316,7 +316,7 @@ def add_ci(n):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
-    if "battery" in storage_techs and policy == "cfe":
+    if "battery" in storage_techs:
         n.add("Bus",
               f"{name} battery",
               carrier="battery"
@@ -354,7 +354,7 @@ def add_ci(n):
               lifetime=n.links.at[f"{node} battery discharger"+"-{}".format(year), "lifetime"]
               )
 
-    if "hydrogen" in storage_techs and policy == "cfe":
+    if "hydrogen" in storage_techs:
         n.add("Bus",
               f"{name} H2",
               carrier="H2"

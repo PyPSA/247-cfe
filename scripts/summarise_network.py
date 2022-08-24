@@ -53,11 +53,8 @@ def summarise_network(n, policy, tech_palette):
     # 1: Generation & imports at C&I node
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
-    if policy == "cfe":
-        p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) \
-                    - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
-    else:
-        p_storage = pd.Series(0.,n.snapshots)   
+    p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) \
+                - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) 
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
 
     p_diff = p_clean + p_storage - p_demand
@@ -267,7 +264,7 @@ def summarise_network(n, policy, tech_palette):
     results['ci_revenue_grid'] = (n.links_t.p0[name + " export"]*n.snapshot_weightings["generators"]*n.buses_t.marginal_price[node]).sum()
     results['ci_average_revenue'] =  results['ci_revenue_grid'] / results['ci_demand_total']
 
-    if "battery" in storage_techs and policy == "cfe":
+    if "battery" in storage_techs:
         results['ci_capital_cost_battery_storage'] = n.stores.at[f"{name} battery","e_nom_opt"]*n.stores.at[f"{name} battery","capital_cost"]
         results['ci_cost_battery_storage'] = results['ci_capital_cost_battery_storage']
         total_cost += results['ci_cost_battery_storage']
@@ -281,7 +278,7 @@ def summarise_network(n, policy, tech_palette):
         results['ci_capital_cost_battery_inverter'] = 0.
         results['ci_cost_battery_inverter'] = 0.
 
-    if "hydrogen" in storage_techs and policy == "cfe":
+    if "hydrogen" in storage_techs:
         results['ci_capital_cost_hydrogen_storage'] = n.stores.at[f"{name} H2 Store","e_nom_opt"]*n.stores.at[f"{name} H2 Store","capital_cost"]
         results['ci_cost_hydrogen_storage'] = results['ci_capital_cost_hydrogen_storage']
         total_cost += results['ci_cost_hydrogen_storage']
@@ -345,7 +342,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="cfe80", palette='p1', zone='IE', year='2025')
+        snakemake = mock_snakemake('summarise_network', policy="res100", palette='p3', zone='DE', year='2025')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]

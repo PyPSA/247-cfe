@@ -385,11 +385,12 @@ if __name__ == "__main__":
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
+    year = snakemake.wildcards.year
     zone = snakemake.wildcards.zone
     area = snakemake.config['area']
-    node = geoscope(zone, area)['node']
     name = snakemake.config['ci']['name']
-    year = snakemake.wildcards.year
+    node = geoscope(zone, area)['node']
+
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]
