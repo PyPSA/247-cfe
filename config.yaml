@@ -5,12 +5,8 @@ results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
 # from ../pypsa-eur-sec/results/<run>/prenetworks-brownfield
-#with distributional grid
-#n_2025: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2025.nc'
-#n_2030: 'data/v4_elec_s_37_lv1.0__3H-H-B-solar+p3-dist1_2030.nc'
-#w/o distributional grid
-n_2025: 'data/v5_elec_s_37_lv1.0__3H-H-B-solar+p3_2025.nc'
-n_2030: 'data/v5_elec_s_37_lv1.0__3H-H-B-solar+p3_2030.nc'
+n_2025: 'data/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
+n_2030: 'data/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 
 
 ###################
