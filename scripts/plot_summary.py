@@ -452,6 +452,7 @@ if __name__ == "__main__":
 
     rename_scen = {'cfe00': 'no policy',
                     'res100': 'res-100%',
+                    'cfe75': 'cfe-75%',
                     'cfe80': 'cfe-80%',
                     'cfe85':'cfe-85%',
                     'cfe90':'cfe-90%',
