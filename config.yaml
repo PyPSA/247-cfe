@@ -90,7 +90,7 @@ costs:
   price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
   price_gas: 20.1 # EUR/MWhth -> TYNDP2020 = default 
   adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
-  adv_geo_overnight_2030: 8000  # 2022$/kW CAPEX
+  adv_geo_overnight_2030: 8500  # 2022$/kW CAPEX
   # price_gas_2025: 50.0 # https://www.powernext.com/futures-market-data
   # price_oil = 50.0 # EUR/MWhth -> TYNDP2020 = default 
   # price_uranium = 1.7 EUR/MWhth -> TYNDP2020  is 2.6
