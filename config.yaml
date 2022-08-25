@@ -16,7 +16,7 @@ run: 'test'
 
 #wildcards
 scenario:
-  policy: ["cfe00", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
+  policy: ["cfe00", "res100", "cfe75", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
   palette: ["p1", # onwind + solar + battery
             "p2", # onwind + solar + battery + LDES
             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
@@ -86,15 +86,15 @@ costs:
   USD2021_to_EUR2021: 0.8460 # [EUR/USD] ECB
   adv_nuclear_overnight: 7138 # 2021$/kW CAPEX https://www.eia.gov/outlooks/aeo/ 2022
   price_green_hydrogen: 3 #EUR/kg
-  price_lignite: 6.5 # EUR/MWhth from source 1 -> default is 2.9
-  price_coal: 8.9 # EUR/MWhth from source 1 -> default is 8.15
-  price_gas: 20.1 # EUR/MWhth -> source 1 = default 
-  #price_gas_2025: 50.0 # https://www.powernext.com/futures-market-data
-  # price_oil = 50.0 # EUR/MWhth -> source 1 = default 
-  # price_uranium = 1.7 EUR/MWhth -> default  is 2.6
-  #source 1: https://2022.entsos-tyndp-scenarios.eu/download/
-  #gas futures EU: https://www.powernext.com/futures-market-data
-
+  price_lignite: 6.5 # EUR/MWhth from TYNDP2020 -> default is 2.9
+  price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
+  price_gas: 20.1 # EUR/MWhth -> TYNDP2020 = default 
+  adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
+  adv_geo_overnight_2030: 8000  # 2022$/kW CAPEX
+  # price_gas_2025: 50.0 # https://www.powernext.com/futures-market-data
+  # price_oil = 50.0 # EUR/MWhth -> TYNDP2020 = default 
+  # price_uranium = 1.7 EUR/MWhth -> TYNDP2020  is 2.6
+  # TYNDP2020: https://2022.entsos-tyndp-scenarios.eu/download/
 
 #~size of C&I electricity load per country
 #https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
@@ -156,6 +156,7 @@ tech_colors:
   "grid imports": "#9ccc65"
   "adv_nuclear": "r"
   "advanced nuclear": "#df3439"
+  "advanced geothermal": "#df3439"
   "advanced dispatchable": "#df3439"
   "battery": "#666666"
   "hydrogen storage": "#990090"

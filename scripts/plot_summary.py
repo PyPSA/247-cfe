@@ -433,6 +433,7 @@ if __name__ == "__main__":
         'H2_Fuel_Cell': 'hydrogen_fuel_cell',
         'hydrogen_storage': 'hydrogen_storage',
         'adv_nuclear': 'advanced nuclear',
+        'adv_geothermal': 'advanced geothermal',
         'grid': 'grid',
         'revenue': "revenue"
     }

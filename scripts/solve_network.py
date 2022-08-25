@@ -32,7 +32,7 @@ def palette(tech_palette):
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
 
     elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_nuclear"]
+        clean_techs = ["onwind", "solar", "adv_geothermal"]  #"adv_nuclear"
         storage_techs = ["battery", "hydrogen"]
         storage_chargers = ["battery charger", "H2 Electrolysis"]
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
@@ -116,7 +116,7 @@ def timescope(zone, year):
     return d
 
 
-def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
+def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
     #set all asset costs and other parameters
     costs = pd.read_csv(cost_file, index_col=[0,1]).sort_index()
@@ -138,17 +138,34 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime):
     })
 
     # Advanced nuclear
-    new_row = pd.Series({'CO2 intensity': 0, 
+    data_nuc = pd.Series({'CO2 intensity': 0, 
             'FOM': costs.loc['nuclear']['FOM'], 
             'VOM': costs.loc['nuclear']['VOM'], 
             'discount rate': costs.loc['nuclear']['discount rate'],
-            'efficiency': 0.36,             #higher than nuclear, see data
+            'efficiency': 0.36,
             'fuel': costs.loc['nuclear']['fuel'],
             'investment': snakemake.config['costs']['adv_nuclear_overnight'] * 1e3 * snakemake.config['costs']['USD2021_to_EUR2021'],
             'lifetime': 40.0
             }, name="adv_nuclear")
-            
-    costs = costs.append(new_row, ignore_index=False)
+
+    if year == '2025':
+        adv_geo_overnight = snakemake.config['costs']['adv_geo_overnight_2025']
+    elif year == '2030':
+        adv_geo_overnight = snakemake.config['costs']['adv_geo_overnight_2030']
+
+    # Advanced geothermal
+    data_geo = pd.Series({'CO2 intensity': 0, 
+            'FOM': 0, 
+            'VOM': 0, 
+            'discount rate': costs.loc['nuclear']['discount rate'],
+            'efficiency': 1,
+            'fuel': 0,
+            'investment':  adv_geo_overnight * 1e3 * 1,
+            'lifetime': 30.0
+            }, name="adv_geothermal")
+
+    costs = costs.append(data_nuc, ignore_index=False)
+    costs = costs.append(data_geo, ignore_index=False)
 
     annuity_factor = lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
     costs["fixed"] = [annuity_factor(v) * v["investment"] * Nyears for i, v in costs.iterrows()]
@@ -297,7 +314,19 @@ def add_ci(n, participation):
               p_nom_extendable = True if policy == "cfe" else False,
               lifetime = costs.loc['adv_nuclear']['lifetime']
               )
-
+    
+    #baseload clean energy generator
+    if "adv_geothermal" in clean_techs:      
+        n.add("Generator",
+              f"{name} adv_geothermal",
+              bus = name,
+              #carrier = '',
+              capital_cost = costs.loc['adv_geothermal']['fixed'],
+              marginal_cost= costs.loc['adv_geothermal']['VOM'],
+              p_nom_extendable = True if policy == "cfe" else False,
+              lifetime = costs.loc['adv_geothermal']['lifetime']
+              )
+    
     #RES generator
     for carrier in ["onwind","solar"]:
         if carrier not in clean_techs:
@@ -686,7 +715,8 @@ if __name__ == "__main__":
                           snakemake.config['costs']['USD2013_to_EUR2013'],
                           snakemake.config['costs']['discountrate'],
                           Nyears,
-                          snakemake.config['costs']['lifetime'])
+                          snakemake.config['costs']['lifetime'],
+                          year)
 
 
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
