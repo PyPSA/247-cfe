@@ -14,7 +14,9 @@ def summarise_network(n, policy, tech_palette):
     storage_chargers = palette(tech_palette)[2]
     storage_dischargers = palette(tech_palette)[3]
 
-    if policy == "res":
+    if policy == "ref":
+        n_iterations = 2
+    elif policy == "res":
         n_iterations = 2
     elif policy == "cfe":
         n_iterations = snakemake.config['solving']['options']['n_iterations']
@@ -342,11 +344,11 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="res100", palette='p3', zone='DE', year='2025', participation='10')
+        snakemake = mock_snakemake('summarise_network', policy="ref", palette='p3', zone='IE', year='2025', participation='25')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
-    penetration = float(snakemake.wildcards.policy[3:])/100
+    penetration = float(snakemake.wildcards.policy[3:])/100 if policy != "ref" else 0
     print(f"summarising network for policy {policy} and penetration {penetration}")
 
     tech_palette = snakemake.wildcards.palette

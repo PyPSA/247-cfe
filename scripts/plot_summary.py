@@ -305,7 +305,6 @@ def system_capacity():
     ax.set_ylabel("System capacity investment [GW]")
     ax.legend(loc="lower right", ncol=2, prop={"size":9})
 
-    ax.set_ylim([0,90])
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity.pdf"),
                 transparent=True)
@@ -325,7 +324,7 @@ def system_capacity_diff():
     ldf = pd.concat([gens, links, dischargers, chargers])
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
     ldf.drop(to_drop, inplace=True)
-    ldf = ldf.sub(ldf.cfe00,axis=0)
+    ldf = ldf.sub(ldf.ref,axis=0)
 
     ldf.columns = ldf.columns.map(rename_scen)
     ldf = ldf.groupby(rename_system_simple).sum()
@@ -383,7 +382,7 @@ def total_capacity_diff():
     ldf = ldf_system.add(ldf_ci, fill_value=0)
 
     #Calculate diff, rename scenarios, order techs
-    ldf = ldf.sub(ldf.cfe00,axis=0)
+    ldf = ldf.sub(ldf.ref,axis=0)
     ldf.columns = ldf.columns.map(rename_scen)
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
@@ -412,7 +411,7 @@ def objective_rel():
 
     values = (df/1e9).loc['objective']
     
-    #The first scenario in config is reference case -> by default cfe00
+    #The first scenario in config is reference case -> by default ref
     ref = values[0]
     l, scens = [], {}
     for count, (index, value) in enumerate(values.iteritems()):
@@ -547,7 +546,7 @@ if __name__ == "__main__":
         'H2_Electrolysis-%s' % year: 'hydrogen electrolysis'
     }
 
-    rename_scen = {'cfe00': 'no\npolicy',
+    rename_scen = {'ref': 'no\npolicy',
                     'res100': '100%\nRES',
                     'cfe75': '75%',
                     'cfe80': '80%',

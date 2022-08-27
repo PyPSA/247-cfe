@@ -299,7 +299,7 @@ def add_ci(n, participation):
               name + " green hydrogen OCGT",
               carrier="green hydrogen OCGT",
               bus=name,
-              p_nom_extendable=True,
+              p_nom_extendable = True if policy == "cfe" else False,
               capital_cost=costs.at['OCGT', 'fixed'],
               marginal_cost=costs.at['OCGT', 'VOM']  + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
 
@@ -336,7 +336,7 @@ def add_ci(n, participation):
               f"{name} {carrier}",
               carrier=carrier,
               bus=name,
-              p_nom_extendable=True,
+              p_nom_extendable=False if policy == "ref" else True,
               p_max_pu=n.generators_t.p_max_pu[gen_template],
               capital_cost=n.generators.at[gen_template,"capital_cost"],
               marginal_cost=n.generators.at[gen_template,"marginal_cost"])
@@ -357,7 +357,7 @@ def add_ci(n, participation):
               f"{name} battery",
               bus=f"{name} battery",
               e_cyclic=True,
-              e_nom_extendable=True,
+              e_nom_extendable=True if policy == "cfe" else False,
               carrier="battery",
               capital_cost=n.stores.at[f"{node} battery"+"-{}".format(year), "capital_cost"],
               lifetime=n.stores.at[f"{node} battery"+"-{}".format(year), "lifetime"]
@@ -370,7 +370,7 @@ def add_ci(n, participation):
               carrier="battery charger",
               efficiency=n.links.at[f"{node} battery charger"+"-{}".format(year), "efficiency"],
               capital_cost=n.links.at[f"{node} battery charger"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True, 
+              p_nom_extendable=True if policy == "cfe" else False,
               lifetime=n.links.at[f"{node} battery charger"+"-{}".format(year), "lifetime"] 
               )
 
@@ -381,7 +381,7 @@ def add_ci(n, participation):
               carrier="battery discharger",
               efficiency=n.links.at[f"{node} battery discharger"+"-{}".format(year), "efficiency"],
               marginal_cost=n.links.at[f"{node} battery discharger"+"-{}".format(year), "marginal_cost"],
-              p_nom_extendable=True,
+              p_nom_extendable=True if policy == "cfe" else False,
               lifetime=n.links.at[f"{node} battery discharger"+"-{}".format(year), "lifetime"]
               )
 
@@ -395,7 +395,7 @@ def add_ci(n, participation):
               f"{name} H2 Store",
               bus=f"{name} H2",
               e_cyclic=True,
-              e_nom_extendable=True,
+              e_nom_extendable=True if policy == "cfe" else False,
               carrier="H2 Store",
               capital_cost=costs.at["hydrogen storage underground","fixed"],
               lifetime=costs.at["hydrogen storage underground","lifetime"],
@@ -408,7 +408,7 @@ def add_ci(n, participation):
               carrier="H2 Electrolysis",
               efficiency=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "efficiency"],
               capital_cost=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True,
+              p_nom_extendable=True if policy == "cfe" else False,
               lifetime=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "lifetime"] 
               )
 
@@ -419,7 +419,7 @@ def add_ci(n, participation):
               carrier="H2 Fuel Cell",
               efficiency=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "efficiency"],
               capital_cost=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True,
+              p_nom_extendable=True if policy == "cfe" else False,
               lifetime=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
               )
 
@@ -512,7 +512,9 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_chargers = palette(tech_palette)[2]
     storage_dischargers = palette(tech_palette)[3]
 
-    if policy == "res":
+    if policy == "ref":
+        n_iterations = 2
+    elif policy == "res":
         n_iterations = 2
         res_gens = [name + " " + g for g in ci['res_techs']]
     elif policy == "cfe":
@@ -557,6 +559,7 @@ def solve_network(n, policy, penetration, tech_palette):
         lhs = excess
 
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum()
+
         share = max(0., penetration - 0.8)
         rhs = share * total_load
 
@@ -637,18 +640,20 @@ def solve_network(n, policy, penetration, tech_palette):
     def extra_functionality(n, snapshots):
 
         add_battery_constraints(n)
-
         country_res_constraints(n)
 
-        if policy == "cfe":
+        if policy == "ref":
+            print("no target set")
+        elif policy == "cfe":
             print("setting CFE target of",penetration)
             cfe_constraints(n)
             excess_constraints(n)
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
+            excess_constraints(n)
         else:
-            print("no target set")
+            print(f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}.")
             sys.exit()
 
     n.consistency_check()
@@ -681,14 +686,14 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="cfe80", palette='p1', zone='IE', year='2025', participation='10')
+                                policy="ref", palette='p1', zone='IE', year='2025', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
-    penetration = float(snakemake.wildcards.policy[3:])/100
+    penetration = float(snakemake.wildcards.policy[3:])/100 if policy != "ref" else 0
     print(f"solving network for policy {policy} and penetration {penetration}")
 
     tech_palette = snakemake.wildcards.palette
@@ -701,7 +706,7 @@ if __name__ == "__main__":
     print(f"solving network year: {year}")
 
     area = snakemake.config['area']
-    print(f"solving with geographcial scope: {area}")
+    print(f"solving with geoscope: {area}")
 
     participation = snakemake.wildcards.participation
     print(f"solving with participation: {participation}")
