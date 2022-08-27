@@ -25,9 +25,13 @@ def used():
     yl_100RES = ldf.loc[:,'100%\nRES'].sum()
     plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
-    plt.text(0.5,yl_100RES+0.03,f'benchmarks', horizontalalignment='center') #{int(yl*100)}%'
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    plt.text(3.5,yl_ref-0.06,f'Reference case, fraction CFE={round(yl_ref,2)}', 
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
     
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
+
     ldf.T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
@@ -35,9 +39,9 @@ def used():
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("CFE target")
-    ax.set_ylabel("fraction CFE [%]")
+    ax.set_ylabel("fraction CFE [per unit]")
     ax.set_ylim([0,1.1])
-    ax.legend(loc="upper left", ncol=2, prop={"size":9})
+    ax.legend(loc="upper left", ncol=2, prop={"size":10})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used, transparent=True)
@@ -64,9 +68,13 @@ def ci_capacity():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
-    yl_100RES = ldf.loc[:,'100%\nRES'].sum()
-    ax.set_ylim([0,yl_100RES*1.3/1e3])
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #yl_100RES = ldf.loc[:,'100%\nRES'].sum()
+    #ax.set_ylim([0,yl_100RES*1.3/1e3])
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -101,7 +109,10 @@ def ci_generation():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -130,10 +141,15 @@ def system_emissions():
     yl_100RES = ldf.loc['100%\nRES']
     yl_end = ldf[-1]
     ax.set_ylim([yl_100RES*0.8, yl_100RES*1.1])
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="-", linewidth=1.5)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
-    plt.text(0.5,yl_ref+0.2,f'benchmarks', horizontalalignment='center') #{int(yl*100)}%'
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    plt.text(3.3, yl_ref+0.3,f'Reference case, emissions {round(yl_ref,1)} [Mt]', 
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
+    
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.index[0], inplace=True)
 
     ldf.plot(kind="bar", ax=ax, 
         color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
@@ -159,12 +175,14 @@ def ci_emisrate():
    
     yl_ref = ldf.loc['no\npolicy']
     yl_100RES = ldf.loc['100%\nRES']
-    ax.set_ylim([0, 0.15])
-    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="-", linewidth=1.5)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
-    plt.text(x=8, y=yl_ref+0.003, horizontalalignment='right', 
-             s=f'Reference case: {round(yl_ref, 3)} [t/MWh]')
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    plt.text(1.5, yl_ref-0.06*yl_ref,f'Reference case, C&I emission rate {round(yl_ref,2)} [t/MWh]', 
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
+    
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.index[0], inplace=True)
 
     ldf.plot(kind="bar", ax=ax,
         color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
@@ -203,10 +221,13 @@ def ci_cost():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    yl_ref = ldf.loc[:,'no\npolicy'].sum()
+    #yl_ref = ldf.loc[:,'no\npolicy'].sum()
     yl_end = ldf.loc[:,ldf.columns[-1]].sum()
-    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    #plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -250,11 +271,15 @@ def ci_costandrev():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    yl_ref = ldf.loc[:,'no\npolicy'].sum()
     yl_end = ldf.loc[:,ldf.columns[-1]].sum()
-    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    plt.text(0.6, yl_end+1,f'PPA cost at 100% 24x7 CFE', 
+            horizontalalignment='left') 
+    
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -293,13 +318,16 @@ def system_capacity():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
     
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
-    ax.grid()
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("CFE target")
     ax.set_ylabel("System capacity investment [GW]")
@@ -331,18 +359,27 @@ def system_capacity_diff():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
+
+    col_list= list(ldf)
+    ldf_pos = ldf[ldf>0]
+    ldf_neg = ldf[ldf<0]
+    up = ldf_pos[col_list].sum(axis=0).max()/1e3
+    lo = ldf_neg[col_list].sum(axis=0).min()/1e3
+    ax.set_ylim(bottom=lo*1.1, top=up*2)
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
-    ax.grid()
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("CFE target")
     ax.set_ylabel(f"System capacity diff. [GW]")
-    ax.legend(loc="lower right", ncol=2, prop={"size":8})
-
+    ax.legend(loc='upper left', ncol=3, prop={"size":8}, fancybox=True)
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity_diff.pdf"),
                 transparent=True)
@@ -387,17 +424,20 @@ def total_capacity_diff():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
-    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
-    ax.grid()
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("CFE target")
     ax.set_ylabel(f"Total capacity diff. [GW]")
-    ax.legend(loc="lower left", ncol=2, prop={"size":8})
+    ax.legend(loc="upper left", ncol=2, prop={"size":8})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","total_capacity_diff.pdf"),
@@ -428,7 +468,7 @@ def objective_rel():
             color='#4a3a28', width=0.65, edgecolor = "black", linewidth=0.05, alpha=0.95)
  
     plt.xticks(rotation=0)
-    ax.grid()
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("CFE target")
     ax.set_ylabel(f"obj % increase to reference case")
@@ -448,7 +488,7 @@ def objective_abs():
 
     ldf.plot(kind="bar", ax=ax)
 
-    ax.grid()
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
     ax.set_ylabel("Objective [EUR 1e9]")
@@ -463,7 +503,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p3', zone='IE', year='2025', participation='25')   
+        snakemake = mock_snakemake('plot_summary', palette='p1', zone='DK', year='2030', participation='25')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
@@ -575,7 +615,7 @@ if __name__ == "__main__":
     #objective_abs()
     
     #diffs to reference case
-    objective_rel()
+    #objective_rel()
     system_capacity_diff()
     total_capacity_diff()
 
