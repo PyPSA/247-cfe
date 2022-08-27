@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 #allow plotting without Xwindows
 import matplotlib
+from pyrsistent import s
+from xarray import align
 matplotlib.use('Agg')
 
 from solve_network import palette, geoscope
@@ -11,54 +13,70 @@ from solve_network import palette, geoscope
 def used():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     typ = ["local","grid"]
 
     ldf = df.loc[[f"ci_fraction_clean_used_{t}" for t in typ]].rename({f"ci_fraction_clean_used_{t}" : t for t in typ})
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf.rename({"local" : "PPA", "grid" : "grid imports"}, inplace=True)
 
+    yl_ref = ldf.loc[:,'no\npolicy'].sum()
+    yl_100RES = ldf.loc[:,'100%\nRES'].sum()
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.text(0.5,yl_100RES+0.03,f'benchmarks', horizontalalignment='center') #{int(yl*100)}%'
+    
     ldf.T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
-    ax.grid()
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("fraction CFE [per unit]")
-    ax.legend(loc="lower left",
-              prop={"size":8})
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("fraction CFE [%]")
+    ax.set_ylim([0,1.1])
+    ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
     fig.tight_layout()
-    fig.savefig(snakemake.output.used,
-                transparent=True)
+    fig.savefig(snakemake.output.used, transparent=True)
 
 
 def ci_capacity():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
     charge_inv = df.loc[["ci_cap_" + t for t in clean_chargers]].rename({"ci_cap_" + t : t for t in clean_chargers})
     charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger capacity
-    
-    ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
 
-    ldf.index = ldf.index.map(rename_ci)
+    ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
+    
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
+    #ldf.index = ldf.index.map(rename_ci_cost)
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf.index = ldf.index.map(rename_ci_capacity)
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    yl_100RES = ldf.loc[:,'100%\nRES'].sum()
+    ax.set_ylim([0,yl_100RES*1.3/1e3])
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
-    ax.grid()
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("CI capacity [GW]")
-    ax.legend(loc="upper left",
-              prop={"size":5})
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("C&I capacity [GW]")
+    ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_capacity.pdf"),
@@ -68,46 +86,63 @@ def ci_capacity():
 def ci_generation():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     generation = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
     discharge = df.loc[["ci_generation_" + t for t in clean_dischargers]].rename({"ci_generation_" + t : t for t in clean_dischargers})/1000.
 
     ldf = pd.concat([generation, discharge])
 
-    ldf.index = ldf.index.map(rename_ci)
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf.index = ldf.index.map(rename_ci_capacity)
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
 
-    ldf.T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
-    ax.grid()
+    (ldf/1e3).T.plot(kind="bar",stacked=True,
+                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("CI generation [GWh]")
-    ax.legend(loc="upper left",
-              prop={"size":5})
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("C&I generation [TWh]")
+    ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_generation.pdf"),
                 transparent=True)
 
 
-def global_emissions():
+def system_emissions():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     ldf = (df/1e6).loc['emissions']
     ldf.index = ldf.index.map(rename_scen)
     
-    ldf.plot(kind="bar", ax=ax)  
+    yl_ref = ldf.loc['no\npolicy']
+    yl_100RES = ldf.loc['100%\nRES']
+    yl_end = ldf[-1]
+    ax.set_ylim([yl_100RES*0.8, yl_100RES*1.1])
+    plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.text(0.5,yl_ref+0.2,f'benchmarks', horizontalalignment='center') #{int(yl*100)}%'
 
-    ax.grid()
+    ldf.plot(kind="bar", ax=ax, 
+        color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
+ 
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("global emissions [MtCO2/a]")
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("system emissions [MtCO$_2$/a]")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_emissions.pdf"),
@@ -117,17 +152,28 @@ def global_emissions():
 def ci_emisrate():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     ldf = df.loc['ci_emission_rate_true']
     ldf.index = ldf.index.map(rename_scen)
    
-    ldf.plot(kind="bar", ax=ax)
+    yl_ref = ldf.loc['no\npolicy']
+    yl_100RES = ldf.loc['100%\nRES']
+    ax.set_ylim([0, 0.15])
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+    plt.text(x=8, y=yl_ref+0.003, horizontalalignment='right', 
+             s=f'Reference case: {round(yl_ref*100, 3)} [t/MWh]')
 
-    ax.grid()
+    ldf.plot(kind="bar", ax=ax,
+        color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
+ 
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_xlabel("scenario")
-    ax.set_ylabel("Emission rate of 24/7 CI [t/MWh]")
+    ax.set_ylabel("C&I emission rate [t/MWh]")
     #ax.yaxis.label.set_size(6)
 
     fig.tight_layout()
@@ -138,7 +184,7 @@ def ci_emisrate():
 def ci_cost():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     techs = clean_techs + ["grid",
                            "battery_storage",
@@ -152,20 +198,26 @@ def ci_cost():
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
     ldf.drop(to_drop, inplace=True)
 
-    ldf.index = ldf.index.map(rename_ci)
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf = ldf.groupby(rename_ci_cost).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    yl_ref = ldf.loc[:,'no\npolicy'].sum()
+    yl_end = ldf.loc[:,ldf.columns[-1]].sum()
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
     ldf.T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
-    ax.grid()
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("CI average cost [EUR/MWh]")
-    ax.legend(loc="upper left",
-              prop={"size":5})
-
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("PPA cost [€/MWh]")
+    ax.legend(loc="upper left", ncol = 3, prop={"size":9})
+    ax.set_ylim(top=yl_end*1.4)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_cost.pdf"),
@@ -175,7 +227,7 @@ def ci_cost():
 def ci_costandrev():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     techs = clean_techs + ["grid",
                            "battery_storage",
@@ -185,27 +237,35 @@ def ci_costandrev():
                            "hydrogen_fuel_cell"]
 
     costs = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
+    
     to_drop = costs.index[(costs < 0.1).all(axis=1)]
     costs.drop(to_drop, inplace=True)
 
     revenues = - df.loc[["ci_average_revenue"]]
     revenues.index = revenues.index.map({'ci_average_revenue': 'revenue'})
-
     ldf = pd.concat([costs, revenues])
 
-    ldf.index = ldf.index.map(rename_ci)
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf = ldf.groupby(rename_ci_cost).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    yl_ref = ldf.loc[:,'no\npolicy'].sum()
+    yl_end = ldf.loc[:,ldf.columns[-1]].sum()
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
     ldf.T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
-    ax.grid()
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("CI average cost [EUR/MWh]")
-    ax.legend(loc="upper left",
-              prop={"size":5})
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("PPA cost incl. market revenue [€/MWh]")
+    ax.legend(loc="upper left", ncol = 3, prop={"size":8})
+    ax.set_ylim(top=yl_end*1.4)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_costandrev.pdf"),
@@ -215,7 +275,7 @@ def ci_costandrev():
 def system_capacity():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
     links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
@@ -225,20 +285,27 @@ def system_capacity():
 
     ldf = pd.concat([gens, links, dischargers, chargers])
 
-    ldf.index = ldf.index.map(rename_system_techs)
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf = ldf.groupby(rename_system_simple).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+    
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
+    plt.xticks(rotation=0)
     ax.grid()
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel("System capacity inv. [GW]")
-    ax.legend(loc="upper right",
-              prop={"size":5})
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("System capacity investment [GW]")
+    ax.legend(loc="lower right", ncol=2, prop={"size":9})
 
+    ax.set_ylim([0,90])
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity.pdf"),
                 transparent=True)
@@ -247,7 +314,7 @@ def system_capacity():
 def system_capacity_diff():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
     links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
@@ -256,22 +323,26 @@ def system_capacity_diff():
     chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
 
     ldf = pd.concat([gens, links, dischargers, chargers])
-
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
     ldf = ldf.sub(ldf.cfe00,axis=0)
 
-    ldf.index = ldf.index.map(rename_system_techs)
     ldf.columns = ldf.columns.map(rename_scen)
+    ldf = ldf.groupby(rename_system_simple).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
+    plt.xticks(rotation=0)
     ax.grid()
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
+    ax.set_xlabel("CFE target")
     ax.set_ylabel(f"System capacity diff. [GW]")
-    ax.legend(loc="upper right",
-              prop={"size":5})
+    ax.legend(loc="lower right", ncol=2, prop={"size":8})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_capacity_diff.pdf"),
@@ -281,7 +352,7 @@ def system_capacity_diff():
 def total_capacity_diff():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     #system capacity
     gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
@@ -291,8 +362,11 @@ def total_capacity_diff():
     chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
 
     ldf_system = pd.concat([gens, links, dischargers, chargers])
-    ldf_system.index = ldf_system.index.map(rename_system_techs)
-    
+
+    to_drop = ldf_system.index[(ldf_system < 0.1).all(axis=1)]
+    ldf_system.drop(to_drop, inplace=True)
+    ldf_system = ldf_system.groupby(rename_system_simple).sum()
+
     #CI capacity
     gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
@@ -300,24 +374,31 @@ def total_capacity_diff():
     charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger capacity
     
     ldf_ci = pd.concat([gen_inv, charge_inv, discharge_inv])
-    ldf_ci.index = ldf_ci.index.map(rename_ci)
+
+    to_drop = ldf_ci.index[(ldf_ci < 0.1).all(axis=1)]
+    ldf_ci.drop(to_drop, inplace=True)
+    ldf_ci.index = ldf_ci.index.map(rename_ci_capacity)
 
     #Total system capacity
     ldf = ldf_system.add(ldf_ci, fill_value=0)
 
+    #Calculate diff, rename scenarios, order techs
     ldf = ldf.sub(ldf.cfe00,axis=0)
     ldf.columns = ldf.columns.map(rename_scen)
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
 
     (ldf/1e3).T.plot(kind="bar",stacked=True,
-               ax=ax,
-               color=tech_colors)
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
+    plt.xticks(rotation=0)
     ax.grid()
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
+    ax.set_xlabel("CFE target")
     ax.set_ylabel(f"Total capacity diff. [GW]")
-    ax.legend(loc="upper right",
-              prop={"size":5})
+    ax.legend(loc="lower left", ncol=2, prop={"size":8})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","total_capacity_diff.pdf"),
@@ -327,15 +408,13 @@ def total_capacity_diff():
 def objective_rel():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     values = (df/1e9).loc['objective']
     
     #The first scenario in config is reference case -> by default cfe00
     ref = values[0]
-    
     l, scens = [], {}
-    
     for count, (index, value) in enumerate(values.iteritems()):
         scens[count] = f'{index}'
         l.append((value - ref)/ref*100)
@@ -344,12 +423,16 @@ def objective_rel():
     ldf.index = ldf.index.map(scens)
     ldf.index = ldf.index.map(rename_scen)
 
-    ldf.plot(kind="bar", ax=ax)
-    
+    plt.axvline(x = 1.5, color = 'gray', linestyle="--")
+
+    ldf.plot(kind="bar", ax=ax,
+            color='#4a3a28', width=0.65, edgecolor = "black", linewidth=0.05, alpha=0.95)
+ 
+    plt.xticks(rotation=0)
     ax.grid()
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
-    ax.set_ylabel(f"obj % increase to {ldf.index[0]}")
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel(f"obj % increase to reference case")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","system_objective_rel.pdf"),
@@ -381,7 +464,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p1', zone='IE', year='2025', participation='10')   
+        snakemake = mock_snakemake('plot_summary', palette='p3', zone='IE', year='2025', participation='25')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
@@ -408,8 +491,7 @@ if __name__ == "__main__":
     exp_generators = ['offwind-ac-%s' % year, 
                     'offwind-dc-%s' % year, 
                     'onwind-%s' % year, 
-                    'solar-%s' % year, 
-                    'solar rooftop-%s' % year]
+                    'solar-%s' % year]
     exp_links = ['OCGT-%s' % year]
     exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
     exp_dischargers = ['battery discharger-%s' % year, 'H2 Fuel Cell-%s' % year]
@@ -421,44 +503,59 @@ if __name__ == "__main__":
     #Assign colors
     tech_colors = snakemake.config['tech_colors']
 
-    rename_ci = {
-        'onwind': 'onwind',
-        'solar': 'solar',
-        'battery_discharger': 'battery_inverter',
-        'battery_inverter': 'battery_inverter',
-        'battery_storage':  "battery_storage",
-        'hydrogen_electrolysis': 'hydrogen_electrolysis',
-        'hydrogen_fuel_cell': 'hydrogen_electrolysis',
-        'H2_Electrolysis': 'hydrogen_electrolysis',
-        'H2_Fuel_Cell': 'hydrogen_fuel_cell',
-        'hydrogen_storage': 'hydrogen_storage',
-        'adv_nuclear': 'advanced nuclear',
-        'adv_geothermal': 'advanced geothermal',
-        'grid': 'grid',
-        'revenue': "revenue"
-    }
+    rename_ci_cost = pd.Series({
+        "onwind" : "onshore wind",
+        "solar" : "solar",
+        "grid" : "grid imports",
+        'revenue': "revenue",
+        "battery_storage" : "battery",
+        "battery_inverter" : "battery",
+        'battery_discharger':"battery",
+        "hydrogen_storage" : "hydrogen storage",
+        "hydrogen_electrolysis": "hydrogen storage",
+        "hydrogen_fuel_cell": "hydrogen storage",
+        "adv_nuclear" : "advanced dispatchable",
+        'adv_geothermal': "advanced geothermal"})
 
-    rename_system_techs = {
-        'offwind-ac-%s' % year: 'offwind-ac',
-        'offwind-dc-%s' % year: 'offwind-dc',
-        'onwind-%s' % year: 'onwind',
+    rename_ci_capacity= pd.Series({
+        "onwind" : "onshore wind",
+        "solar" : "solar",
+        'battery_discharger':"battery",
+        "H2_Fuel_Cell": "hydrogen fuel cell",
+        "H2_Electrolysis": "hydrogen electrolysis",
+        'adv_geothermal': "advanced geothermal"})
+
+    preferred_order = pd.Index([
+        "advanced geothermal",
+        'Gas OC',
+        "offshore wind",
+        "onshore wind",
+        "solar",
+        "battery",
+        "hydrogen storage",
+        "hydrogen electrolysis",
+        "hydrogen fuel cell"])
+
+    rename_system_simple = {
+        'offwind-ac-%s' % year: 'offshore wind',
+        'offwind-dc-%s' % year: 'offshore wind',
+        'onwind-%s' % year: 'onshore wind',
         'solar-%s' % year: 'solar',
-        'solar_rooftop-%s' % year: 'solar_rooftop',
-        'OCGT-%s' % year: 'OCGT',
-        'battery_discharger-%s' % year: 'battery_inverter',
-        'H2_Fuel_Cell-%s' % year: 'hydrogen_fuel_cell',
-        'H2_Electrolysis-%s' % year: 'hydrogen_electrolysis'
+        'OCGT-%s' % year: 'Gas OC',
+        'battery_discharger-%s' % year: 'battery',
+        'H2_Fuel_Cell-%s' % year: 'hydrogen fuel cell',
+        'H2_Electrolysis-%s' % year: 'hydrogen electrolysis'
     }
 
-    rename_scen = {'cfe00': 'no policy',
-                    'res100': 'res-100%',
-                    'cfe75': 'cfe-75%',
-                    'cfe80': 'cfe-80%',
-                    'cfe85':'cfe-85%',
-                    'cfe90':'cfe-90%',
-                    'cfe95':'cfe-95%',
-                    'cfe98':'cfe-98%',
-                    'cfe100':'cfe-100%'
+    rename_scen = {'cfe00': 'no\npolicy',
+                    'res100': '100%\nRES',
+                    'cfe75': '75%',
+                    'cfe80': '80%',
+                    'cfe85':'85%',
+                    'cfe90':'90%',
+                    'cfe95':'95%',
+                    'cfe98':'98%',
+                    'cfe100':'100%'
                     }
 
 
@@ -474,7 +571,7 @@ if __name__ == "__main__":
     ci_emisrate()
 
     #system
-    global_emissions()
+    system_emissions()
     system_capacity()
     #objective_abs()
     
@@ -482,3 +579,4 @@ if __name__ == "__main__":
     objective_rel()
     system_capacity_diff()
     total_capacity_diff()
+
