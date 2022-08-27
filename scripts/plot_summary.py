@@ -164,7 +164,7 @@ def ci_emisrate():
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axvline(x = 1.5, color = 'gray', linestyle="--")
     plt.text(x=8, y=yl_ref+0.003, horizontalalignment='right', 
-             s=f'Reference case: {round(yl_ref*100, 3)} [t/MWh]')
+             s=f'Reference case: {round(yl_ref, 3)} [t/MWh]')
 
     ldf.plot(kind="bar", ax=ax,
         color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
