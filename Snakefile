@@ -102,3 +102,21 @@ rule copy_config:
     threads: 1
     resources: mem_mb=1000
     script: "scripts/copy_config.py"
+
+
+# additional rules for cluster communication -> not included into a workflow 
+rule sync_solution:
+    params:
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/247cfe"
+    shell: 
+        """
+        rsync -uvarh --no-g {params.cluster} results/
+        """
+
+rule sync_plots:
+    params:
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/247cfe/plots/"
+    shell: 
+        """
+        rsync -uvarh --no-g {params.cluster} report/plots
+        """
