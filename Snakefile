@@ -107,7 +107,7 @@ rule copy_config:
 # additional rules for cluster communication -> not included into a workflow 
 rule sync_solution:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/247cfe"
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/test-co2p"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} results/
@@ -120,3 +120,18 @@ rule sync_plots:
         """
         rsync -uvarh --no-g {params.cluster} report/plots
         """
+
+
+# illustrate workflow
+rule dag:
+     message: "Plot dependency graph of the workflow."
+     output:
+         dot="workflow/dag.dot",
+         graph="workflow/graph.dot",
+         pdf="workflow/graph.pdf"
+     shell:
+         """
+         snakemake --rulegraph > {output.dot}
+         sed -e '1,2d' < {output.dot} > {output.graph}
+         dot -Tpdf -o {output.pdf} {output.graph}
+         """

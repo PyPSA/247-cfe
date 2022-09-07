@@ -9,6 +9,7 @@ gurobi.log
 /data
 /results
 /logs
+/workflow
 
 *.org
 *~
