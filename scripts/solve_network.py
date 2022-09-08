@@ -209,6 +209,33 @@ def shutdown_lineexp(n):
     n.links.loc[n.links.carrier=='DC', 'p_nom_extendable'] = False
 
 
+def limit_resexp(n, year):
+    '''
+    limit expansion of renewable technologies per zone and carrier type 
+    as a ratio of max increase to 2021 capacity fleet
+    (additional to zonal place availability constraint)
+    '''
+    name = snakemake.config['ci']['name']
+    ratio = snakemake.config['global'][f'limit_res_exp_{year}']
+
+    res = n.generators[(~n.generators.index.str.contains('EU')) & (~n.generators.index.str.contains(name))]
+    fleet = res[res.p_nom_extendable==False]
+
+    #fleet.groupby([fleet.carrier, fleet.bus]).p_nom.sum()
+    off_c = fleet[fleet.index.str.contains('offwind')].carrier + '-' + \
+            fleet[fleet.index.str.contains('offwind')].index.str.extract('(ac)|(dc)').fillna('').sum(axis=1).values
+    
+    fleet["carrier_s"] = off_c.reindex(fleet.index).fillna(fleet.carrier)
+
+    for bus in fleet.bus.unique():
+        for carrier in ['solar', 'onwind', 'offwind-ac', 'offwind-dc']:
+            p_nom_fleet = 0
+            p_nom_fleet = fleet.loc[(fleet.bus == bus) & (fleet.carrier_s == carrier), "p_nom"].sum()
+            #print(f'bus: {bus}, carrier: {carrier}' ,p_nom_fleet)
+            n.generators.loc[(n.generators.p_nom_extendable==True) & (n.generators.bus == bus) & \
+                             (n.generators.carrier == carrier), "p_nom_max"] = ratio * p_nom_fleet
+
+
 def nuclear_policy(n):
     '''
     remove nuclear PPs fleet for countries with nuclear ban policy
@@ -686,7 +713,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="ref", palette='p1', zone='IE', year='2025', participation='10')
+                                policy="ref", palette='p1', zone='IE', year='2030', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -729,6 +756,7 @@ if __name__ == "__main__":
         strip_network(n)
 
         shutdown_lineexp(n)
+        limit_resexp(n,year)
         nuclear_policy(n)
         coal_policy(n)
         biomass_potential(n)
