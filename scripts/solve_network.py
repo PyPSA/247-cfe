@@ -275,21 +275,24 @@ def cost_parametrization(n):
     #n.generators[n.generators.index.str.contains('EU')].T
 
 
-def add_ci(n, participation):
+def add_ci(n, participation, year):
     """Add C&I at its own node"""
 
     #first deal with global policy environment
     gl_policy = snakemake.config['global']
+
     if gl_policy['policy_type'] == "co2 cap":
         co2_cap = gl_policy['co2_share']*gl_policy['co2_baseline']
-        print("Setting global CO2 cap to ",co2_cap)
+        print(f"Setting global CO2 cap to {co2_cap}")
         n.global_constraints.at["CO2Limit","constant"] = co2_cap
+
     elif gl_policy['policy_type'] == "co2 price":
-        n.global_constraints.drop("CO2Limit",
-                                  inplace=True)
-        print("Setting CO2 price to",gl_policy['co2_price'])
+        n.global_constraints.drop("CO2Limit", inplace=True)
+        co2_price = gl_policy[f'co2_price_{year}']
+        print(f"Setting CO2 price to {co2_price}")
         for carrier in ["coal", "oil", "gas", "lignite"]:
-            n.generators.at[f"EU {carrier}","marginal_cost"] += gl_policy['co2_price']*costs.at[carrier, 'CO2 intensity']
+            n.generators.at[f"EU {carrier}","marginal_cost"] += co2_price*costs.at[carrier, 'CO2 intensity']
+
 
     #local C&I properties
     name = snakemake.config['ci']['name']
@@ -762,7 +765,7 @@ if __name__ == "__main__":
         biomass_potential(n)
         cost_parametrization(n)
 
-        add_ci(n, participation)
+        add_ci(n, participation, year)
 
         solve_network(n, policy, penetration, tech_palette)
 

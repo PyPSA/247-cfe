@@ -72,7 +72,10 @@ global:
   policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
   co2_share: 0.5 #pu  - rough target for 2030
-  co2_price: 130 #EUR/tCO2
+  limit_res_exp_2025: 2 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology 
+  limit_res_exp_2030: 4 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology 
+  co2_price_2025: 80 #EUR/tCO2
+  co2_price_2030: 130 #EUR/tCO2
   grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar", 
                     "hydro","urban central solid biomass CHP"] #"solar rooftop"
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
