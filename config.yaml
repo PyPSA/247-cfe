@@ -12,7 +12,7 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: '247cfe'
+run: 'wp1'
 
 #wildcards
 scenario:
