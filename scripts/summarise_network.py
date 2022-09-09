@@ -325,7 +325,7 @@ def summarise_network(n, policy, tech_palette):
     if snakemake.config['global']['policy_type'] == "co2 cap":
         results["co2_price"] = n.global_constraints.at["CO2Limit","mu"]
     elif snakemake.config['global']['policy_type'] == "co2 price":
-        results["co2_price"] = snakemake.config['global']['co2_price']
+        results["co2_price"] = snakemake.config['global'][f'co2_price_{year}']
     else:
         results["co2_price"] = 0
 
