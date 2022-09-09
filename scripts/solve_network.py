@@ -377,6 +377,9 @@ def add_ci(n, participation, year):
           bus=name,
           p_set=pd.Series(load,index=n.snapshots))
 
+    #C&I following 24/7 approach is a share of all C&I load -> thus substract it from node's profile
+    n.loads_t.p_set[f'{node}'] -= n.loads_t.p_set[f'{name}'+' load']
+
     if "battery" in storage_techs:
         n.add("Bus",
               f"{name} battery",
@@ -716,7 +719,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="ref", palette='p1', zone='IE', year='2030', participation='10')
+                                policy="ref", palette='p1', zone='DE', year='2030', participation='25')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
