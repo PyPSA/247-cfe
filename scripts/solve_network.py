@@ -32,7 +32,7 @@ def palette(tech_palette):
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
 
     elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_geothermal"]  #"adv_nuclear"
+        clean_techs = ["onwind", "solar", "adv_geothermal", "allam_ccs"]  #"adv_nuclear", "allam_ccs"
         storage_techs = ["battery", "hydrogen"]
         storage_chargers = ["battery charger", "H2 Electrolysis"]
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
@@ -116,6 +116,17 @@ def timescope(zone, year):
     return d
 
 
+def cost_parametrization(n):
+    '''
+    overwrite default price assumptions for primary energy carriers
+    only for virtual generators located in 'EU {carrier}' buses
+    '''
+
+    for carrier in ['lignite', 'coal', 'gas']:
+        n.generators.loc[n.generators.index.str.contains(f'EU {carrier}'), 'marginal_cost'] = snakemake.config['costs'][f'price_{carrier}']
+    #n.generators[n.generators.index.str.contains('EU')].T
+
+
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
     #set all asset costs and other parameters
@@ -141,7 +152,7 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
     data_nuc = pd.Series({'CO2 intensity': 0, 
             'FOM': costs.loc['nuclear']['FOM'], 
             'VOM': costs.loc['nuclear']['VOM'], 
-            'discount rate': costs.loc['nuclear']['discount rate'],
+            'discount rate': discount_rate,
             'efficiency': 0.36,
             'fuel': costs.loc['nuclear']['fuel'],
             'investment': snakemake.config['costs']['adv_nuclear_overnight'] * 1e3 * snakemake.config['costs']['USD2021_to_EUR2021'],
@@ -150,22 +161,38 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
     if year == '2025':
         adv_geo_overnight = snakemake.config['costs']['adv_geo_overnight_2025']
+        allam_ccs_overnight = snakemake.config['costs']['allam_ccs_overnight_2025']
     elif year == '2030':
         adv_geo_overnight = snakemake.config['costs']['adv_geo_overnight_2030']
+        allam_ccs_overnight = snakemake.config['costs']['allam_ccs_overnight_2030']
 
     # Advanced geothermal
     data_geo = pd.Series({'CO2 intensity': 0, 
             'FOM': 0, 
             'VOM': 0, 
-            'discount rate': costs.loc['nuclear']['discount rate'],
+            'discount rate': discount_rate,
             'efficiency': 1,
             'fuel': 0,
             'investment':  adv_geo_overnight * 1e3 * 1,
             'lifetime': 30.0
             }, name="adv_geothermal")
 
+    # Allam cycle ccs
+    data_allam = pd.Series({'CO2 intensity': 0, 
+            'FOM': 0, #%/year
+            'FOM-abs' : 33000, #$/MW-yr
+            'VOM': 3.2, #EUR/MWh
+            'co2_seq': 40, #$/ton
+            'discount rate': discount_rate,
+            'efficiency': 0.54,
+            'fuel': snakemake.config['costs']['price_gas'],
+            'investment':  allam_ccs_overnight * 1e3 * 1,
+            'lifetime': 30.0
+            }, name="allam_ccs")
+
     costs = costs.append(data_nuc, ignore_index=False)
     costs = costs.append(data_geo, ignore_index=False)
+    costs = costs.append(data_allam, ignore_index=False)
 
     annuity_factor = lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
     costs["fixed"] = [annuity_factor(v) * v["investment"] * Nyears for i, v in costs.iterrows()]
@@ -264,17 +291,6 @@ def biomass_potential(n):
     n.stores.loc[n.stores.index=='EU solid biomass', 'e_initial'] *= 0.45
 
 
-def cost_parametrization(n):
-    '''
-    overwrite default price assumptions for primary energy carriers
-    only for virtual generators located in 'EU {carrier}' buses
-    '''
-
-    for carrier in ['lignite', 'coal', 'gas']:
-        n.generators.loc[n.generators.index.str.contains(f'EU {carrier}'), 'marginal_cost'] = snakemake.config['costs'][f'price_{carrier}']
-    #n.generators[n.generators.index.str.contains('EU')].T
-
-
 def add_ci(n, participation, year):
     """Add C&I at its own node"""
 
@@ -345,6 +361,21 @@ def add_ci(n, participation, year):
               lifetime = costs.loc['adv_nuclear']['lifetime']
               )
     
+    #baseload clean energy generator
+    if "allam_ccs" in clean_techs:      
+        n.add("Generator",
+              f"{name} allam_ccs",
+              bus = name,
+              carrier = 'gas',
+              capital_cost = costs.loc['allam_ccs']['fixed'] + costs.loc['allam_ccs']['FOM-abs'],
+              marginal_cost = costs.loc['allam_ccs']['VOM'] + \
+                              costs.loc['allam_ccs']['fuel']/costs.loc['allam_ccs']['efficiency'] + \
+                              costs.loc['allam_ccs']['co2_seq']*costs.at['gas', 'CO2 intensity']/costs.loc['allam_ccs']['efficiency'],
+              p_nom_extendable = True if policy == "cfe" else False,
+              lifetime = costs.loc['allam_ccs']['lifetime'],
+              efficiency = costs.loc['allam_ccs']['efficiency'],
+              )
+
     #baseload clean energy generator
     if "adv_geothermal" in clean_techs:      
         n.add("Generator",
