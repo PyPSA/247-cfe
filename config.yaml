@@ -16,7 +16,7 @@ run: 'final'
 
 #wildcards
 scenario:
-  policy:  ["ref", "res100", "cfe75", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe100"]
+  policy:  ["ref", "res100", "cfe80", "cfe84", "cfe88", "cfe92", "cfe94", "cfe98", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
              "p3", # onwind + solar + battery + LDES + clean dispatchable gen
