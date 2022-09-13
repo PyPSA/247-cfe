@@ -244,8 +244,9 @@ def limit_resexp(n, year):
     '''
     name = snakemake.config['ci']['name']
     ratio = snakemake.config['global'][f'limit_res_exp_{year}']
+    node = geoscope(zone, area)['node']
 
-    res = n.generators[(~n.generators.index.str.contains('EU')) & (~n.generators.index.str.contains(name))]
+    res = n.generators[(~n.generators.index.str.contains('EU')) & (~n.generators.index.str.contains(name)) & (~n.generators.index.str.contains(f'{node}'))]
     fleet = res[res.p_nom_extendable==False]
 
     #fleet.groupby([fleet.carrier, fleet.bus]).p_nom.sum()
@@ -750,7 +751,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="ref", palette='p1', zone='DE', year='2030', participation='25')
+                                policy="cfe80", palette='p3', zone='DE', year='2030', participation='25')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
