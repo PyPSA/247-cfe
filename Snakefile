@@ -83,7 +83,7 @@ if config['solve_network'] == 'solve':
             python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_python.log",
             memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_memory.log"
         threads: 12
-        resources: mem=16000
+        resources: mem=8000
         script: "scripts/solve_network.py"
 
 rule summarise_network:
@@ -107,7 +107,7 @@ rule copy_config:
 # additional rules for cluster communication -> not included into a workflow 
 rule sync_solution:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/wp1"
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/final"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} results/
@@ -115,7 +115,7 @@ rule sync_solution:
 
 rule sync_plots:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/wp1/plots/"
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/final/plots/"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} report/plots

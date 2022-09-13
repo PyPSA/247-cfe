@@ -32,7 +32,7 @@ def palette(tech_palette):
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
 
     elif tech_palette == 'p3':
-        clean_techs = ["onwind", "solar", "adv_geothermal", "allam_ccs"]  #"adv_nuclear", "allam_ccs"
+        clean_techs = ["onwind", "solar", "allam_ccs"]  #"adv_nuclear", "adv_geothermal"
         storage_techs = ["battery", "hydrogen"]
         storage_chargers = ["battery charger", "H2 Electrolysis"]
         storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
