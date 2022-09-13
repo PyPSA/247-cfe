@@ -624,7 +624,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
         total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum()
 
-        share = max(0., penetration - 0.8)
+        share = 0.2 # max(0., penetration - 0.8) -> no sliding share
         rhs = share * total_load
 
         con = define_constraints(n, lhs, '<=', rhs, 'Excess_constraint')
