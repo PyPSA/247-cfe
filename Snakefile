@@ -107,7 +107,7 @@ rule copy_config:
 # additional rules for cluster communication -> not included into a workflow 
 rule sync_solution:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/final"
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/report"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} results/
@@ -115,7 +115,7 @@ rule sync_solution:
 
 rule sync_plots:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/final/plots/"
+        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/report/plots/"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} report/plots

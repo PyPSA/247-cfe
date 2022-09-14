@@ -12,7 +12,7 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 'final'
+run: 'report'
 
 #wildcards
 scenario:
@@ -92,7 +92,7 @@ costs:
   price_green_hydrogen: 3 #EUR/kg
   price_lignite: 6.5 # EUR/MWhth from TYNDP2020 -> default is 2.9
   price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
-  price_gas: 50 # EUR/MWhth -> https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf
+  price_gas: 35 # EUR/MWhth -> https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf
   adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
   adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
@@ -129,7 +129,7 @@ res_target_2025:
   DE: 0.45
   NL: 0.35
 res_target_2030:
-  IE: 0.8
+  IE: 0.7
   DK: 1.1
   DE: 0.8
   NL: 0.5
