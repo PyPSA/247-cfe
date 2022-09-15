@@ -553,8 +553,9 @@ if __name__ == "__main__":
         "hydrogen_storage" : "hydrogen storage",
         "hydrogen_electrolysis": "hydrogen storage",
         "hydrogen_fuel_cell": "hydrogen storage",
-        "adv_nuclear" : "advanced dispatchable",
-        'adv_geothermal': "advanced geothermal",
+        #"adv_nuclear" : "advanced dispatchable",
+        #'adv_geothermal': "advanced geothermal",
+        'adv_geothermal': "advanced dispatchable",
         'allam_ccs': "NG-Allam"})
 
     rename_ci_capacity= pd.Series({
@@ -563,11 +564,11 @@ if __name__ == "__main__":
         'battery_discharger':"battery",
         "H2_Fuel_Cell": "hydrogen fuel cell",
         "H2_Electrolysis": "hydrogen electrolysis",
-        'adv_geothermal': "advanced geothermal",
+        'adv_geothermal': "advanced dispatchable",
         'allam_ccs': "NG-Allam"})
 
     preferred_order = pd.Index([
-        "advanced geothermal",
+        "advanced dispatchable",
         "NG-Allam",
         'Gas OC',
         "offshore wind",
