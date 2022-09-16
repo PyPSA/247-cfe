@@ -330,14 +330,14 @@ def add_ci(n, participation, year):
           name + " export",
           bus0=name,
           bus1=node,
-          marginal_cost=1, #to stop link being used to destroy energy
+          marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
           p_nom=1e6)
 
     n.add("Link",
           name + " import",
           bus0=node,
           bus1=name,
-          marginal_cost=1, #to stop link being used to destroy energy
+          marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
           p_nom=1e6)
 
     #baseload clean energy generator
