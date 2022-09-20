@@ -32,7 +32,7 @@ Further information:
 
 ### Data
 
-The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2025/2030. To get started, you can download these sample networks: [pypsa-eur-sec-2025/2030](https://tubcloud.tu-berlin.de/s/YRbQZiygNeXJ5on).
+The folder `data` should contain PyPSA networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) built with `myopic` setting to get brownfield networks for 2025/2030. To get started, you can use sample networks from the `input` folder.
 
 Parallel to the repository you should also clone the [technology-data](https://github.com/PyPSA/technology-data) repository.
 
@@ -62,6 +62,6 @@ mamba env create -f envs/environment.yml
 ## License
 
 
-Copyright 2022 Tom Brown.
+Copyright 2022 Tom Brown, Iegor Riepin.
 
 This code is licensed under the open source MIT License.
