@@ -166,6 +166,42 @@ def system_emissions():
                 transparent=True)
 
 
+def zone_emissions():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((6,4.5))
+
+    ldf = (df).loc['emissions_zone']
+    ldf.index = ldf.index.map(rename_scen)
+    
+    yl_ref = ldf.loc['no\npolicy']
+    yl_100RES = ldf.loc['100%\nRES']
+    yl_end = ldf[-1]
+    ax.set_ylim([yl_100RES*0.8, yl_ref*1.1])
+    plt.axhline(y = yl_ref, color = 'gray', linestyle="-", linewidth=1.5)
+    plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
+    plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    plt.text(3.3, yl_ref-0.02*yl_ref,f'Reference case, emissions {round(yl_ref,1)} [Mt]', 
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
+    
+    #Drop reference scenario before plotting
+    ldf.drop(ldf.index[0], inplace=True)
+
+    ldf.plot(kind="bar", ax=ax, 
+        color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
+ 
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.set_xlabel("CFE target")
+    ax.set_ylabel("Emissions in local zone [MtCO$_2$/a]")
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.used.replace("used.pdf","zone_emissions.pdf"),
+                transparent=True)
+
+
 def ci_emisrate():
 
     fig, ax = plt.subplots()
@@ -512,7 +548,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='25')   
+        snakemake = mock_snakemake('plot_summary', palette='p3', zone='IE', year='2025', participation='10')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
@@ -623,7 +659,8 @@ if __name__ == "__main__":
     ci_emisrate()
 
     #system
-    system_emissions()
+    zone_emissions()
+    #system_emissions()
     system_capacity()
     #objective_abs()
     

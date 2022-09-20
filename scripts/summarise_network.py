@@ -165,6 +165,10 @@ def summarise_network(n, policy, tech_palette):
     #3.3: Total CO2 emissions for 24/7 participating customers
     results['ci_emissions'] = (ci_emissions_t*n.snapshot_weightings["generators"]).sum()
 
+    #3.4: Total CO2 emissions in zone where 24/7 participating customers are located
+    results['emissions_zone'] = (country_hourly_emissions*n.snapshot_weightings["generators"]).sum()/1e6
+
+
     # 4: Storing invested capacities at CI node
 
     for tech in clean_techs:
@@ -344,7 +348,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="ref", palette='p3', zone='IE', year='2025', participation='25')
+        snakemake = mock_snakemake('summarise_network', policy="ref", palette='p3', zone='DE', year='2025', participation='10')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
