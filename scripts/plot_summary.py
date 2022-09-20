@@ -262,7 +262,6 @@ def ci_costandrev():
     
     to_drop = costs.index[(costs < 0.1).all(axis=1)]
     costs.drop(to_drop, inplace=True)
-
     revenues = - df.loc[["ci_average_revenue"]]
     revenues.index = revenues.index.map({'ci_average_revenue': 'revenue'})
     ldf = pd.concat([costs, revenues])
@@ -276,7 +275,7 @@ def ci_costandrev():
     plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(0.6, yl_end+1,f'PPA cost at 100% 24x7 CFE', 
+    plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE', 
             horizontalalignment='left') 
     
     #Drop reference scenario before plotting
@@ -284,6 +283,15 @@ def ci_costandrev():
 
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+
+    netc=ldf.sum()
+    x = 0
+    for i in range(len(netc)):
+        ax.scatter(x = x, y = netc[i], color='black', marker="_")
+        x += 1
+    ax.scatter([], [], color='black', marker="_", label='net cost')
+    #dots = ax.scatter(0, 0, color='black', marker="_")
+    #ax.legend(handlers = [dots])
 
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
@@ -504,7 +512,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p1', zone='DK', year='2030', participation='25')   
+        snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='25')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
@@ -594,11 +602,11 @@ if __name__ == "__main__":
     rename_scen = {'ref': 'no\npolicy',
                     'res100': '100%\nRES',
                     'cfe80': '80%',
-                    'cfe84':'84%',
-                    'cfe88':'88%',
-                    'cfe92':'92%',
-                    'cfe96':'96%',
+                    'cfe85':'85%',
+                    'cfe90':'90%',
+                    'cfe95':'95%',
                     'cfe98':'98%',
+                    'cfe99':'99%',
                     'cfe100':'100%'
                     }
 
