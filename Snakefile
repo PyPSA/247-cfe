@@ -9,27 +9,27 @@ CDIR = config['costs_dir']
 
 
 rule merge_all_plots:
-    input: 
+    input:
         expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/SUMMARY.pdf", **config['scenario'])
 
 
 rule plot_summary_all_networks:
-    input: 
+    input:
         expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf", **config['scenario'])
 
 
 rule make_summary_all_networks:
-    input: 
+    input:
         expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv", **config['scenario'])
 
 
 rule summarise_all_networks:
-    input: 
+    input:
         expand(RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}.yaml", **config['scenario'])
 
 
 rule solve_all_networks:
-    input: 
+    input:
         expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc", **config['scenario'])
 
 
@@ -76,8 +76,7 @@ if config['solve_network'] == 'solve':
             costs2030=CDIR + "/costs_2030.csv",
             costs2025=CDIR + "/costs_2025.csv"
         output:
-            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc",
-            grid_cfe=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.csv"
+            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
         log:
             solver=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_solver.log",
             python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_python.log",
@@ -88,8 +87,7 @@ if config['solve_network'] == 'solve':
 
 rule summarise_network:
     input:
-        network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc",
-	    grid_cfe=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.csv"
+        network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
     output:
         yaml=RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}.yaml"
     threads: 2
@@ -104,11 +102,11 @@ rule copy_config:
     script: "scripts/copy_config.py"
 
 
-# additional rules for cluster communication -> not included into a workflow 
+# additional rules for cluster communication -> not included into a workflow
 rule sync_solution:
     params:
         cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/report"
-    shell: 
+    shell:
         """
         rsync -uvarh --no-g {params.cluster} results/
         """
@@ -116,7 +114,7 @@ rule sync_solution:
 rule sync_plots:
     params:
         cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/report/plots/"
-    shell: 
+    shell:
         """
         rsync -uvarh --no-g {params.cluster} report/plots
         """
