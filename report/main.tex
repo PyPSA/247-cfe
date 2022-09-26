@@ -1,30 +1,49 @@
 \include{backmatter.tex}
 
-\title{Google \& TU Berlin Project, WP1: \\
-System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+\title{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
 
 %\subtitle{---}
 \author{
-  Tom Brown, {\bf Iegor Riepin}\\
-  \hrefc{mailto:iegor.riepin@tu-berlin.de}{iegor.riepin@tu-berlin.de}, \hrefc{https://tub-ensys.github.io/}{Department of Digital Transformation in Energy Systems}, TU Berlin
+  Iegor Riepin, Tom Brown\\
+  \hrefc{https://tub-ensys.github.io/}{Department of Digital Transformation in Energy Systems}, TU Berlin
 }
 
-\date{Online, 30 August 2022}
+\date{30 September 2022}
 
 \titlegraphic{%
   \vspace{0cm}
   \hspace{10.7cm}
-    \includegraphics[trim=0 0cm 0 0cm,height=1.2cm,clip=true]{TUB.png}
+    \includegraphics[trim=0 0cm 0 0cm,height=1.2cm,clip=true]{images/TUB.png}
 
 \vspace{5.1cm}
+   
+}
 
-{\footnotesize
-Unless otherwise stated, graphics and text are Copyright \copyright Tom Brown and Iegor Riepin, 2022.  \\
-Graphics and text for which no other attribution are given are licensed under a \href{https://creativecommons.org/licenses/by/4.0/}{CC BY 4.0}. \ccby}}
- 
+
 \begin{document}
 
 \maketitle
+
+
+
+\begin{frame}
+  \frametitle{Acknowledgements}
+
+  \begin{itemize}
+    \item {\bf Funding:} This study was supported by a grant from Google, Inc. 
+    \item {\bf Acknowledgements:} The authors acknowledge members of the Google energy markets and policy team 
+    for their feedback and inputs on earlier drafts of this report. 
+    Also, warm regards to the \hrefc{https://pypsa.org/}{PyPSA team} and many contributors to the open-source 
+    PyPSA energy system modelling tool used in this study (see: \hrefc{https://github.com/PyPSA/PyPSA}{github.com/PyPSA})
+    \item 
+    {\bf Copyright} Unless otherwise stated, graphics and text are Copyright \copyright Tom Brown and Iegor Riepin, 2022.
+    Graphics and text for which no other attribution are given are licensed under a 
+    \href{https://creativecommons.org/licenses/by/4.0/}{CC BY 4.0}.  {\footnotesize \ccby} 
+    \item The content of this study, including any errors or omissions are the responsibility
+    of the authors alone.
+  \end{itemize}
+
+\end{frame}
 
 
 \begin{frame}
@@ -38,34 +57,200 @@ Graphics and text for which no other attribution are given are licensed under a 
 %----------------------------------------
 %----------------------------------------
 
-\section{test of lst-git-latex-snakemake chain}
+\section{Introduction}
 
 
-\begin{frame}{test}
+\begin{frame}{Introduction}
+
+  \centering
+    \begin{itemize}
+    \item Climate change is driving a global effort to rapidly decarbonise 
+    electricity systems across the globe. 
+    Many public and private energy buyers have joined this effort and highlight
+    their sustainable credentials by procuring renewable energy with the 
+    Power Purchase Agreements (PPAs).
+    \item Such \alert{voluntary commitments accelerate the deployment of renewable 
+    capacity} above the policy requirements in the countries and jurisdictions
+    these companies operate. This facilitates faster
+    transformation of electricity markets by driving renewables
+    techologies down the experience curves.
+    \item Additionally, many early actors in the field helped pave the way for followers 
+    \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{by 
+    developing methods and establishing standard contracts} for clean energy procurement.
+    \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}{Introduction}
+
+  \begin{columns}[T]
+    \begin{column}{6cm}
+      \begin{itemize}
+        \item   PPAs typically allow for renewable energy to match supply and
+        demand on average over a long period of time. 
+        \item For example, more than 370 members of the \href{https://www.there100.org/}{RE100} group have committed to purchasing enough renewable energy to match
+        \alert{100\% of their electricity consumption on an annual basis}.
+      \end{itemize}
+    \end{column}
+
+  \begin{column}{10cm}
+      \centering
+      
+      \includegraphics[width=10cm]{images/100re-companies.jpg}
+      \vspace{.1cm}
+      More than 370 companies have joined \hrefc{https://www.there100.org/}{RE100}
+    \end{column}
+    \end{columns}
+
+    \source{source: \href{https://www.there100.org/}{RE100}}
+\end{frame}
+  
+
+\begin{frame}{Introduction}
+  
+    \begin{itemize}
+    \item However, electricity buyers that commit to 100\% annual matching 
+    from renewable energy sources still face times when generation 
+    from wind and solar generators is not sufficient to match 
+    the companies’ electricity demand. 
+    \item Thus, although buyers match their demand on a \alert{yearly} basis with 
+    renewable energy, on an \alert{hourly} basis they still have hours 
+    when they have to rely on carbon-emitting technologies available 
+    on a local market, such as coal and gas-fired power plants.
+    \end{itemize}
+
+  \centering
+  \includegraphics[width=14cm]{images/google-year.png}
+  \source{\href{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{source: Google 24/7 CFE}}
+           
+\end{frame}
+
+
+\begin{frame}{Introduction}
+  
+  More generally, 100\% annual matching leads to many challenges 
+  from the electricity buyers' and system perspectives: 
+  \begin{itemize}
+  \item No \alert{simultaneity} - variable generation of wind and solar power is not aligned with the 
+  buyer’s electricity consumption profile.
+  \item Lack of \alert{additionality} - some buyers procure unbundled guarantees of origin from existing 
+  facilities, which does not lead to additional renewable generation.
+  \item Displaced \alert{location} - some buyers procure  PPAs from locations far away from their consumption.
+  \item Exposure to \alert{risk} - electricity buyers are exposed to price volatility 
+  in local electricity markets.
+  \item Need for \alert{backup} - electricity system has to maintain backup and flexibility options 
+  for hours with low renewable generation.
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}{Introduction}
+
+  \centering
+
+  There is growing interest from leaders in voluntary clean
+  electricity procurement to cover their consumption 
+  with clean energy supply on a \alert{truly 24/7 basis}. \\
+  \vspace{0.3cm}
+  Achieving 24/7 Carbon-Free Energy (CFE) means that every kilowatt-hour of electricity consumption is met
+  with carbon-free electricity sources, \alert{every hour of every day}.
+  
+\end{frame}
+
+
+\begin{frame}{Introduction}
+  
+  \begin{columns}[T]
+  \begin{column}{8cm}
+
+    \begin{itemize}
+    \item The \hrefc{https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy}{24/7 Carbon-free Energy Compact} 
+    initiative was launched in 2021 by Sustainable Energy for All and the United Nations. 
+    It now includes more than 80 companies, policymakers, investors, and organizations 
+    on a mission to realize a 24/7 Carbon-Free Energy future. 
+
+    \item One of the forefront runners in 24/7 initiative is Google Inc. In 2020 the company committed 
+    \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{to the goal} 
+    of operating entirely on a 24/7-CFE approach at all its data centres and campuses worldwide by 2030. 
+    Shortly after, Google published 
+    \hrefc{https://www.gstatic.com/gumdrop/sustainability/policy-roadmap-carbon-free-energy.pdf}{a policy roadmap} 
+    on achieving the 24/7-CFE goal.
+
+    \end{itemize}
+  \end{column}
+
+  \begin{column}{8cm}
+    \centering
+    \includegraphics[width=7.5cm]{images/247-google-web.png}
+    \vspace{.1cm}
+  \end{column}
+
+  \source{\href{https://sustainability.google/progress/energy/}{Google Inc.}}
+  \end{columns}
+  
+\end{frame}
+
+
+\begin{frame}{Introduction}
+  
+  The 24/7 CFE procurement has potential benefits over the 100\% renewable matching:
+  
+  \begin{itemize}
+  \item Ensure match of electricity consumption with carbon-free resources 
+        on an \alert{hourly basis}.
+  \item Enable much \alert{deeper reductions in CO$_2$} emissions assosiated 
+        to buyer's electricity consumption.
+  \item Ensure that contracted power is \alert{additional} (i.e. leads to new capacity).
+  \item Ensure that power comes from the \alert{same bidding zone}.
+  \item Enable procurement of \alert{carbon-free} rather than renewable technologies 
+        (such as advanced “clean dispatchable” power generation and long-duration energy storage).
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}{Focus of the study}
+  
+  In this study, we investigate both the \alert{means and costs of 24/7 procurement} for companies
+  and the \alert{system impacts} for the rest of the European electricity system. 
+
+  We focus our analysis on the following quesitons:
+
+    \begin{enumerate}
+    \item How can companies following 24/7~CFE procurement achieve hourly matching?
+    \item What is the cost premium of 24/7~CFE versus the 100\% annual matching?
+    \item To which extent can technologies, such as long-duration storage or advanced dispatchable
+          clean generators, help to achieve the 24/7~CFE goal?
+    \item To which extent can 24/7~CFE contribute to reductions in CO$_2$
+          emissions intensity of buyer's consumption? 
+    \item If many companies follow the 24/7~CFE approach, how does this effect the rest of
+          the energy system?
+    \end{enumerate}
+  
+\end{frame}
+
+
+
+\begin{frame}{Quick summary}
   
   \begin{columns}[T]
   \begin{column}{9cm}
   \centering
-  
-  \includegraphics[width=9.9cm]{plots/10/2025/IE/p1/ci_costandrev.pdf}
-  \end{column}
-  \begin{column}{5cm}
-  
-    \vspace{.5cm}
-  
+
     \begin{itemize}
-    \item test line
+    \item Key findings
     \end{itemize}
   \end{column}
   \end{columns}
   
-  \end{frame}
-
+\end{frame}
 
 %----------------------------------------
 %----------------------------------------
 
-\section{Summary of experimental design}
+\section{Summary of study design}
 
 \begin{frame}
   \frametitle{Open Model of European Energy System: PyPSA-Eur(-Sec)}
@@ -157,7 +342,10 @@ a showcase example
 
 \end{frame}
 
-%--------------------
+%----------------------------------------
+%----------------------------------------
+
+\section{Data sources and key assumptions}
 
 \begin{frame}{Summary of data sources}
 
@@ -191,11 +379,12 @@ meeting the hourly 24/7 CFE [75\%..100\%], (ii) 100\% annual matching, and (iii)
 
 
 %---------------------------------------------
+%---------------------------------------------
 \section{Modelling results}
+
 
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 
 \\ Fraction of demand met with carbon-free energy (CFE)}
-
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
@@ -630,8 +819,10 @@ However, each zone is has \alert{unique characteristics} that depend on local re
 
 \end{frame}
 
-%----------------------------------------
-%now jump to other countries for selected scenario branches 
+
+%---------------------------------------------
+%---------------------------------------------
+\section{Additional scenarios}
 
 
 \begin{frame}{The special scenario case}
@@ -728,23 +919,7 @@ Cost breakdown with advanced dispatchable generators}
 \end{frame}
 
 %----------------------------------------
-\section{Next steps}
-
-\begin{frame}
-  \frametitle{Next steps and open questions}
-
-\begin{itemize}
-\item Remaining TODOs on the 'System-level impacts of 24/7 CFE
-procurement in Europe' study: compute remaining metrics, add sensitivity runs.
-\item Study draft by end September.
-\item Research paper based on WP1 results.
-\item Toy model for WP2: Implementing temporal and spatial demand response.
-\end{itemize}
-
-
-\end{frame}
-
-
+%----------------------------------------
 \section*{Backup}
 
 \begin{frame}{Code availability}
