@@ -624,10 +624,11 @@ if __name__ == "__main__":
                     level=snakemake.config['logging_level'])
 
     #Wildcards & Settings
-    policy = snakemake.wildcards.policy[:3]
+    #to fix background "base" network, solve first without H2 DEMAND
+    policy = "ref" #snakemake.wildcards.policy[:3]
     print(f"solving network for policy: {policy}")
 
-    penetration = snakemake.wildcards.policy[3:]
+    penetration = 100.#snakemake.wildcards.policy[3:]
     if penetration != "":
         print(f"warning, penetration {penetration} not supported, only 100%")
 

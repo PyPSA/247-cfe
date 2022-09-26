@@ -8,16 +8,6 @@ RDIR = os.path.join(config['results_dir'], config['run'])
 CDIR = config['costs_dir']
 
 
-rule merge_all_plots:
-    input:
-        expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/SUMMARY.pdf", **config['scenario'])
-
-
-rule plot_summary_all_networks:
-    input:
-        expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf", **config['scenario'])
-
-
 rule make_summary_all_networks:
     input:
         expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv", **config['scenario'])
@@ -59,7 +49,7 @@ rule plot_summary:
 
 rule make_summary:
     input:
-        expand(RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}.yaml",
+        expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc",
                **config['scenario'])
     output:
         summary=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv"
@@ -67,14 +57,27 @@ rule make_summary:
     resources: mem_mb=2000
     script: 'scripts/make_summary.py'
 
-
 if config['solve_network'] == 'solve':
-    rule solve_network:
+    rule solve_base_network:
         input:
             network2030 = config['n_2030'],
             network2025 = config['n_2025'],
             costs2030=CDIR + "/costs_2030.csv",
             costs2025=CDIR + "/costs_2025.csv"
+        output:
+            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/base.nc"
+        log:
+            solver=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_solver.log",
+            python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_python.log",
+            memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_memory.log"
+        threads: 12
+        resources: mem=8000
+        script: "scripts/solve_network.py"
+
+if config['solve_network'] == 'solve':
+    rule solve_network:
+        input:
+            base_network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/base.nc"
         output:
             network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
         log:
@@ -83,7 +86,7 @@ if config['solve_network'] == 'solve':
             memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_memory.log"
         threads: 12
         resources: mem=8000
-        script: "scripts/solve_network.py"
+        script: "scripts/resolve_network.py"
 
 rule summarise_network:
     input:
