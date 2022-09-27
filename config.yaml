@@ -36,7 +36,7 @@ scenario:
 #data center
 ci:
   name: "google"
-  #load: 1000.
+  profile_shape: "baseload" #"baseload", "datacenter", "industry"
   res_techs: ["onwind","solar"]
 
 #regional coverage of the model: "regions" or "EU"

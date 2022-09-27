@@ -127,6 +127,45 @@ def cost_parametrization(n):
     #n.generators[n.generators.index.str.contains('EU')].T
 
 
+def load_profile(n, zone, profile_shape):
+    '''
+    create daily load profile for 24/7 CFE buyers based on config setting
+    '''
+    shape_base = [1/24]*24
+
+    shape_it =  [0.034,0.034,0.034,0.034,0.034,0.034,
+                 0.038,0.042,0.044,0.046,0.047,0.048,
+                 0.049,0.049,0.049,0.049,0.049,0.048,
+                 0.047,0.043,0.038,0.037,0.036,0.035]
+
+    shape_ind = [0.009,0.009,0.009,0.009,0.009,0.009,
+                 0.016,0.031,0.070,0.072,0.073,0.072,
+                 0.070,0.052,0.054,0.066,0.070,0.068,
+                 0.063,0.035,0.037,0.045,0.045,0.009]
+
+    if profile_shape == 'baseload':
+        shape = np.array(shape_base).reshape(-1, 3).mean(axis=1)
+    elif profile_shape == 'datacenter':
+        shape = np.array(shape_it).reshape(-1, 3).mean(axis=1)
+    elif profile_shape == 'industry':
+        shape = np.array(shape_ind).reshape(-1, 3).mean(axis=1)   
+    else: 
+        print(f"'profile_shape' option must be one of 'baseload', 'datacenter' or 'industry'. Now is {profile_shape}.")
+        sys.exit()
+
+    ci_load = snakemake.config['ci_load'][f'{zone}']
+    load = ci_load * float(participation)/100  #C&I baseload MW
+
+    load_day = load*8 #24h with 3h sampling. to avoid use of hard-coded value
+    load_profile_day = pd.Series(shape*load_day*3)
+    load_profile_year = pd.concat([load_profile_day]*int(len(n.snapshots)/8))
+    
+    profile = load_profile_year.set_axis(n.snapshots)
+    #baseload = pd.Series(load,index=n.snapshots)
+
+    return profile
+
+
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
     #set all asset costs and other parameters
@@ -313,9 +352,6 @@ def add_ci(n, participation, year):
 
     #local C&I properties
     name = snakemake.config['ci']['name']
-    #load = snakemake.config['ci']['load']
-    ci_load = snakemake.config['ci_load'][f'{zone}']
-    load = ci_load * float(participation)/100  #C&I baseload MW
     node = geoscope(zone, area)['node']
 
     #tech_palette options
@@ -340,6 +376,19 @@ def add_ci(n, participation, year):
           marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
           p_nom=1e6)
 
+
+    #Add C&I load
+    n.add("Load",
+          name + " load",
+          carrier=name,
+          bus=name,
+          p_set=load_profile(n, zone, profile_shape))
+
+    #C&I following 24/7 approach is a share of all C&I load -> thus substract it from node's profile
+    n.loads_t.p_set[f'{node}'] -= n.loads_t.p_set[f'{name}'+' load']
+
+
+    #Add generators 
     #baseload clean energy generator
     if "green hydrogen OCGT" in clean_techs:
         n.add("Generator",
@@ -403,15 +452,7 @@ def add_ci(n, participation, year):
               capital_cost=n.generators.at[gen_template,"capital_cost"],
               marginal_cost=n.generators.at[gen_template,"marginal_cost"])
 
-    n.add("Load",
-          name + " load",
-          carrier=name,
-          bus=name,
-          p_set=pd.Series(load,index=n.snapshots))
-
-    #C&I following 24/7 approach is a share of all C&I load -> thus substract it from node's profile
-    n.loads_t.p_set[f'{node}'] -= n.loads_t.p_set[f'{name}'+' load']
-
+    #Add storage tech
     if "battery" in storage_techs:
         n.add("Bus",
               f"{name} battery",
@@ -751,7 +792,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="cfe80", palette='p3', zone='DE', year='2030', participation='25')
+                                policy="cfe80", palette='p3', zone='IE', year='2025', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -776,6 +817,8 @@ if __name__ == "__main__":
     participation = snakemake.wildcards.participation
     print(f"solving with participation: {participation}")
 
+    profile_shape = snakemake.config['ci']['profile_shape']
+
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
                       override_component_attrs=override_component_attrs())
@@ -799,6 +842,8 @@ if __name__ == "__main__":
         coal_policy(n)
         biomass_potential(n)
         cost_parametrization(n)
+
+        load_profile(n, zone, profile_shape)
 
         add_ci(n, participation, year)
 
