@@ -99,7 +99,9 @@
       
       \includegraphics[width=10cm]{images/100re-companies.jpg}
       \vspace{.1cm}
+      {\footnotesize
       More than 370 companies have joined \hrefc{https://www.there100.org/}{RE100}
+      }
     \end{column}
     \end{columns}
 
@@ -122,7 +124,7 @@
 
   \centering
   \includegraphics[width=14cm]{images/google-year.png}
-  \source{\href{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{source: Google 24/7 CFE}}
+  \source{\href{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{source: Google 2021, 24/7 CFE: Methodologies and Metrics}}
            
 \end{frame}
 
@@ -146,7 +148,7 @@
 \end{frame}
 
 
-\begin{frame}{Introduction}
+\begin{frame}{24/7 carbon-free energy}
 
   \centering
 
@@ -160,7 +162,7 @@
 \end{frame}
 
 
-\begin{frame}{Introduction}
+\begin{frame}{24/7 carbon-free energy}
   
   \begin{columns}[T]
   \begin{column}{8cm}
@@ -193,7 +195,7 @@
 \end{frame}
 
 
-\begin{frame}{Introduction}
+\begin{frame}{Yearly versus hourly matching}
   
   The 24/7 CFE procurement has potential benefits over the 100\% renewable matching:
   
@@ -250,41 +252,302 @@
 %----------------------------------------
 %----------------------------------------
 
-\section{Summary of study design}
+\section{Methodology and study design}
+
 
 \begin{frame}
-  \frametitle{Open Model of European Energy System: PyPSA-Eur(-Sec)}
+  \frametitle{PyPSA: an energy systems modelling toolbox}
 
 \begin{columns}[T]
-\begin{column}{6cm}
+\begin{column}{7cm}
 
+{\small
   \begin{itemize}
-
-  \item PyPSA is an \alert{open source} tool for modelling energy systems developed at TU Berlin
-  \item PyPSA is used worldwide by \alert{dozens of research institutes and companies}. See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}
-  \item PyPSA-Eur is an open model of the European power system at the transmission network level that covers the \alert{full ENTSO-E area}
+  \item PyPSA (Python for Power System Analysis) is an open source toolbox 
+  for for state-of-the-art energy system modelling.
+  \item Fills gap between power flow software (e.g. PowerFactory,
+  MATPOWER) and energy system planning software (e.g. TIMES, OSeMOSYS).
+  \item PyPSA develoment and maintenance is coordinated by the TU Berlin,
+  \hrefc{https://www.ensys.tu-berlin.de/}{Department of Energy Systems}.  
+  \item PyPSA is used worldwide by dozens of research institutes and companies.\\
+  See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}.
   \end{itemize}
+}
 
 \end{column}
 
-\begin{column}{8cm}
+\begin{column}{9cm}
 
 \centering
-\includegraphics[width=8cm]{images/elec_s_100.png}
-
- \vspace{0.1cm}
-
- PyPSA-Eur(-Sec) suite of models are available on \hrefc{https://pypsa.org/}{GitHub}
+\includegraphics[width=8.5cm]{images/pypsa-web.png}
+\source{\href{https://pypsa.org/}{PyPSA}}
 
 \end{column}
 \end{columns}
 
 \end{frame}
 
-%----------------------------------------
+
 
 \begin{frame}
-  \frametitle{Study design 1/2}
+  \frametitle{PyPSA-Eur(-Sec): open models of the European energy system}
+
+  \begin{columns}[T]
+  \begin{column}{7cm}
+  {\small
+  \begin{itemize}
+  \item PyPSA-Eur is an open model of the European power system at the transmission network 
+  level that covers the full ENTSO-E area.
+  \item Only freely available and open data.
+  \item Automated and configurable software pipeline from raw data to optimised electricity system.
+  \item Adjustable temporal and spatial resolution.
+  \item See \hrefc{https://pypsa-eur.readthedocs.io/en/latest/}{documentation}
+  and \hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{feature summary} 
+  for more details.
+  \item PyPSA-Eur{\bf-Sec} version of the model adds building heating, transport and industry sectors, as well as gas networks.
+  \end{itemize}
+  }
+  \end{column}
+
+  \begin{column}{9cm}
+    \centering
+  {\footnotesize
+    \includegraphics[width=8cm]{images/elec_s_100.png}
+  
+   \vspace{0.1cm}
+   PyPSA-Eur(-Sec) suite of models are available on \hrefc{https://github.com/PyPSA}{GitHub}
+  }
+  \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Modeling 24/7 CFE procurement}
+  \begin{columns}[T]
+  \begin{column}{7cm}
+  {\small
+
+  \begin{itemize}
+  \item We implement a set of additional constraints to the PyPSA-Eur 
+  to model a situation when a fraction of corporate and industry (C\&I) demand 
+  commits to the 24/7~CFE procurement.
+  \item The model optimises investment and operational decisions to meet projected
+  electricity demand for the 24/7~CFE consumers, as well as
+  the demand of other consumers in the European electricity system, while meeting all
+  relevant engineering, reliability, and policy constraints.
+  \end{itemize}
+  }
+  \end{column}
+
+  \begin{column}{9cm}
+  \centering
+  \includegraphics[width=8.5cm]{images/247-concept.png}
+  {\footnotesize
+  The methods are based on the Google's CFE procurement framework, presented in paper
+  \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{"24/7 Carbon-Free Energy: Methodologies and Metrics"}
+  }
+  \source{\href{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{source: Google 2021, 24/7 CFE: Methodologies and Metrics}}
+  \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Implementation of C\&I demand and supply}
+
+  {\small
+
+  The model optimizes portfolio of carbon-free generation and storage technologies 
+  procured by the participating C\&I consumers. The portfolio assets have to be located 
+  in the same market zone.
+
+  The hourly demand of C\&I consumers $d_t$ for hour $t$ can be met 
+  by a combination of the following: \\
+    \begin{itemize}
+      \item dispatch $g_{r,t}$ of procured CFE generators $r\in CFE$ 
+      \item dispatch $\bar{g}_{s,t}$ of procured storage technologies $s\in STO$
+            (requires charge $\ubar{g}_{s,t}$)
+      \item imports from the grid $im_t$.
+    \end{itemize}
+    }
+
+\begin{columns}
+
+  \begin{column}{7cm}
+  \begin{equation*}
+  \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_t + im_t  =  d_t \hspace{.7cm} \forall t
+  \end{equation*}
+
+  \vspace{0.3cm}
+  {\small NB: the excess from the local supply $ex_t$ can either be sold to the grid 
+  at market prices or curtailed.}
+  \end{column}
+
+\begin{column}{5cm}
+\centering
+\begin{circuitikz}
+  \draw (0,13.5) to [short,i^=$im_t$]  (1.5,13.5) to (1.5,13);
+  \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
+  \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_t$] +(1.5,0.5);
+  \draw (0.5,13) -- +(0,-0.5) node[sground]{};
+  \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
+  (V2.left) -- +(0,0.6);
+  \draw (3.5,13) -- (3.5,12.4);
+  \draw (3.5,12.4) to [esource] (3.5,11.7);
+  \draw (0.5,11) node{$d_t$};
+  \draw (2,11) node{$g_{CFE,t}$};
+  \draw (3.5,11) node{$g_{STO,t}$};
+\end{circuitikz}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Implementation of 100\% annual matching}
+
+  {\small
+  
+The \alert{100\% annual matching} is modelled with a constraint (\ref{eqn:RES100}), which requires C\&I consumers 
+to purchase enough renewable electricity to match all of their electricity consumption
+on an annual basis.
+
+\vspace{0.3cm}
+More formally, the sum of all dispatch $g_{r,t}$ for RES generators $r\in RES$ over the year $t\in T$ 
+is equal to the annual demand $d_t$ of C\&I consumers:
+  \begin{equation}
+    \sum_{r\in RES, t\in T} g_{r,t} = \sum_{t\in T} d_t
+  \label{eqn:RES100}
+  \end{equation}
+  }
+\end{frame}
+
+
+\begin{frame}{Implementation of 24/7 CFE matching}
+
+  {\small
+
+  The \alert{24/7 CFE matching} is modelled with a constraint (\ref{eqn:CFE}), 
+  which matches demand of C\&I consumers with carbon-free resources on an hourly basis. 
+
+  More formally, the constraint states that sum over generators from procured CFE resources $r\in CFE$,
+  discharge and charge from storage technologies $s\in STO$,
+  as well as import from the grid $im_t$ multiplied by the grid's CFE factor $CFE_t$
+  must be higher or equal than a certain CFE target $x$ multiplied with the total load:
+  \vspace{0.1cm}
+  \begin{equation}
+  \sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq x \cdot \sum_{t\in T} d_t
+  \label{eqn:CFE}
+  \end{equation}
+  \vspace{0.1cm}
+  \noindent\fbox{%
+    \parbox{\textwidth}{%
+  The \alert{CFE Score} $x$~[\%] measures the degree to which hourly electricity consumption 
+  is matched with carbon-free electricity generation within the regional grid.
+  }}
+
+  \noindent\fbox{%
+    \parbox{\textwidth}{%
+  Note that the grid CFE factor $CFE_t$ is affected by capacity procured by C\&I consumers. This
+  introduces a nonconvex term to the optimization problem. We relax the problem by treating grid CFE factor
+  as a parameter that is iteratively updated (starting with $CFE_t =0 \, \forall t$). 
+  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. 2021} study, we find that one forward pass (i.e. 2 iterations) yields very good convergence.
+  }}
+  }
+
+\end{frame}
+
+
+
+\begin{frame}{Implementation of 24/7 CFE matching}
+
+  {\small
+
+  The excess generation $ex_t$ from the procured resources representes clean electricity over
+  and above demand of C\&I consumers following 24/7 approach in a particular hour. 
+  The \alert{excess is not counted toward CFE score} -- 
+  and thus it is substracted on the left-hand side of the eq. (\ref{eqn:CFE}).
+
+  The excess generation can be stored and shifted to another hour where procured resources 
+  generate less than the C\&I demand, sold to the regional grid at market prices or curtailed. 
+  The total amount of excess generation is constrained to a certain level on an annual basis. 
+  In this study, the limit is set to 20\% of annual 24/7 participating customer's demand:
+  \vspace{0.1cm}
+  \begin{equation}
+  \sum_{t\in T} ex_t \leq ExLimit \cdot \sum_{t\in T} d_t
+  \label{eqn:excess}
+  \end{equation}
+
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+  The constraint (\ref{eqn:excess}) facilitates \alert{additionality} -- 
+  \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{one of the principles} 
+  of the 24/7 CFE matching.
+   From the modelling perspective, the limit on excess electricity ensures that CFE resources 
+  procured by C\&I consumers are \emph{additional}, i.e. 24/7 procurement activities
+  enable the deployment of clean electricity generation that is new to the grid. 
+  }}
+
+  }
+\end{frame}
+
+
+
+\begin{frame}{Estimating the CFE score of the regional grid}
+
+  {\small
+
+  The \alert{grid CFE factor} $CFEt$ in eq. (\ref{eqn:CFE}) defines the share of 
+  carbon-free electricity  in grid imports by C\&I consumers following 24/7 approach. 
+  The factor depends on the generation mix in the region where C\&I consumers are located, 
+  as well as on the generation mix in other regions where from electricity is imported. 
+
+  \begin{columns}
+    \begin{column}{8cm}
+
+  Using the notation on the right, the average cleanness 
+  of the rest of the electricity system is:
+  \begin{equation*}
+  ImportCFE = \frac{A_t}{A_t + D_t}
+  \end{equation*}
+
+  The CFE factor of grid supply for a given hour $t$ is:
+  \begin{equation*}
+  CFEt = \frac{B_t + ImportCFE * import_t}{B_t + E_t + import_t}
+  \end{equation*}    
+
+  \end{column}
+
+  \begin{column}{5cm}
+  \centering
+  \includegraphics[width=5cm]{images/cfe.png}
+  \end{column}
+    
+  \end{columns}
+
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+  Thus, CFEt is the percentage of clean electricity in each MWh of imported 
+  electricity from the grid to supply participating 24/7 loads in a given hour.
+  }}
+  %Generation by CFE resources contracted by 24/7 consumers is excluded from the grid supply.
+  }
+\end{frame}
+
+%----------------------------------------
+%----------------------------------------
+\section{Scenario setup}
+
+
+\begin{frame}
+  \frametitle{Scenario setup 1/2}
 
 \begin{columns}[T]
 \begin{column}{6cm}
@@ -311,10 +574,10 @@ PyPSA-Eur network clustered to 37 zones
 
 \end{frame}
 
-%----------------------------------------
+
 
 \begin{frame}
-  \frametitle{Study design 2/2}
+  \frametitle{Scenario setup 2/2}
 
 \begin{columns}[T]
 \begin{column}{6cm}
@@ -324,7 +587,7 @@ PyPSA-Eur network clustered to 37 zones
   \item We focus on two periods: \\ \alert{2025} and \alert{2030}. Periods differ by \\ 
   (i) technology cost assumptions, \\ 
   (ii) renewable expansion pathways (based on NECPs), \\(iii) \emph{brownfield} fleet of power plants
-  \item We incorporate various technologies that can be procured by C\&I customers: wind, solar, short-term storage (batteries), long-term storage (hydrogen storage system), and advanced geothermal system
+  \item We incorporate various technologies that can be procured by C\&I consumers: wind, solar, short-term storage (batteries), long-term storage (hydrogen storage system), and advanced geothermal system
   \end{itemize}
 
 \end{column}
@@ -342,10 +605,63 @@ a showcase example
 
 \end{frame}
 
-%----------------------------------------
-%----------------------------------------
 
+
+\begin{frame}{Scenario space at one glance}
+  \centering
+  
+  \begin{itemize}
+      \item Years (2): 2025 and 2030
+      \item Zones (4): IE, DK1, DE, NL
+      \item Tech palettes (3): \\
+          \emph{Palette 1}: wind, solar, battery  storage \\
+          \emph{Palette 2}: all above and long-duration energy storage (hydrogen storage system) \\
+          \emph{Palette 3}: all above and clean dispatchable generator (advanced geothermal system)
+      \item Participation (2): 10\% and 25\% of C\&I load 
+      \item Procurement targets (9): (i) different thresholds for
+  meeting the hourly 24/7 CFE [75\%..100\%], (ii) 100\% annual matching, and (iii) a reference case when 24/7 participants cover load purely with grid purchases
+  \end{itemize}
+  
+  \end{frame}
+
+
+%----------------------------------------
+%----------------------------------------
 \section{Data sources and key assumptions}
+
+
+\begin{frame}{Summary of data sources}
+\begin{columns}[T]
+\begin{column}{6cm}
+
+  \vspace{0.3cm}
+\centering
+
+%\includegraphics[width=4cm]{line-loading}
+\includegraphics[width=7cm]{images/pypsa-eur-grid.png}
+
+\vspace{.1cm}
+
+Basic \alert{validation} of grid model in \hrefc{https://arxiv.org/abs/1806.01613}{Hörsch et al, 2018)},
+\hrefc{https://github.com/PyPSA/pypsa-eur}{github.com/PyPSA/pypsa-eur}
+
+\end{column}
+\begin{column}{7.5cm}
+
+  \begin{itemize}
+    \item Grid data based on \alert{GridKit} extraction of ENTSO-E interactive map
+    \item \alert{powerplantmatching} tool combines open databases using matching algorithm \href{https://github.com/larsga/Duke}{DUKE}
+    \item Renewable energy time series from open \alert{atlite}, which processes terabytes of weather data from e.g. new ERA5 global reanalysis
+    \item Geographic \alert{potentials} for RE from land use GIS availability
+    \item All energy demand and supply options (power, transport, heating and industry)
+      \item  See \hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{other slidedeck} for full details
+
+  \end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
 
 \begin{frame}{Summary of data sources}
 
@@ -360,20 +676,23 @@ a showcase example
 \end{frame}
 
 
-\begin{frame}{Scenario space at one glance}
-\centering
+\begin{frame}{Key assumptions}
 
-\begin{itemize}
-    \item Years (2): 2025 and 2030
-    \item Zones (4): IE, DK1, DE, NL
-    \item Tech palettes (3): \\
-        \emph{Palette 1}: wind, solar, battery  storage \\
-        \emph{Palette 2}: all above and long-duration energy storage (hydrogen storage system) \\
-        \emph{Palette 3}: all above and clean dispatchable generator (advanced geothermal system)
-    \item Participation (2): 10\% and 25\% of C\&I load 
-    \item Procurement targets (9): (i) different thresholds for
-meeting the hourly 24/7 CFE [75\%..100\%], (ii) 100\% annual matching, and (iii) a reference case when 24/7 participants cover load purely with grid purchases
-\end{itemize}
+  \begin{itemize}
+\item key assumptions list
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{A note on open research}
+
+  \centering
+  All input data and code for this study is open and freely available at \\
+  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe}
+
+  \vspace{.3cm}
 
 \end{frame}
 
@@ -381,6 +700,7 @@ meeting the hourly 24/7 CFE [75\%..100\%], (ii) 100\% annual matching, and (iii)
 %---------------------------------------------
 %---------------------------------------------
 \section{Modelling results}
+
 
 
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 
@@ -809,7 +1129,7 @@ However, each zone is has \alert{unique characteristics} that depend on local re
 \begin{column}{5cm}
 
   \begin{itemize}
-  \item  Clean capacity procured by C\&I customers displaces capacity built in the rest of the system 
+  \item  Clean capacity procured by C\&I consumers displaces capacity built in the rest of the system 
   \item Here remarkable that \alert{C\&I clean resources substitute gas-fired technology}
   \item Inclusion of clean firm resources in C\&I portfolio \alert{helps to decarbonise} the entire electricity system
   \end{itemize}
@@ -922,158 +1242,5 @@ Cost breakdown with advanced dispatchable generators}
 %----------------------------------------
 \section*{Backup}
 
-\begin{frame}{Code availability}
-
-  The code is already available online with an MIT licence:
-
-  \urlc{https://github.com/PyPSA/247-cfe}
-
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{24/7 carbon-free procurement}
-
-  Idea behind \alert{24/7 carbon-free energy (CFE)} procurement:
-
-  \begin{itemize}
-  \item Insist that contracted power is \alert{additional} (i.e. leads to new capacity)
-  \item Insist power comes from the \alert{same bidding zone}
-   \item Insist that demand is matched on an \alert{hourly basis}
-    \item Insist that power is \alert{carbon-free} rather than renewable (i.e. technology neutrality)
-  \end{itemize}
-
-\end{frame}
-
-
-\begin{frame}{Implementation of C\&I demand and supply}
-
-  The hourly C\&I demand $d_t$ for hour $t$ can be met by procured CFE generators $r\in CFE$ dispatching $g_{r,t}$~MW but also storage discharging $\bar{g}_{s,t}$ and charging $\ubar{g}_{s,t}$ for storage technologies $s\in STO$ as well as from imports from the grid $im_t$. The excess from the local supply $ex_t$ can either be sold to the grid or curtailed
-  \begin{equation*}
-  \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_t + im_t  =  d_t \hspace{.7cm} \forall t
-  \end{equation*}
-
-\centering
-\begin{circuitikz}
-  \draw (0,13.5) to [short,i^=$im_t$]  (1.5,13.5) to (1.5,13);
-  \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
-  \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_t$] +(1.5,0.5);
-  \draw (0.5,13) -- +(0,-0.5) node[sground]{};
-  \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
-  (V2.left) -- +(0,0.6);
-  \draw (3.5,13) -- (3.5,12.4);
-  \draw (3.5,12.4) to [esource] (3.5,11.7);
-  \draw (0.5,11) node{$d_t$};
-  \draw (2,11) node{$g_{CFE,t}$};
-  \draw (3.5,11) node{$g_{STO,t}$};
-\end{circuitikz}
-
-\end{frame}
-
-
-\begin{frame}{Methodology for RES and CFE constraints, 1/2}
-
-  The 100\% \alert{RES constraint} ensures that the sum of all dispatch $g_{r,t}$ for RES generators $r\in RES$ over the year $t\in T$ is equal to the sum of demand $d_t$ at the data center
-  \begin{equation*}
-    \sum_{r\in RES, t\in T} g_{r,t} = \sum_{t\in T} d_t
-  \end{equation*}
-
-\end{frame}
-
-
-\begin{frame}{Methodology for RES and CFE constraints, 2/2}
-
-
-  The $x \cdot 100$\% \alert{carbon-free energy (CFE) constraint} sums over CFE generators $r\in CFE$ but also storage discharging $\bar{g}_{s,t}$ and charging $\ubar{g}_{s,t}$ for storage technologies $s\in STO$ as well as the excess from the data center $ex_t$ (could be sold to grid or curtailed) and import from the grid $im_t$ multiplied by the grid's CFE factor $CFE_t$ (the fraction of CFE technology running at time $t$)
-  \begin{equation*}
-  \sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq x \cdot \sum_{t\in T} d_t
-  \end{equation*}
-
-  \begin{equation*}
-  \sum_{t\in T} ex_t \leq ExLimit \cdot \sum_{t\in T} d_t
-  \end{equation*}
-
-\begin{itemize}
-    \item  The grid CFE factor $CFE_t$ is affected by capacity built at data center, so has to be updated iteratively (starting with $CFE_t =0 \, \forall t$, convergence is very good after 1 iteration).
-    \item Annual excess generation is constrained to 80 percentage points less than the annual CFE target per year, i.e. $ExLimit = max(0, x - 0.8)$. This sets 10\% limit for 90\% CFE, 
-     and 20\% for 100\% CFE.
-\end{itemize}
-
-
-
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Python for Power System Analysis: Worldwide Usage}
-
-  PyPSA is used worldwide by \alert{dozens of research institutes and companies} (TU Delft, KIT, Shell, TSO TransnetBW, TERI, Agora Energiewende, RMI, Fraunhofer ISE, Climate Analytics, DLR, FZJ, RLI, Saudi Aramco, Edison Energy, spire and many others). See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}.
-
-  \centering
-  \includegraphics[width=12cm]{images/users.png}
-
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{PyPSA-Eur: Open Model of European Energy System}
-\begin{columns}[T]
-\begin{column}{6cm}
-
-  \vspace{0.3cm}
-\centering
-
-%\includegraphics[width=4cm]{line-loading}
-\includegraphics[width=7cm]{images/pypsa-eur-grid.png}
-
-\vspace{.1cm}
-
-Basic \alert{validation} of grid model in \hrefc{https://arxiv.org/abs/1806.01613}{Hörsch et al, 2018)},
-\hrefc{https://github.com/PyPSA/pypsa-eur}{github.com/PyPSA/pypsa-eur}
-
-\end{column}
-\begin{column}{7.5cm}
-
-  \begin{itemize}
-    \item Grid data based on \alert{GridKit} extraction of ENTSO-E interactive map
-    \item \alert{powerplantmatching} tool combines open databases using matching algorithm \href{https://github.com/larsga/Duke}{DUKE}
-    \item Renewable energy time series from open \alert{atlite}, which processes terabytes of weather data from e.g. new ERA5 global reanalysis
-    \item Geographic \alert{potentials} for RE from land use GIS availability
-    \item All energy demand and supply options (power, transport, heating and industry)
-      \item  See \hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{other slidedeck} for full details
-
-  \end{itemize}
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-
-\begin{frame}
-  \frametitle{More information}
-
-  All input data and code for PyPSA-Eur-Sec is open and free to download:
-  \begin{enumerate}
-  \item \url{https://github.com/pypsa/pypsa}: The modelling framework
-  \item \url{https://github.com/pypsa/pypsa-eur}: The power system model for Europe
-  \item \url{https://github.com/pypsa/pypsa-eur-sec}: The full energy system model for Europe
-  \end{enumerate}
-
-  \vspace{.3cm}
-
-  Publications (selection):
-  {\tiny
-    \begin{enumerate}
-      \item M.~Victoria, K.~Zhu, T.~Brown, G.~B.~Andresen, M.~Greiner, \emph{``Early decarbonisation of the European energy system pays off,''} Nature Communications (2020),  \hrefc{https://doi.org/10.1038/s41467-020-20015-4}{DOI}, \hrefc{https://arxiv.org/abs/2004.11009}{arXiv}.
-  \item T.~Brown, D.~Schlachtberger, A.~Kies, S.~Schramm, M.~Greiner, \emph{``Synergies of sector coupling and transmission reinforcement in a cost-optimised, highly renewable European energy system,''} Energy 160 (2018) 720-739, \hrefc{https://doi.org/10.1016/j.energy.2018.06.222}{DOI}, \hrefc{https://arxiv.org/abs/1801.05290}{arXiv}.
-  \item J.~Hörsch, F.~Hofmann, D.~Schlachtberger and T.~Brown, \emph{``PyPSA-Eur: An open optimization model of the
-    European transmission system,''} Energy Strategy Reviews (2018), \hrefc{https://doi.org/10.1016/j.esr.2018.08.012}{DOI}, \hrefc{https://arxiv.org/abs/1806.01613}{arXiv}
-  \item D.~Schlachtberger, T.~Brown, M.~Schäfer, S.~Schramm, M.~Greiner, \emph{``Cost optimal scenarios of a future highly renewable European electricity system: Exploring the influence of weather data, cost parameters and policy constraints,''} Energy (2018), \hrefc{https://doi.org/10.1016/j.energy.2018.08.070}{DOI}, \hrefc{https://arxiv.org/abs/1803.09711}{arXiv}.
-\item T.~Brown, J.~Hörsch, D.~Schlachtberger, \emph{``PyPSA: Python for Power System Analysis,''}  Journal of Open Research Software, 6(1), 2018, \hrefc{https://doi.org/10.5334/jors.188}{DOI}, \hrefc{https://arxiv.org/abs/1707.09913}{arXiv}.
-\item D.~Schlachtberger, T.~Brown, S.~Schramm, M.~Greiner, \emph{``The Benefits of Cooperation in a Highly Renewable European Electricity System,''} Energy 134 (2017) 469-481, \hrefc{https://doi.org/10.1016/j.energy.2017.06.004}{DOI}, \hrefc{https://arxiv.org/abs/1704.05492}{arXiv}.
-  \end{enumerate}
-}
-\end{frame}
 
 \end{document}
