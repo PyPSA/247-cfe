@@ -19,11 +19,9 @@
    
 }
 
-
 \begin{document}
 
 \maketitle
-
 
 
 \begin{frame}
@@ -82,6 +80,7 @@
 \end{frame}
 
 
+
 \begin{frame}{Introduction}
 
   \begin{columns}[T]
@@ -109,6 +108,7 @@
 \end{frame}
   
 
+
 \begin{frame}{Introduction}
   
     \begin{itemize}
@@ -127,6 +127,7 @@
   \source{\href{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{source: Google 2021, 24/7 CFE: Methodologies and Metrics}}
            
 \end{frame}
+
 
 
 \begin{frame}{Introduction}
@@ -148,6 +149,7 @@
 \end{frame}
 
 
+
 \begin{frame}{24/7 carbon-free energy}
 
   \centering
@@ -160,6 +162,7 @@
   with carbon-free electricity sources, \alert{every hour of every day}.
   
 \end{frame}
+
 
 
 \begin{frame}{24/7 carbon-free energy}
@@ -195,6 +198,7 @@
 \end{frame}
 
 
+
 \begin{frame}{Yearly versus hourly matching}
   
   The 24/7 CFE procurement has potential benefits over the 100\% renewable matching:
@@ -211,6 +215,7 @@
   \end{itemize}
   
 \end{frame}
+
 
 
 \begin{frame}{Focus of the study}
@@ -458,7 +463,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   Note that the grid CFE factor $CFE_t$ is affected by capacity procured by C\&I consumers. This
   introduces a nonconvex term to the optimization problem. We relax the problem by treating grid CFE factor
   as a parameter that is iteratively updated (starting with $CFE_t =0 \, \forall t$). 
-  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. 2021} study, we find that one forward pass (i.e. 2 iterations) yields very good convergence.
+  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)} study, we find that one forward pass (i.e. 2 iterations) yields very good convergence.
   }}
   }
 
@@ -494,13 +499,13 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   procured by C\&I consumers are \emph{additional}, i.e. 24/7 procurement activities
   enable the deployment of clean electricity generation that is new to the grid. 
   }}
-
   }
+
 \end{frame}
 
 
 
-\begin{frame}{Estimating the CFE score of the regional grid}
+\begin{frame}{CFE factor of the regional grid}
 
   {\small
 
@@ -518,7 +523,10 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   ImportCFE = \frac{A_t}{A_t + D_t}
   \end{equation*}
 
-  The CFE factor of grid supply for a given hour $t$ is:
+  The CFE factor of grid supply\footnote{Note 
+  that generators contracted by 24/7 consumers (C) are excluded from the grid supply.} 
+  for a given hour $t$ is:
+  
   \begin{equation*}
   CFEt = \frac{B_t + ImportCFE * import_t}{B_t + E_t + import_t}
   \end{equation*}    
@@ -528,17 +536,81 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \begin{column}{5cm}
   \centering
   \includegraphics[width=5cm]{images/cfe.png}
+  {\scriptsize
+  This approach is based on \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)}
+  }
   \end{column}
     
   \end{columns}
 
   \noindent\fbox{%
   \parbox{\textwidth}{%
-  Thus, CFEt is the percentage of clean electricity in each MWh of imported 
+  CFEt can be seen as the percentage of clean electricity in each MWh of imported 
   electricity from the grid to supply participating 24/7 loads in a given hour.
   }}
-  %Generation by CFE resources contracted by 24/7 consumers is excluded from the grid supply.
   }
+
+\end{frame}
+
+
+\begin{frame}{$CO_2$ emissions rate of the regional grid and 24/7 portfolio, 1/2}
+
+  {\small
+
+  \alert{$CO_2$ emissions} associated with the dispatch of emitting power plants 
+  in the European electricity system are part of the model solution.
+  We can use this information to calculate (i) the \emph{emissionality} of generation 
+  that serves participating 24/7 demand, and (ii) the \emph{avoided emissions}, i.e.,
+  the difference in regional $CO_2$ emissions with and without 24/7 procurement. 
+  Similarly to the logic of computing the grid CFE factor, 
+  we need to consider imported emissions also in this calculation.
+  
+  First, let $X(D)_t$ be hourly emissions $[tCO_2]$ in the rest of the electricity system. 
+  The average emissions rate of the rest of the system is calculated as:
+
+  \begin{equation*}
+  SystemEmisRate = \frac{X(D)_t}{A_t + D_t}
+  \end{equation*}
+
+  Second, let $Y(E)_t$ be hourly emissions in the regional grid where 24/7 consumers are located.
+  The emissions rate of grid supply than is:
+
+  \begin{equation*}
+  GridSupplyEmisRate = \frac{Y(E)_t + SystemEmisRate * import_t}{B_t + E_t + import_t}
+  \end{equation*}
+
+  }
+\end{frame}
+
+
+
+\begin{frame}{$CO_2$ emissions rate of the regional grid and 24/7 portfolio, 2/2}
+
+  {\small
+
+  Third, we calculate {$CO_2$ emissions} associated with the electricity consumption of 
+  24/7 participating consumers on an hourly basis:
+  
+  \begin{equation*}
+  Emissions_t = GridSupply_t * GridSupplyEmisRate_t
+  \end{equation*}
+
+  Now, we have the necessary components to calculate two metrics of interest for our analysis. 
+  A first metric is the \alert{average emissions rate of 24/7 consumers' consumption}:
+
+  \begin{equation*}
+    (C\&I)EmisRate = \frac{\sum_{t\in T} Emissions_t}{\sum_{t\in T} Load_t}
+  \end{equation*}
+
+  A second metric is the \alert{avoided emissions} by 24/7 procurement. The calculation is based on the 
+  difference between the total {$CO_2$ emissions} in the regional grid where 24/7 consumers are located
+  with and without 24/7 procurement (\emph{'247-cfe'} and \emph{'benchmark'} labels, accordingly):
+
+  \begin{equation*}
+    AvoidedEmissions = \sum_{t\in T} Y(E)_t^{benchmark} - \sum_{t\in T} Y(E)_t^{247-cfe}
+  \end{equation*}
+  }
+
 \end{frame}
 
 %----------------------------------------
