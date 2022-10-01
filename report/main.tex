@@ -8,7 +8,7 @@
   \hrefc{https://tub-ensys.github.io/}{Department of Digital Transformation in Energy Systems}, TU Berlin
 }
 
-\date{30 September 2022}
+\date{12 October 2022}
 
 \titlegraphic{%
   \vspace{0cm}
@@ -553,15 +553,15 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 \end{frame}
 
 
-\begin{frame}{$CO_2$ emissions rate of the regional grid and 24/7 portfolio, 1/2}
+\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 1/2}
 
   {\small
 
-  \alert{$CO_2$ emissions} associated with the dispatch of emitting power plants 
+  \alert{CO$_2$ emissions} associated with the dispatch of emitting power plants 
   in the European electricity system are part of the model solution.
   We can use this information to calculate (i) the \emph{emissionality} of generation 
   that serves participating 24/7 demand, and (ii) the \emph{avoided emissions}, i.e.,
-  the difference in regional $CO_2$ emissions with and without 24/7 procurement. 
+  the difference in regional CO$_2$ emissions with and without 24/7 procurement. 
   Similarly to the logic of computing the grid CFE factor, 
   we need to consider imported emissions also in this calculation.
   
@@ -584,11 +584,10 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
 
 
-\begin{frame}{$CO_2$ emissions rate of the regional grid and 24/7 portfolio, 2/2}
+\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 2/2}
 
   {\small
-
-  Third, we calculate {$CO_2$ emissions} associated with the electricity consumption of 
+  Third, we calculate {CO$_2$ emissions} associated with the electricity consumption of 
   24/7 participating consumers on an hourly basis:
   
   \begin{equation*}
@@ -603,7 +602,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \end{equation*}
 
   A second metric is the \alert{avoided emissions} by 24/7 procurement. The calculation is based on the 
-  difference between the total {$CO_2$ emissions} in the regional grid where 24/7 consumers are located
+  difference between the total {CO$_2$ emissions} in the regional grid where 24/7 consumers are located
   with and without 24/7 procurement (\emph{'247-cfe'} and \emph{'benchmark'} labels, accordingly):
 
   \begin{equation*}
@@ -613,88 +612,108 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
 \end{frame}
 
+
 %----------------------------------------
 %----------------------------------------
 \section{Scenario setup}
 
 
-\begin{frame}
-  \frametitle{Scenario setup 1/2}
+\begin{frame}{Scenario setup 1/3}
+ 
+  \begin{columns}[T]
+  \begin{column}{7.5cm}
 
-\begin{columns}[T]
-\begin{column}{6cm}
-
-  \begin{itemize}
-
-  \item We model the European power system consisting of \alert{37 zones}
-  \item C\&I taking 24/7 approach can be located in either of the \alert{four zones}: Ireland, Denmark (zone DK1 or DK-West), Germany and the Netherlands
-  \item Different shares of national C\&I demand participate in 24/7 approach. We assume here \alert{10\%} and \alert{25\%}
-  \end{itemize}
-
-\end{column}
-
-\begin{column}{8cm}
-
-\centering
-\includegraphics[width=8cm]{images/elec_s_37.png}
-
-\vspace{0.1cm}
-PyPSA-Eur network clustered to 37 zones
-
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-
-\begin{frame}
-  \frametitle{Scenario setup 2/2}
-
-\begin{columns}[T]
-\begin{column}{6cm}
-
-  \begin{itemize}
-
-  \item We focus on two periods: \\ \alert{2025} and \alert{2030}. Periods differ by \\ 
-  (i) technology cost assumptions, \\ 
-  (ii) renewable expansion pathways (based on NECPs), \\(iii) \emph{brownfield} fleet of power plants
-  \item We incorporate various technologies that can be procured by C\&I consumers: wind, solar, short-term storage (batteries), long-term storage (hydrogen storage system), and advanced geothermal system
-  \end{itemize}
-
-\end{column}
-
-\begin{column}{8cm}
-
-\centering
-\includegraphics[width=8cm]{images/powerplantmatching.png}
-
-\vspace{0.1cm}
-\hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching} tool \\
-a showcase example
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-
-\begin{frame}{Scenario space at one glance}
+  \vspace{0.3cm}
   \centering
-  
+
+  \includegraphics[width=7.5cm]{images/elec_s_37.png}
+
+  {\footnotesize 
+  PyPSA-Eur network clustered to 37 zones
+  }
+  \end{column}
+
+  \begin{column}{8cm}
+  {\small 
   \begin{itemize}
-      \item Years (2): 2025 and 2030
-      \item Zones (4): IE, DK1, DE, NL
-      \item Tech palettes (3): \\
-          \emph{Palette 1}: wind, solar, battery  storage \\
-          \emph{Palette 2}: all above and long-duration energy storage (hydrogen storage system) \\
-          \emph{Palette 3}: all above and clean dispatchable generator (advanced geothermal system)
-      \item Participation (2): 10\% and 25\% of C\&I load 
-      \item Procurement targets (9): (i) different thresholds for
-  meeting the hourly 24/7 CFE [75\%..100\%], (ii) 100\% annual matching, and (iii) a reference case when 24/7 participants cover load purely with grid purchases
-  \end{itemize}
+  \item In each scenario, we model the full European power system 
+  clustered to \alert{37 zones}. 
+    
+  \item Each zone represents an individual country. Some countries are split to individual bidding zones, 
+  such as DK1 (West) and DK2 (East).
+
+  \item Consumers following 24/7 approach can be located in either of the \alert{four zones}: 
+  Ireland, Denmark (zone DK1), Germany and the Netherlands.
+    
+  \item We assume that all consumers committed to 24/7 matching, form an alliance and sign contracts 
+  with CFE generators so that their aggregated consumption can be matched 
+  on an hour-by-hour basis with clean generation to achieve a given CFE matching score.
   
-  \end{frame}
+  \end{itemize}
+  }
+  
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Scenario setup 2/3}
+
+  {\small 
+  \begin{itemize}
+
+  \item We model various procurement policies and targets. The scenarios include: \\
+  (i) \alert{24/7 CFE matching} with seven different CFE scores in a range from 80\% to 100\%, \\
+  (ii) \alert{100\% annual matching} -- the best case scenario for the annual matching policy, \\
+  (iii) \alert{A benchmark case} when 24/7 consumers cover theur load purely with grid purchases 
+  without any policy regarding the origin of electricity.
+
+  \item We conduct an analysis for different rates of participation. The two scenarios 
+  assume that \alert{10\%} and \alert{25\%} of commercial and industrial load
+  in a given zone participate in 24/7 CFE matching.
+
+  \item We focus on two periods: \alert{2025} and \alert{2030}. The two periods differ by \\ 
+  (i) Technology cost assumptions, \\
+  (ii) National renewable expansion pathways,\\
+  (iii) Power plant fleet (changes take place due to decomissioning based on generators' 
+  age or national policies), \\
+  (iv) System-wide assumptions, such as price for EU ETS allowances.
+
+  \end{itemize}
+  }
+\end{frame}
+
+
+
+\begin{frame}{Scenario setup 3/3}
+
+  {\small 
+  \begin{itemize}
+
+  \item We assume that 24/7 consumers have an access to a wide palette
+  of carbon-free technologies that are either available on the European market now
+  or expected to be available for a commercial scale up in a close future. 
+  
+  \item We deliberately encode prospective technologies into the analysis.
+  The \alert{technology inclusivity} is another 
+  \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{important principle} 
+  of the 24/7 CFE methodology. Thus, we consider carbon-free power generation
+  technologies, which we believe can play important roles in facilitating CFE matching on hourly basis, 
+  while enabling deeper decarbonization of electricity systems at the same time. 
+  
+  \item We formulate three scenarios grouping generators by a degree of technological
+  maturity as of now \\
+    \alert{Palette 1}: onshore wind, utility-scale solar, battery storage \\
+    \alert{Palette 2}: all above + long-duration energy storage (hydrogen storage system) \\
+    \alert{Palette 3}: all above + Allam Cycle natural gas generator + 
+    advanced clean dispatchable generator (e.g., advanced geothermal system or advanced nuclear technology)
+
+  \end{itemize}
+  }
+\end{frame}
+
 
 
 %----------------------------------------
@@ -702,78 +721,269 @@ a showcase example
 \section{Data sources and key assumptions}
 
 
-\begin{frame}{Summary of data sources}
-\begin{columns}[T]
-\begin{column}{6cm}
+\begin{frame}{Summary of data sources: electricity grid}
+ 
+  \begin{columns}[T]
+  \begin{column}{7cm}
 
   \vspace{0.3cm}
-\centering
-
-%\includegraphics[width=4cm]{line-loading}
-\includegraphics[width=7cm]{images/pypsa-eur-grid.png}
-
-\vspace{.1cm}
-
-Basic \alert{validation} of grid model in \hrefc{https://arxiv.org/abs/1806.01613}{Hörsch et al, 2018)},
-\hrefc{https://github.com/PyPSA/pypsa-eur}{github.com/PyPSA/pypsa-eur}
-
-\end{column}
-\begin{column}{7.5cm}
-
-  \begin{itemize}
-    \item Grid data based on \alert{GridKit} extraction of ENTSO-E interactive map
-    \item \alert{powerplantmatching} tool combines open databases using matching algorithm \href{https://github.com/larsga/Duke}{DUKE}
-    \item Renewable energy time series from open \alert{atlite}, which processes terabytes of weather data from e.g. new ERA5 global reanalysis
-    \item Geographic \alert{potentials} for RE from land use GIS availability
-    \item All energy demand and supply options (power, transport, heating and industry)
-      \item  See \hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{other slidedeck} for full details
-
-  \end{itemize}
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-\begin{frame}{Summary of data sources}
-
-  \begin{itemize}
-\item Technology data from the open-source \hrefc{https://github.com/PyPSA/technology-data}{technology-data} project \\ (maintained by ENSYS, TU Berlin)
-\item Existing generation fleet data from the open-source \hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching} project (maintained by ENSYS, TU Berlin)
-\item Renewable power potentials and generation profiles from the open-source \hrefc{https://github.com/PyPSA/atlite}{Atlite} project (maintained by ENSYS, TU Berlin)
-\item National climate \& renewable policies:  \\ https://ec.europa.eu for NECPs, https://beyond-coal.eu/, https://world-nuclear.org/
-\item Other is based on open-sourced power system data of PyPSA-Eur(-Sec) suite of models \hrefc{https://pypsa.org/}{PyPSA}
-  \end{itemize}
-
-\end{frame}
-
-
-\begin{frame}{Key assumptions}
-
-  \begin{itemize}
-\item key assumptions list
-  \end{itemize}
-
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{A note on open research}
-
   \centering
+
+  \includegraphics[width=7cm]{images/pypsa-eur-grid.png}
+
+  {\footnotesize 
+  \vspace{.1cm}
+  Basic validation of grid model in 
+  \hrefc{https://doi.org/10.1016/j.esr.2018.08.012}{Hörsch et al. (2018)}
+  }
+  \end{column}
+
+  \begin{column}{7.5cm}
+  {\small 
+  \vspace{.3cm}
+  \begin{itemize}
+    \item Grid data contains AC lines at and above 220~kV voltage level, 
+    all high voltage DC lines, and substations for the full 
+    \hrefc{https://www.entsoe.eu/data/map/}{ENTSO-E area}.
+    \item Grid data is collected by \hrefc{https://github.com/PyPSA/GridKit}{GridKit extraction} 
+    of ENTSO-E interactive map
+    \item Spatial resolution is
+    \hrefc{https://pypsa-eur.readthedocs.io/en/latest/simplification/cluster_network.html}{adjustable}, 
+    what allows spatial and topological analysis at different levels 
+    (e.g. by transforming the transmission grid to a 380~kV only equivalent network).
+
+  \end{itemize}
+  }
+  
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Summary of data sources: power plants and technology costs}
+ 
+  \begin{columns}[T]\
+
+  \begin{column}{7.5cm}
+    {\small 
+    \begin{itemize}
+      \item Existing generation fleet data is collected by cleaning, 
+      standardizing and merging multiple power plant databases.
+      
+      \item The process is transparent and open-sourced via the 
+      \hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching} package.
+      The package provides all the important information about power plants in a ready-to-use format
+      for the European power system. 
+  
+      \item Assumptions on energy system technologies (such as capital and operational costs, efficiencies, lifetimes, etc.) 
+      are gathered from variety of open sources. The process is also open-sourced via the 
+      \hrefc{https://github.com/PyPSA/technology-data}{technology-data} project. 
+  
+      \item Both tools are maintained by TU Berlin team.
+  
+    \end{itemize}
+    }  
+  \end{column}
+
+  \begin{column}{7cm}
+
+  \vspace{0.3cm}
+  \centering
+
+  \includegraphics[width=7cm]{images/powerplantmatching.png}
+
+  {\footnotesize 
+  \vspace{0.1cm}
+  A showcase example 
+  of \hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching}
+  }
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{Summary of data sources: renewable potentials and time series}
+ 
+  \begin{columns}[T]
+  \begin{column}{9cm}
+
+  \vspace{0.3cm}
+  \centering
+
+  \includegraphics[width=9cm]{images/atlite.jpg}
+
+  {\footnotesize 
+  Converting weather data to energy system data with \hrefc{https://github.com/PyPSA/atlite}{atlite}
+  }
+  \end{column}
+
+  \begin{column}{7cm}
+  {\small 
+  \begin{itemize}
+    \item Renewable power potentials and generation profiles are processed by 
+    the open-source \hrefc{https://github.com/PyPSA/atlite}{atlite} package, 
+    which converts terabytes of weather data (like wind speeds, solar influx) 
+    into the data for energy systems modelling.
+    \item Geographic potentials for renewable energy are based on the
+    \hrefc{https://github.com/FZJ-IEK3-VSA/glaes}{GLAES} framework. We gather and process
+    datasets for land cover (CORINE2018), natural protection areas (NATURA2000),
+    bathymetry (GEBCO2018) and \hrefc{https://pypsa-eur.readthedocs.io/en/latest/}{other} 
+    to conduct own geospatial land availability analysis.
+    \item The \alert{atlite} project is also maintained by TU Berlin team.
+
+  \end{itemize}
+  }
+  
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
+\begin{frame}{Other assumptions}
+
+\begin{itemize}
+  {\small 
+\item Model is set to perform a \alert{single period}, \alert{perfect-foresight} optimization of investment 
+and power dispatch decisions to meet electricity demand of the 24/7 consumers, 
+as well as the demand of other consumers in the European electricity system for 2025 or 2030.
+\item Electrical demand time-series is based on the 
+\hrefc{https://open-power-system-data.org/}{OPSD project}. 
+We assume the same demand profile per bidding zone for 2025 and 2030, as in the representative year 2013.
+\item Similarly, we assume 2013 as the representative climate year for renewable in-feed.
+\item Renewable expansion in the regional grid where 24/7 consumers are located is based on the 
+\hrefc{https://energy.ec.europa.eu/topics/energy-strategy/national-energy-and-climate-plans-necps_en}{national energy and climate plans}.\footnote{{\scriptsize For Germany, we assume the 
+\hrefc{https://www.bmwk.de/Redaktion/EN/Pressemitteilungen/2022/04/20220406-federal-minister-robert-habeck-says-easter-package-is-accelerator-for-renewable-energy.html}{Easter package}
+to come into force as planned, i.e. RES cover 80\% of gross electricity consumption by 2030.}}
+\item  National policies and decommissioning plans for coal and nuclear 
+power plants are based on the 
+\hrefc{https://beyond-coal.eu/}{Europe Beyond Coal}, 
+and \hrefc{https://world-nuclear.org/}{world-nuclear.org} projects.
+\item We assume price for EU ETS allowances to be 80~\euro/tCO$_2$ 
+and 130~\euro/tCO$_2$ for 2025 and 2030, accordingly. The price for 
+natural gas is assumed to be 35~\euro/MWh.\footnote{{\scriptsize Based on the price assumptions in the \hrefc{https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf}{REPowerEU Plan}
+issued by the European Commission in May 2022}}
+}
+\vspace{0.2cm}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Technologies available for 24/7 consumers - 2025}
+  
+  {\scriptsize 
+
+    \begin{tabular}{cccccccc}
+      \hline
+      Palette & Technology & CAPEX & FOM & VOM & Eff. & lifetime & Original reference \\
+       &  & (overnight cost)  &  (\%/year) &  (€/MWh) & (per unit) & (years) & (\hrefc{https://github.com/PyPSA/technology-data}{technology data}) \\
+      \hline
+      1,2,3 & solar & 612 €/kW & 1.7 & 0.01 & - & 37.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
+      \hline
+      1,2,3 & onshore wind & 1077 €/kW & 1.2 & 1.42 & - & 28.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
+      \hline
+      1,2,3 & battery storage & 187 €/kWh & - & - & - & 22.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      1,2,3  & battery inverter & 215 €/kW & 0.3 & - & 0.96  & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & hydrogen storage\footnote{{\scriptsize Underground hydrogen storage in salt cavern}} 
+                  & 2.5 €/kWh & 0 & 0 & - & 100.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & electrolysis & 550 €/kW & 2.0 & - & 0.67 & 27.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & fuel cell & 1200 €/kW & 5.0 & - & 0.50 & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      3 & NG Allam cycle\footnote{{\scriptsize Costs also include estimate of 40~€/ton for CO$_2$ transport \& sequestration.}} & 2760 €/kW & 14.8  & 3.2 & 0.54 & 30.0 &
+      \hrefc{https://file.go.gov.sg/carbon-capture-utilisation-and-storage-decarbonisation-pathway-for-singapore-energy-and-chemical-sectors-pdf.pdf}{Navigant}, 
+      \hrefc{https://netzeroamerica.princeton.edu/}{NZA}\\
+      \hline
+      3 & Advanced dispatchable\footnote{{\scriptsize A stand-in for clean dispatchable technologies, 
+      such as advanced geothermal (closed-loop) systems. See e.g., \hrefc{https://www.eavor.com/}{Eavor} 
+      developing a promising solution for clean baseload \& dispatchable power with a potential
+      for a commercial scale up in Europe.}} 
+      & 10000 €/kW & 0 & 0 & 1.00 & 30.0 & own estimates \\
+      \end{tabular}
+  }
+
+\end{frame}
+
+
+
+\begin{frame}{Technologies available for 24/7 consumers - 2030}
+  
+  {\scriptsize 
+
+    \begin{tabular}{cccccccc}
+      \hline
+      Palette & Technology & CAPEX & FOM & VOM & Eff. & lifetime & Original reference \\
+       &  & (overnight cost)  &  (\%/year) &  (€/MWh) & (per unit) & (years) & (\hrefc{https://github.com/PyPSA/technology-data}{technology data}) \\
+      \hline
+      1,2,3 & solar & 492 €/kW & 2.0 & 0.01 & - & 40 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
+      \hline
+      1,2,3 & onshore wind & 1035 €/kW & 1.2 & 1.35 & - & 30 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
+      \hline
+      1,2,3 & battery storage & 142 €/kWh & - & - & - & 25.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      1,2,3  & battery inverter & 160 €/kW & 0.3 & - & 0.96  & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & hydrogen storage\footnote{{\scriptsize Underground hydrogen storage in salt cavern}} 
+                  & 2.0 €/kWh & 0 & 0 & - & 100 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & electrolysis & 450 €/kW & 2.0 & - & 0.68 & 30.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      2,3 & fuel cell & 1100 €/kW & 5.0 & - & 0.5 & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      \hline
+      3 & NG Allam cycle\footnote{{\scriptsize Costs also include estimate of 40~€/ton for CO$_2$ transport \& sequestration.}}  & 2600 €/kW & 14.8  & 3.2 & 0.54 & 30 &
+      \hrefc{https://file.go.gov.sg/carbon-capture-utilisation-and-storage-decarbonisation-pathway-for-singapore-energy-and-chemical-sectors-pdf.pdf}{Navigant}, 
+      \hrefc{https://netzeroamerica.princeton.edu/}{NZA}\\
+      \hline
+      3& Advanced dispatchable\footnote{{\scriptsize A stand-in for clean dispatchable technologies, 
+      such as advanced geothermal (closed-loop) systems. See e.g., \hrefc{https://www.eavor.com/}{Eavor} 
+      developing a promising solution for clean baseload \& dispatchable power with a potential
+      for a commercial scale up in Europe.}} 
+      & 10000 €/kW & 0 & 0 & 1 & 30 & own estimates \\
+      \end{tabular}
+  }
+
+\end{frame}
+
+
+%---------------------------------------------
+%---------------------------------------------
+\section{Modelling results and analysis}
+
+
+%----------------------------------------
+\section{Conclusions and policy implications}
+
+
+%----------------------------------------
+\begin{frame}
+  \frametitle{Open research and contacts}
+
+  {\Large
+  \alert{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+  }
+
+  \vspace{.3cm}
   All input data and code for this study is open and freely available at \\
   \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe}
 
   \vspace{.3cm}
+  For questions and inquiries related to this study, contact \\
+  Dr. Iegor Riepin, iegor.riepin@tu-berlin.de \\
+  Prof. Tom Brown, t.brown@tu-berlin.de
 
 \end{frame}
+\end{document}
 
 
-%---------------------------------------------
-%---------------------------------------------
-\section{Modelling results}
-
-
+%----------------------------------
 
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 
 \\ Fraction of demand met with carbon-free energy (CFE)}
@@ -1295,7 +1505,7 @@ Cost breakdown with advanced dispatchable generators}
 
 
 %----------------------------------------
-\section{Discussion \& Takeaways}
+\section{Conclusions and policy implications}
 
 
 \begin{frame}{Discussion:}
@@ -1310,9 +1520,30 @@ Cost breakdown with advanced dispatchable generators}
 
 \end{frame}
 
+
+
+\begin{frame}
+  \frametitle{Open research and contacts}
+
+  {\Large
+  \alert{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+  }
+
+  \vspace{.3cm}
+  All input data and code for this study is open and freely available at \\
+  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe}
+
+  \vspace{.3cm}
+  For questions and inquiries related to this study, contact \\
+  Dr. Iegor Riepin, iegor.riepin@tu-berlin.de \\
+  Prof. Tom Brown, t.brown@tu-berlin.de
+
+\end{frame}
+
+
 %----------------------------------------
 %----------------------------------------
-\section*{Backup}
+\section*{Annex}
 
 
 \end{document}
