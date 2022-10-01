@@ -96,7 +96,7 @@ costs:
   adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
   adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
-  allam_ccs_overnight_2030: 3000 # 2022$/kW CAPEX, 2500*1.2 
+  allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
   # price_gas_2025: 50.0 # https://www.powernext.com/futures-market-data
   # price_oil = 50.0 # EUR/MWhth -> TYNDP2020 = default 
   # price_uranium = 1.7 EUR/MWhth -> TYNDP2020  is 2.6
