@@ -8,7 +8,7 @@
   \hrefc{https://tub-ensys.github.io/}{Department of Digital Transformation in Energy Systems}, TU Berlin
 }
 
-\date{12 October 2022}
+\date{11 October 2022}
 
 \titlegraphic{%
   \vspace{0cm}
@@ -29,15 +29,15 @@
 
   \begin{itemize}
     \item {\bf Funding:} This study was supported by a grant from Google, Inc. 
-    \item {\bf Acknowledgements:} The authors acknowledge members of the Google energy markets and policy team 
+    \item {\bf Acknowledgements:} The authors thank members of the Google energy markets and policy team 
     for their feedback and inputs on earlier drafts of this report. 
-    Also, warm regards to the \hrefc{https://pypsa.org/}{PyPSA team} and many contributors to the open-source 
+    We also thank the \hrefc{https://pypsa.org/}{PyPSA team} and many contributors to the open-source 
     PyPSA energy system modelling tool used in this study (see: \hrefc{https://github.com/PyPSA/PyPSA}{github.com/PyPSA})
     \item 
     {\bf Copyright} Unless otherwise stated, graphics and text are Copyright \copyright Tom Brown and Iegor Riepin, 2022.
     Graphics and text for which no other attribution are given are licensed under a 
     \href{https://creativecommons.org/licenses/by/4.0/}{CC BY 4.0}.  {\footnotesize \ccby} 
-    \item The content of this study, including any errors or omissions are the responsibility
+    \item The content of this study, including any errors or omissions, are the responsibility
     of the authors alone.
   \end{itemize}
 
@@ -64,15 +64,14 @@
     \begin{itemize}
     \item Climate change is driving a global effort to rapidly decarbonise 
     electricity systems across the globe. 
-    Many public and private energy buyers have joined this effort and highlight
-    their sustainable credentials by procuring renewable energy with the 
-    Power Purchase Agreements (PPAs).
+    Many public and private energy buyers have joined this effort 
+    by purchasing certificates for renewable energy or
+    by procuring renewable energy directly with Power Purchase Agreements (PPAs).
     \item Such \alert{voluntary commitments accelerate the deployment of renewable 
     capacity} above the policy requirements in the countries and jurisdictions
-    these companies operate. This facilitates faster
-    transformation of electricity markets by driving renewables
-    techologies down the experience curves.
-    \item Additionally, many early actors in the field helped pave the way for followers 
+    where these companies operate, facilitating faster
+    transformation of electricity markets.
+    \item Additionally, many early actors in the field have paved the way for others to follow 
     \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{by 
     developing methods and establishing standard contracts} for clean energy procurement.
     \end{itemize}
@@ -86,8 +85,8 @@
   \begin{columns}[T]
     \begin{column}{6cm}
       \begin{itemize}
-        \item   PPAs typically allow for renewable energy to match supply and
-        demand on average over a long period of time. 
+        \item   PPAs typically are typically used for renewable energy to match generation 
+        and consumption on average over a year.
         \item For example, more than 370 members of the \href{https://www.there100.org/}{RE100} group have committed to purchasing enough renewable energy to match
         \alert{100\% of their electricity consumption on an annual basis}.
       \end{itemize}
@@ -119,7 +118,7 @@
     \item Thus, although buyers match their demand on a \alert{yearly} basis with 
     renewable energy, on an \alert{hourly} basis they still have hours 
     when they have to rely on carbon-emitting technologies available 
-    on a local market, such as coal and gas-fired power plants.
+    on the local market, such as coal and gas-fired power plants.
     \end{itemize}
 
   \centering
@@ -136,14 +135,16 @@
   from the electricity buyers' and system perspectives: 
   \begin{itemize}
   \item No \alert{simultaneity} - variable generation of wind and solar power is not aligned with the 
-  buyer’s electricity consumption profile.
+  buyers' electricity consumption profile.
   \item Lack of \alert{additionality} - some buyers procure unbundled guarantees of origin from existing 
   facilities, which does not lead to additional renewable generation.
-  \item Displaced \alert{location} - some buyers procure  PPAs from locations far away from their consumption.
+  \item Displaced \alert{location} - some buyers procure PPAs from locations far away 
+  from their consumption, where there is no way to transmit the electricity to the demand.
   \item Exposure to \alert{risk} - electricity buyers are exposed to price volatility 
-  in local electricity markets.
-  \item Need for \alert{backup} - electricity system has to maintain backup and flexibility options 
-  for hours with low renewable generation.
+  in local electricity markets, since they still have to procure electricity to cover
+  the difference between demand and supply.
+  \item Need for \alert{backup} - the rest of the electricity system still has to 
+  maintain backup and flexibility options for hours with low renewable generation.
   \end{itemize}
   
 \end{frame}
@@ -165,6 +166,25 @@
 
 
 
+\begin{frame}{Yearly versus hourly matching}
+  
+  24/7 CFE procurement has potential benefits over the 100\% renewable matching:
+  
+  \begin{itemize}
+  \item Ensure match of electricity consumption with carbon-free resources 
+        on an \alert{hourly basis}.
+  \item Enable much \alert{deeper reductions in CO$_2$ emissions} associated 
+        to buyer's electricity consumption.
+  \item Ensure that contracted power is \alert{additional} (i.e. leads to new capacity).
+  \item Ensure that power comes from the \alert{same bidding zone}.
+  \item Enable technology-neutral procurement of \alert{carbon-free} rather than renewable technologies 
+        (such as advanced “clean dispatchable” power generation and long-duration energy storage).
+  \end{itemize}
+  
+\end{frame}
+
+
+
 \begin{frame}{24/7 carbon-free energy}
   
   \begin{columns}[T]
@@ -176,7 +196,7 @@
     It now includes more than 80 companies, policymakers, investors, and organizations 
     on a mission to realize a 24/7 Carbon-Free Energy future. 
 
-    \item One of the forefront runners in 24/7 initiative is Google Inc. In 2020 the company committed 
+    \item One of the front runners in the 24/7 initiative is Google Inc. In 2020 the company committed 
     \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{to the goal} 
     of operating entirely on a 24/7-CFE approach at all its data centres and campuses worldwide by 2030. 
     Shortly after, Google published 
@@ -199,65 +219,99 @@
 
 
 
-\begin{frame}{Yearly versus hourly matching}
-  
-  The 24/7 CFE procurement has potential benefits over the 100\% renewable matching:
-  
-  \begin{itemize}
-  \item Ensure match of electricity consumption with carbon-free resources 
-        on an \alert{hourly basis}.
-  \item Enable much \alert{deeper reductions in CO$_2$} emissions assosiated 
-        to buyer's electricity consumption.
-  \item Ensure that contracted power is \alert{additional} (i.e. leads to new capacity).
-  \item Ensure that power comes from the \alert{same bidding zone}.
-  \item Enable procurement of \alert{carbon-free} rather than renewable technologies 
-        (such as advanced “clean dispatchable” power generation and long-duration energy storage).
-  \end{itemize}
-  
-\end{frame}
-
-
-
 \begin{frame}{Focus of the study}
   
-  In this study, we investigate both the \alert{means and costs of 24/7 procurement} for companies
+  In this study, we investigate both the \alert{means and costs of 24/7 procurement} 
+  for companies in a selection of European countries 
   and the \alert{system impacts} for the rest of the European electricity system. 
+  
+  In particular, we focus our analysis on the following quesitons:
 
-  We focus our analysis on the following quesitons:
-
-    \begin{enumerate}
+    \begin{itemize}
     \item How can companies following 24/7~CFE procurement achieve hourly matching?
     \item What is the cost premium of 24/7~CFE versus the 100\% annual matching?
     \item To which extent can technologies, such as long-duration storage or advanced dispatchable
           clean generators, help to achieve the 24/7~CFE goal?
     \item To which extent can 24/7~CFE contribute to reductions in CO$_2$
-          emissions intensity of buyer's consumption? 
-    \item If many companies follow the 24/7~CFE approach, how does this effect the rest of
-          the energy system?
-    \end{enumerate}
-  
-\end{frame}
-
-
-
-\begin{frame}{Quick summary}
-  
-  \begin{columns}[T]
-  \begin{column}{9cm}
-  \centering
-
-    \begin{itemize}
-    \item Key findings
+          emissions intensity of buyers' consumption? 
+    \item If many companies follow the 24/7~CFE approach, how does this affect 
+    emissions and flexibility needs in the rest of the electricity system?
     \end{itemize}
-  \end{column}
-  \end{columns}
   
 \end{frame}
+
+
+
+\begin{frame}{Summary of key findings}
+  
+  \centering
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+    \begin{enumerate}
+    \item Reaching carbon-free energy (CFE) for 80-90\% of hours of the year 
+    has comparable cost and system impact to annually matching 100\% renewable energy. 
+    A CFE target of 80-90\% can be met through a combination of wind, solar and batteries.
+
+    \item Reaching 100\% CFE is possible but costly with existing renewable 
+    and storage technologies, with costs increasing rapidly above 95\%.
+    
+    \item 100\% CFE could have a much smaller cost premium if long duration storage or 
+    clean dispatchable technologies like advanced geothermal are available.
+    
+    \item 100\% CFE procurement leads to lower emissions for both the buyer and the system,
+    as well as reducing the needs for flexibility in the rest of the system.
+    
+    \item 100\% CFE targets would create an early market for these advanced technologies,
+    stimulating innovation and learning from which the whole electricity system would profit.
+    
+  \end{enumerate}
+  }}
+  
+  {\small 
+  These European study results align with \hrefc{https://acee.princeton.edu/24-7/}{a similar study} 
+  done by Princeton University \\ for regions in the United States.}
+
+\end{frame}
+
 
 %----------------------------------------
 %----------------------------------------
 
 \section{Methodology and study design}
+
+
+
+\begin{frame}
+  \frametitle{A quick overview}
+
+
+{\small
+  \begin{itemize}
+    
+    \item The mathematical model for this study is build upon 
+    \hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur(-Sec)} --
+    a widely-used open-source optimization model for the European energy system.
+
+    \item We encode a set of new equations and routines into the PyPSA-Eur(-Sec),
+    which allow for modelling a situation when some C\&I electricity consumers 
+    commits to a voluntary clean energy procurement.
+
+    \item We compare 100\% annual matching with renewable energy versus 
+    different targets for hourly CFE matching.
+
+    \item We place C\&I consumers committed to a clean energy procurement in a 
+    selection of European countries, such as Germany, Denmark, Ireland and the Netherlands.
+    These countries differ in patterns of electricity demand, renewable potentials,
+    national energy and climate policies, legacy fleets of generation capacities, degree 
+    of interconnectons, etc. Apart form that, we consider different C\&I participation rates, a wide palette 
+    of CFE generation technologies available for 24/7 consumers, 
+    and two years (2025 and 2030). These differences help to understand and generalize 
+    the impacts of 24/7 CFE procurement.
+    
+  \end{itemize}
+}
+
+\end{frame}
 
 
 \begin{frame}
@@ -272,7 +326,7 @@
   for for state-of-the-art energy system modelling.
   \item Fills gap between power flow software (e.g. PowerFactory,
   MATPOWER) and energy system planning software (e.g. TIMES, OSeMOSYS).
-  \item PyPSA develoment and maintenance is coordinated by the TU Berlin,
+  \item PyPSA development and maintenance is coordinated by the TU Berlin,
   \hrefc{https://www.ensys.tu-berlin.de/}{Department of Energy Systems}.  
   \item PyPSA is used worldwide by dozens of research institutes and companies.\\
   See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}.
@@ -367,7 +421,7 @@
 
   {\small
 
-  The model optimizes portfolio of carbon-free generation and storage technologies 
+  The model optimizes a portfolio of carbon-free generation and storage technologies 
   procured by the participating C\&I consumers. The portfolio assets have to be located 
   in the same market zone.
 
@@ -461,9 +515,11 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \noindent\fbox{%
     \parbox{\textwidth}{%
   Note that the grid CFE factor $CFE_t$ is affected by capacity procured by C\&I consumers. This
-  introduces a nonconvex term to the optimization problem. We relax the problem by treating grid CFE factor
-  as a parameter that is iteratively updated (starting with $CFE_t =0 \, \forall t$). 
-  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)} study, we find that one forward pass (i.e. 2 iterations) yields very good convergence.
+  introduces a nonconvex term to the optimization problem. We relax the problem by treating 
+  the grid CFE factor as a parameter that is iteratively updated 
+  (starting with $CFE_t =0 \,~\forall t$). 
+  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)} study, 
+  we find that one forward pass (i.e. 2 iterations) yields very good convergence.
   }}
   }
 
@@ -475,13 +531,14 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   {\small
 
-  The excess generation $ex_t$ from the procured resources representes clean electricity over
+  The excess generation $ex_t$ from the procured resources represents clean electricity over
   and above demand of C\&I consumers following 24/7 approach in a particular hour. 
-  The \alert{excess is not counted toward CFE score} -- 
-  and thus it is substracted on the left-hand side of the eq. (\ref{eqn:CFE}).
+  The \alert{excess is not counted toward the CFE score} -- 
+  and thus it is subtracted on the left-hand side of the eq. (\ref{eqn:CFE}).
 
-  The excess generation can be stored and shifted to another hour where procured resources 
-  generate less than the C\&I demand, sold to the regional grid at market prices or curtailed. 
+  CFE generation above the demand can be stored and shifted to another hour where procured resources 
+  generate less than the C\&I demand, sold to the regional grid as excess $ex_t$
+  at market prices, or curtailed. 
   The total amount of excess generation is constrained to a certain level on an annual basis. 
   In this study, the limit is set to 20\% of annual 24/7 participating customer's demand:
   \vspace{0.1cm}
@@ -492,12 +549,15 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   \noindent\fbox{%
   \parbox{\textwidth}{%
-  The constraint (\ref{eqn:excess}) facilitates \alert{additionality} -- 
-  \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{one of the principles} 
-  of the 24/7 CFE matching.
-   From the modelling perspective, the limit on excess electricity ensures that CFE resources 
-  procured by C\&I consumers are \emph{additional}, i.e. 24/7 procurement activities
-  enable the deployment of clean electricity generation that is new to the grid. 
+  The constraint (\ref{eqn:excess}) gives the C\&I consumers the flexibility to sell 
+  electricity to the regional grid, while avoiding the situation that sales to the grid 
+  become significantly larger than supply to the C\&I's own demand.
+  %This approach facilitates \alert{additionality} -- 
+  %\hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{one of the principles} 
+  %of the 24/7 CFE matching.
+  %From the modelling perspective, the limit on excess electricity ensures that CFE resources 
+  %procured by C\&I consumers are \emph{additional}, i.e. 24/7 procurement activities
+  %enable the deployment of clean electricity generation that is new to the grid. 
   }}
   }
 
@@ -509,10 +569,11 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   {\small
 
-  The \alert{grid CFE factor} $CFEt$ in eq. (\ref{eqn:CFE}) defines the share of 
+  The \alert{grid CFE factor} $CFE_t$ in eq. (\ref{eqn:CFE}) defines the share of 
   carbon-free electricity  in grid imports by C\&I consumers following 24/7 approach. 
   The factor depends on the generation mix in the region where C\&I consumers are located, 
-  as well as on the generation mix in other regions where from electricity is imported. 
+  as well as on the generation mix in other regions from which electricity is imported
+  to the local region ($import_t$). 
 
   \begin{columns}
     \begin{column}{8cm}
@@ -520,7 +581,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   Using the notation on the right, the average cleanness 
   of the rest of the electricity system is:
   \begin{equation*}
-  ImportCFE = \frac{A_t}{A_t + D_t}
+  ImportCFE_t = \frac{A_t}{A_t + D_t}
   \end{equation*}
 
   The CFE factor of grid supply\footnote{Note 
@@ -528,7 +589,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   for a given hour $t$ is:
   
   \begin{equation*}
-  CFEt = \frac{B_t + ImportCFE * import_t}{B_t + E_t + import_t}
+  CFE_t = \frac{B_t + ImportCFE_t * import_t}{B_t + E_t + import_t}
   \end{equation*}    
 
   \end{column}
@@ -545,7 +606,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   \noindent\fbox{%
   \parbox{\textwidth}{%
-  CFEt can be seen as the percentage of clean electricity in each MWh of imported 
+  $CFE_t$ can be seen as the percentage of clean electricity in each MWh of imported 
   electricity from the grid to supply participating 24/7 loads in a given hour.
   }}
   }
@@ -573,7 +634,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \end{equation*}
 
   Second, let $Y(E)_t$ be hourly emissions in the regional grid where 24/7 consumers are located.
-  The emissions rate of grid supply than is:
+  The emissions rate of grid supply is then:
 
   \begin{equation*}
   GridSupplyEmisRate = \frac{Y(E)_t + SystemEmisRate * import_t}{B_t + E_t + import_t}
@@ -639,7 +700,8 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \item In each scenario, we model the full European power system 
   clustered to \alert{37 zones}. 
     
-  \item Each zone represents an individual country. Some countries are split to individual bidding zones, 
+  \item Each zone represents an individual country. Some countries
+  that straddle different synchronous areas are split to individual bidding zones, 
   such as DK1 (West) and DK2 (East).
 
   \item Consumers following 24/7 approach can be located in either of the \alert{four zones}: 
@@ -666,8 +728,8 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   \item We model various procurement policies and targets. The scenarios include: \\
   (i) \alert{24/7 CFE matching} with seven different CFE scores in a range from 80\% to 100\%, \\
-  (ii) \alert{100\% annual matching} -- the best case scenario for the annual matching policy, \\
-  (iii) \alert{A benchmark case} when 24/7 consumers cover theur load purely with grid purchases 
+  (ii) \alert{100\% annual renewable matching} -- the best case scenario for the annual matching policy, \\
+  (iii) \alert{A benchmark case} when 24/7 consumers cover their load purely with grid purchases 
   without any policy regarding the origin of electricity.
 
   \item We conduct an analysis for different rates of participation. The two scenarios 
@@ -677,7 +739,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \item We focus on two periods: \alert{2025} and \alert{2030}. The two periods differ by \\ 
   (i) Technology cost assumptions, \\
   (ii) National renewable expansion pathways,\\
-  (iii) Power plant fleet (changes take place due to decomissioning based on generators' 
+  (iii) Power plant fleet (changes take place due to decommissioning based on generators' 
   age or national policies), \\
   (iv) System-wide assumptions, such as price for EU ETS allowances.
 
@@ -694,20 +756,20 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   \item We assume that 24/7 consumers have an access to a wide palette
   of carbon-free technologies that are either available on the European market now
-  or expected to be available for a commercial scale up in a close future. 
+  or expected to be available for a commercial scale up in the near future. 
   
   \item We deliberately encode prospective technologies into the analysis.
-  The \alert{technology inclusivity} is another 
+  The \alert{technology inclusivity} is an 
   \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{important principle} 
   of the 24/7 CFE methodology. Thus, we consider carbon-free power generation
-  technologies, which we believe can play important roles in facilitating CFE matching on hourly basis, 
+  technologies that we believe can play important roles in facilitating CFE matching on hourly basis, 
   while enabling deeper decarbonization of electricity systems at the same time. 
   
   \item We formulate three scenarios grouping generators by a degree of technological
-  maturity as of now \\
+  maturity as of now: \\
     \alert{Palette 1}: onshore wind, utility-scale solar, battery storage \\
     \alert{Palette 2}: all above + long-duration energy storage (hydrogen storage system) \\
-    \alert{Palette 3}: all above + Allam Cycle natural gas generator + 
+    \alert{Palette 3}: all above + Allam Cycle natural gas generator with carbon capture and sequestration + 
     advanced clean dispatchable generator (e.g., advanced geothermal system or advanced nuclear technology)
 
   \end{itemize}
@@ -848,7 +910,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
 \begin{itemize}
   {\small 
-\item Model is set to perform a \alert{single period}, \alert{perfect-foresight} optimization of investment 
+\item Model is set to perform a \alert{perfect-foresight optimization} of investment 
 and power dispatch decisions to meet electricity demand of the 24/7 consumers, 
 as well as the demand of other consumers in the European electricity system for 2025 or 2030.
 \item Electrical demand time-series is based on the 
