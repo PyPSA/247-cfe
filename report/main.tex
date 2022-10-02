@@ -220,13 +220,13 @@
 
 
 \begin{frame}{Focus of the study}
-  
+
   In this study, we investigate both the \alert{means and costs of 24/7 procurement} 
   for companies in a selection of European countries 
   and the \alert{system impacts} for the rest of the European electricity system. 
   
+  \vspace{0.3cm}
   In particular, we focus our analysis on the following quesitons:
-
     \begin{itemize}
     \item How can companies following 24/7~CFE procurement achieve hourly matching?
     \item What is the cost premium of 24/7~CFE versus the 100\% annual matching?
@@ -237,14 +237,16 @@
     \item If many companies follow the 24/7~CFE approach, how does this affect 
     emissions and flexibility needs in the rest of the electricity system?
     \end{itemize}
-  
+
 \end{frame}
 
 
 
 \begin{frame}{Summary of key findings}
-  
+
   \centering
+  {\small
+
   \noindent\fbox{%
   \parbox{\textwidth}{%
     \begin{enumerate}
@@ -252,25 +254,25 @@
     has comparable cost and system impact to annually matching 100\% renewable energy. 
     A CFE target of 80-90\% can be met through a combination of wind, solar and batteries.
 
-    \item Reaching 100\% CFE is possible but costly with existing renewable 
+    \item Reaching 100\% CFE target is possible but costly with existing renewable 
     and storage technologies, with costs increasing rapidly above 95\%.
     
-    \item 100\% CFE could have a much smaller cost premium if long duration storage or 
+    \item 100\% CFE target could have a much smaller cost premium if long duration storage or 
     clean dispatchable technologies like advanced geothermal are available.
     
-    \item 100\% CFE procurement leads to lower emissions for both the buyer and the system,
+    \item 24/7~CFE procurement leads to lower emissions for both the buyer and the system,
     as well as reducing the needs for flexibility in the rest of the system.
     
-    \item 100\% CFE targets would create an early market for these advanced technologies,
+    \item 24/7~CFE procurement would create an early market for the advanced technologies,
     stimulating innovation and learning from which the whole electricity system would profit.
     
   \end{enumerate}
   }}
   
-  {\small 
   These European study results align with \hrefc{https://acee.princeton.edu/24-7/}{a similar study} 
-  done by Princeton University \\ for regions in the United States.}
-
+  done by Princeton University \\ for regions in the United States.
+  }
+  
 \end{frame}
 
 
@@ -1020,67 +1022,92 @@ issued by the European Commission in May 2022}}
 \section{Modelling results and analysis}
 
 
-%----------------------------------------
-\section{Conclusions and policy implications}
+%----------------------------------
 
+\begin{frame}{Scenario space}
 
-%----------------------------------------
-\begin{frame}
-  \frametitle{Open research and contacts}
+  {\small
+  The following section presents modelling results and related analysis. 
+  For convenience, we brach out a \alert{base scenario} 
+  with the following setup:
 
-  {\Large
-  \alert{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+    \quad{\bf Zone:} IE| DE | DK1 | NL \\
+    \quad{\bf Technology palette:} 1 | 2 | 3 \\
+    \quad{\bf Year:} 2025 \\ 
+    \quad{\bf Participation rate:} 10\% of C\&I demand in a modelled zone \\
+    \quad{\bf Demand profile}: baseload (flat) \\
+  
+  \vspace{0.3cm}
+  Afterwards, we explore the scenario space further by implementing one-at-a-time 
+  adjustment to the base scenario: \\
+  (i) implementing year {\bf 2030}, \\
+  (ii) implementing participation rate of {\bf 25\%}, \\ 
+  (iii) implementing {\bf other types of demand profiles} for C\&I consumers.
+  
+  \vspace{0.3cm}
+  For interested parties, we publish an \hrefc{tba}{online annex} 
+  with a full pack of modelling results alongside this study. The annex 
+  includes modelling results for all scenario combinations.
   }
-
-  \vspace{.3cm}
-  All input data and code for this study is open and freely available at \\
-  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe}
-
-  \vspace{.3cm}
-  For questions and inquiries related to this study, contact \\
-  Dr. Iegor Riepin, iegor.riepin@tu-berlin.de \\
-  Prof. Tom Brown, t.brown@tu-berlin.de
-
-\end{frame}
-\end{document}
-
+  \end{frame}
 
 %----------------------------------
 
-\begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 
-\\ Fraction of demand met with carbon-free energy (CFE)}
+\begin{frame}{Base scenario -- Ireland}
+
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-used.pdf}
+\includegraphics[width=9.4cm]{plots/10/2025/IE/p1/used.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
-  \begin{itemize}
-  \item 100\% RES has only \alert{annual matching}
-  \item 100\% RES PPA covers \alert{only 80\%} of hourly demand with CFE
-  \item CFE target \alert{90\%} and beyond yields higher share of hourly demand met with CFE
-  \item When CFE target approaches 100\%, C\&I participants rely \alert{only on procured resources}
-  \end{itemize}
-  
+\vspace{0.1cm}
+Figure on the left shows a fraction of demand met with carbon-free
+electricity depending on procurement policy that C\&I consumers follow.
+
+\vspace{0.3cm}
+In the reference case -- where C\&I consumers do not procure any resources,  
+relying purely on grid purchases -- only \alert{61\%} of demand is met with CFE.
+
+\vspace{0.3cm}
+100\% annual matching (100\% RES) reach has only \alert{annual matching}.
+
+\vspace{0.3cm}
+100\% RES PPA covers \alert{only 80\%} of hourly demand with CFE.
+
+\vspace{0.3cm}
+CFE target \alert{90\%} and beyond yields higher share of hourly demand met with CFE.
+
+\vspace{0.3cm}
+When CFE target approaches 100\%, C\&I participants rely \alert{only on procured resources}.
+
 \end{column}
 \end{columns}
+
+}
+\source{Ireland -- Palette 1 -- 2025 -- 10\% -- baseload}
 
 \end{frame}
 
 
 
-\begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1
-\\ C\&I emission rate}
+\begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1}
+
+  {\footnotesize
+  \vspace{0.3cm}
 
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-ci_emisrate.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p1-ci_emisrate.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \vspace{.5cm}
 
@@ -1090,7 +1117,7 @@ issued by the European Commission in May 2022}}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
@@ -1098,13 +1125,16 @@ issued by the European Commission in May 2022}}
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 \\
 Cost breakdown with existing technologies (wind, solar, battery)}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p1-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \vspace{.5cm}
 
@@ -1116,7 +1146,7 @@ Cost breakdown with existing technologies (wind, solar, battery)}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
@@ -1124,13 +1154,16 @@ Cost breakdown with existing technologies (wind, solar, battery)}
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 2 \\
 Cost breakdown with long duration energy storage (LDES)}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p2-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p2-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \vspace{.5cm}
 
@@ -1141,21 +1174,23 @@ Cost breakdown with long duration energy storage (LDES)}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 3 \\
 Cost breakdown with advanced dispatchable generators}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p3-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p3-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
-
+\begin{column}{6cm}
 
   \begin{itemize}
   \item Advanced geothermal could \alert{further limit cost}
@@ -1166,7 +1201,7 @@ Cost breakdown with advanced dispatchable generators}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
@@ -1174,13 +1209,16 @@ Cost breakdown with advanced dispatchable generators}
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 \\
 System emissions (full ENTSO-E area),  1/2}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-system_emissions.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p1-system_emissions.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
    \item  Here 550~MW of C\&I load in Ireland follows different procurement strategies
@@ -1190,20 +1228,23 @@ System emissions (full ENTSO-E area),  1/2}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 \begin{frame}{Scenario: Participation 25\% - 2025 - IE - Palette 1 \\
 System-level emissions (full ENTSO-E area), 2/2}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-system_emissions.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-IE-p1-system_emissions.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
    \item  Here 550~MW of C\&I load in Ireland follows different procurement strategies
@@ -1213,90 +1254,26 @@ System-level emissions (full ENTSO-E area), 2/2}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 %----------------------------------------
 %now explore IE-2030
 
-\begin{frame}{The impacts of 2030 scenario  \\ 
-Fraction of demand met with carbon-free energy (CFE) }
-
-\begin{columns}[T]
-\begin{column}{9cm}
-\centering
-
-\includegraphics[width=9.9cm]{pr/25-2025-IE-p1-used.pdf}
-\end{column}
-\begin{column}{5cm}
-
-  \begin{itemize}
-  \item Here results showed above for 25\%-\alert{2025}-IE-Palette~1
-  \end{itemize}
-  
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-
-\begin{frame}{The impacts of 2030 scenario \\ 
-Fraction of demand met with carbon-free energy (CFE) }
-
-\begin{columns}[T]
-\begin{column}{9cm}
-\centering
-
-\includegraphics[width=9.9cm]{pr/25-2030-IE-p1-used.pdf}
-\end{column}
-\begin{column}{5cm}
-
-  \begin{itemize}
-  \item Here results showed above for 25\%-\alert{2025}-IE-Palette~1
-  \item ... 25\%-\alert{2030}-IE-Palette~1
-  \item 
-  \end{itemize}
-  
-\end{column}
-\end{columns}
-
-\end{frame}
-
 
 \begin{frame}{The impacts of 2030 scenario  \\ 
 Fraction of demand met with carbon-free energy (CFE) }
 
-\begin{columns}[T]
-\begin{column}{9cm}
-\centering
-
-\includegraphics[width=9.9cm]{pr/25-2030-IE-p2-used.pdf}
-\end{column}
-\begin{column}{5cm}
-
-  \begin{itemize}
-  \item Here results showed above for 25\%-\alert{2025}-IE-Palette~1
-  \item ... 25\%-\alert{2030}-IE-Palette~1
-  \item ... 25\%-\alert{2030}-IE-Palette~2 (notice how LDES impacts 100\% CFE in 2030, which is not the case in 2025)
-  \end{itemize}
-  
-\end{column}
-\end{columns}
-
-\end{frame}
-
-
-\begin{frame}{The impacts of 2030 scenario  \\ 
-Fraction of demand met with carbon-free energy (CFE) }
+{\footnotesize
+\vspace{0.3cm}
 
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2030-IE-p3-used.pdf}
+\includegraphics[width=9.4cm]{pr/25-2030-IE-p3-used.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item Here results showed above for 25\%-\alert{2025}-IE-Palette~1
@@ -1307,20 +1284,23 @@ Fraction of demand met with carbon-free energy (CFE) }
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 \begin{frame}{The impacts of 2030 scenario\\
 Intuitive effect on all metrics (selected: cost breakdown for Palette 2)}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2030-IE-p2-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2030-IE-p2-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item Electricity market developments from 2025 to 2030 (such as technology cost developments, national policies) \alert{decrease PPA cost}
@@ -1330,7 +1310,7 @@ Intuitive effect on all metrics (selected: cost breakdown for Palette 2)}
   \end{itemize}
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 %----------------------------------------
@@ -1351,13 +1331,17 @@ However, each zone is has \alert{unique characteristics} that depend on local re
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ Fraction of demand met with carbon-free energy (CFE)}
 
+
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-used.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-used.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item German grid is cleaner, in particular due to good interconnections with e.g., France and Denmark
@@ -1366,19 +1350,24 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
+
+
 
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ C\&I emission rate}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-ci_emisrate.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-ci_emisrate.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item German grid is cleaner, in particular due to good interconnections with e.g., France and Denmark
@@ -1387,20 +1376,23 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ Cost breakdown with advanced dispatchable generators}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item German grid is cleaner, in particular due to good interconnections with e.g., France and Denmark
@@ -1409,20 +1401,23 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ Procured capacity by C\&I participants}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-ci_capacity.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-ci_capacity.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item  One of the unique features of German zone is it's size
@@ -1432,7 +1427,7 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
@@ -1440,13 +1435,16 @@ However, each zone is has \alert{unique characteristics} that depend on local re
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ Generation of resources procured by C\&I participants}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-ci_generation.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-ci_generation.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item  One of the unique features of German zone is it's size
@@ -1456,7 +1454,7 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
@@ -1464,13 +1462,16 @@ However, each zone is has \alert{unique characteristics} that depend on local re
 \begin{frame}{e.g. Germany (25\% - 2025 - DE - Palette~3) 
 \\ System-level capacity difference (rel. to reference scenario)}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2025-DE-total_capacity_diff.pdf}
+\includegraphics[width=9.4cm]{pr/25-2025-DE-total_capacity_diff.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
   \begin{itemize}
   \item  Clean capacity procured by C\&I consumers displaces capacity built in the rest of the system 
@@ -1480,13 +1481,9 @@ However, each zone is has \alert{unique characteristics} that depend on local re
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
-
-%---------------------------------------------
-%---------------------------------------------
-\section{Additional scenarios}
 
 
 \begin{frame}{The special scenario case}
@@ -1502,13 +1499,16 @@ aimed at 110\% of renewable electricity in the consumption mix by 2030.
 \begin{frame}{Scenario: 25\% - 2030 - DK1 - Palette~2
 \\ Fraction of demand met with carbon-free energy (CFE)}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2030-DK-p2-used.pdf}
+\includegraphics[width=9.4cm]{pr/25-2030-DK-p2-used.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
 \begin{itemize}
   \item Danish grid in 2030 is \alert{extremely clean}
@@ -1517,20 +1517,24 @@ aimed at 110\% of renewable electricity in the consumption mix by 2030.
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
+
 
 
 \begin{frame}{Scenario: 25\% - 2030 - DK1 - Palette~2 \\ 
 C\&I emission rate}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2030-DK-p2-ci_emisrate.pdf}
+\includegraphics[width=9.4cm]{pr/25-2030-DK-p2-ci_emisrate.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
 \begin{itemize}
   \item Danish grid in 2030 is \alert{extremely clean}
@@ -1540,20 +1544,24 @@ C\&I emission rate}
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
+
 
 
 \begin{frame}{Scenario: 25\% - 2030 - DK1 - Palette~2 \\ 
 Cost breakdown with advanced dispatchable generators}
 
+{\footnotesize
+\vspace{0.3cm}
+
 \begin{columns}[T]
 \begin{column}{9cm}
 \centering
 
-\includegraphics[width=9.9cm]{pr/25-2030-DK-p2-ci_costandrev.pdf}
+\includegraphics[width=9.4cm]{pr/25-2030-DK-p2-ci_costandrev.pdf}
 \end{column}
-\begin{column}{5cm}
+\begin{column}{6cm}
 
 \begin{itemize}
   \item Danish grid in 2030 is \alert{extremely clean}
@@ -1562,30 +1570,69 @@ Cost breakdown with advanced dispatchable generators}
   
 \end{column}
 \end{columns}
-
+}
 \end{frame}
 
 
 %----------------------------------------
-\section{Conclusions and policy implications}
+%----------------------------------------
+\section{Conclusions}
 
-
-\begin{frame}{Discussion:}
-
-  \begin{itemize}
-  \item 24/7 CFE procurement in Europe \alert{reduces emissions} both for buyer and for rest of system. The level of emission reduction is subject to zone where C\&I participants are located, as well as the time period.
-  \item 75-90\% hourly CFE targets have \alert{only small cost premium} over annual RES matching.
-  \item 100\% hourly CFE target \alert{comes at costs}. However, LDES can considerably decrease the cost premium. Inexpensive clean firm generation could nearly remove the cost premium.   
-  \item 24/7 approach \alert{triggers investment in new technologies} the system will need later: long-duration storage and dispatchable clean generation.
-  \item 24/7 approach \alert{benefits the rest of the system}, reducing emissions and flexibility needs.
-  \end{itemize}
-
+{\small
+\begin{frame}{Conclusions}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+    {\bf Conclusion 1:} Reaching carbon-free energy (CFE) for 80-90\% of hours of the year 
+    has comparable cost and system impact to annually matching 100\% renewable energy. 
+    A CFE target of 80-90\% can be met through a combination of wind, solar and batteries.
+    }}
 \end{frame}
 
+\begin{frame}{Conclusions}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
 
+    {\bf Conclusion 2:} 
+    Reaching 100\% CFE is possible but costly with existing renewable 
+    and storage technologies, with costs increasing rapidly above 95\%. 
 
-\begin{frame}
-  \frametitle{Open research and contacts}
+    }}
+\end{frame}
+
+\begin{frame}{Conclusions}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+
+    {\bf Conclusion 3:} 100\% 24/7~CFE procurement could have a much smaller cost premium if long duration storage or 
+    clean dispatchable technologies like advanced geothermal are available.
+    
+    }}
+\end{frame}
+
+\begin{frame}{Conclusions}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+
+    {\bf Conclusion 4:} 24/7~CFE procurement leads to \alert{lower emissions 
+    for both the buyer and the system},
+    as well as reducing the needs for flexibility in the rest of the system.
+    
+    }}
+\end{frame}
+
+\begin{frame}{Conclusions}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+
+    {\bf Conclusion 5:} 24/7~CFE procurement targets would create an early market for advanced technologies,
+    stimulating innovation and learning from which the whole electricity system would profit.
+    }}
+\end{frame}
+}
+%----------------------------------------
+%----------------------------------------
+
+\begin{frame}\frametitle{\quad}
 
   {\Large
   \alert{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
@@ -1603,9 +1650,9 @@ Cost breakdown with advanced dispatchable generators}
 \end{frame}
 
 
-%----------------------------------------
-%----------------------------------------
-\section*{Annex}
-
+%\section*{Annex}
 
 \end{document}
+
+%----------------------------------------
+%----------------------------------------
