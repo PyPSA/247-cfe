@@ -1,5 +1,7 @@
+
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 #allow plotting without Xwindows
 import matplotlib
@@ -39,7 +41,7 @@ def used():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("fraction CFE [%]")
     ax.set_ylim([0,110])
     ax.legend(loc="upper left", ncol=2, prop={"size":10})
@@ -83,8 +85,10 @@ def ci_capacity():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
-    ax.set_ylabel("C&I capacity [GW]")
+    ax.set_ylim([0,max(ldf.sum())*1.3/1e3])
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    #ax.set_xlabel("CFE target")
+    ax.set_ylabel("C&I portfolio capacity [GW]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
     fig.tight_layout()
@@ -121,7 +125,7 @@ def ci_generation():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("C&I generation [TWh]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
@@ -158,7 +162,7 @@ def system_emissions():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("system emissions [MtCO$_2$/a]")
 
     fig.tight_layout()
@@ -194,7 +198,7 @@ def zone_emissions():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("Emissions in local zone [MtCO$_2$/a]")
 
     fig.tight_layout()
@@ -215,7 +219,7 @@ def ci_emisrate():
     plt.axhline(y = yl_ref, color = 'gray', linestyle="-", linewidth=1.5)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(1.5, yl_ref-0.06*yl_ref,f'Reference case, C&I emission rate {round(yl_ref,2)} [t/MWh]', 
+    plt.text(1.5, yl_ref-0.06*yl_ref,f'Reference case, C&I emission rate {round(yl_ref,3)} [t/MWh]', 
             horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
     
     #Drop reference scenario before plotting
@@ -227,7 +231,7 @@ def ci_emisrate():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("C&I emission rate [t/MWh]")
     #ax.yaxis.label.set_size(6)
 
@@ -272,7 +276,7 @@ def ci_cost():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("24x7 C&I cost [€/MWh]")
     ax.legend(loc="upper left", ncol = 3, prop={"size":9})
     ax.set_ylim(top=yl_end*1.4)
@@ -332,10 +336,10 @@ def ci_costandrev():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("24x7 C&I cost and revenue [€/MWh]")
     ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    ax.set_ylim(top=yl_end*1.4)
+    ax.set_ylim(top=yl_end*1.5)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","ci_costandrev.pdf"),
@@ -374,7 +378,7 @@ def system_capacity():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("System capacity investment [GW]")
     ax.legend(loc="lower right", ncol=2, prop={"size":9})
 
@@ -422,7 +426,7 @@ def system_capacity_diff():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel(f"System capacity diff. [GW]")
     ax.legend(loc='upper left', ncol=3, prop={"size":8}, fancybox=True)
     fig.tight_layout()
@@ -480,9 +484,10 @@ def total_capacity_diff():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel(f"Total capacity diff. [GW]")
-    ax.legend(loc="upper left", ncol=2, prop={"size":8})
+
+    ax.legend(loc="lower left", ncol=2, prop={"size":7})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","total_capacity_diff.pdf"),
@@ -515,7 +520,7 @@ def objective_rel():
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("CFE target")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel(f"obj % increase to reference case")
 
     fig.tight_layout()
@@ -535,7 +540,7 @@ def objective_abs():
 
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_xlabel("scenario")
+    #ax.set_xlabel("CFE target")
     ax.set_ylabel("Objective [EUR 1e9]")
 
     fig.tight_layout()
@@ -548,7 +553,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p3', zone='IE', year='2025', participation='10')   
+        snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='10')   
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
