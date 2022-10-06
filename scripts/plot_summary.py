@@ -485,9 +485,9 @@ def total_capacity_diff():
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     #ax.set_xlabel("CFE target")
-    ax.set_ylabel(f"Total capacity diff. [GW]")
+    ax.set_ylabel(f"System capacity expansion \n diff. to no CFE procurement. [GW]")
 
-    ax.legend(loc="lower left", ncol=2, prop={"size":7})
+    ax.legend(loc="upper left", ncol=2, prop={"size":7})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.used.replace("used.pdf","total_capacity_diff.pdf"),
