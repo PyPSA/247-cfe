@@ -49,8 +49,8 @@ rule plot_summary:
 
 rule make_summary:
     input:
-        expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc",
-               **config['scenario'])
+        expand(RDIR + "/networks/{{participation}}/{{year}}/{{zone}}/{{palette}}/{policy}.nc",
+               policy=config["scenario"]["policy"])
     output:
         summary=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv"
     threads: 2
@@ -65,7 +65,7 @@ if config['solve_network'] == 'solve':
             costs2030=CDIR + "/costs_2030.csv",
             costs2025=CDIR + "/costs_2025.csv"
         output:
-            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/base.nc"
+            network=RDIR + "/base/{participation}/{year}/{zone}/{palette}/base.nc"
         log:
             solver=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_solver.log",
             python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_python.log",
@@ -77,7 +77,7 @@ if config['solve_network'] == 'solve':
 if config['solve_network'] == 'solve':
     rule solve_network:
         input:
-            base_network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/base.nc"
+            base_network=RDIR + "/base/{participation}/{year}/{zone}/{palette}/base.nc"
         output:
             network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
         log:
