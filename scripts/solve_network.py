@@ -612,13 +612,14 @@ def solve_network(n, policy, penetration, tech_palette):
            solver_options=solver_options,
            solver_logfile=snakemake.log.solver)
 
-
+#%%
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network',
-                                policy="cfe80", palette='p3', zone='DE', year='2030', participation='25')
+                                policy="cfe", palette='p1', zone='DE', year='2025',
+                                participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])

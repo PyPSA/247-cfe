@@ -15,12 +15,16 @@ rule make_summary_all_networks:
 
 rule summarise_all_networks:
     input:
-        expand(RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}.yaml", **config['scenario'])
+        expand(RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.yaml", **config['scenario'])
 
 
 rule solve_all_networks:
     input:
-        expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc", **config['scenario'])
+        expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.nc", **config['scenario'])
+
+rule plot_summary_all:
+    input:
+        expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf", **config["scenario"])
 
 
 rule merge_plots:
@@ -79,20 +83,20 @@ if config['solve_network'] == 'solve':
         input:
             base_network=RDIR + "/base/{participation}/{year}/{zone}/{palette}/base.nc"
         output:
-            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
+            network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.nc"
         log:
-            solver=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_solver.log",
-            python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_python.log",
-            memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_memory.log"
+            solver=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume_solver.log",
+            python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume_python.log",
+            memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume_memory.log"
         threads: 12
         resources: mem=8000
         script: "scripts/resolve_network.py"
 
 rule summarise_network:
     input:
-        network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}.nc"
+        network=RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.nc"
     output:
-        yaml=RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}.yaml"
+        yaml=RDIR + "/summaries/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.yaml"
     threads: 2
     resources: mem_mb=2000
     script: 'scripts/summarise_network.py'
