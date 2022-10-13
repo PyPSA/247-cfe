@@ -10,7 +10,7 @@ CDIR = config['costs_dir']
 
 rule make_summary_all_networks:
     input:
-        expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv", **config['scenario'])
+        expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/_{offtake_price}price_{offtake_volume}volume_summary.csv", **config['scenario'])
 
 
 rule summarise_all_networks:
@@ -53,10 +53,10 @@ rule plot_summary:
 
 rule make_summary:
     input:
-        expand(RDIR + "/networks/{{participation}}/{{year}}/{{zone}}/{{palette}}/{policy}.nc",
+        expand(RDIR + "/networks/{{participation}}/{{year}}/{{zone}}/{{palette}}/{policy}_{offtake_price}price_{offtake_volume}volume.nc",
                policy=config["scenario"]["policy"])
     output:
-        summary=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/summary.csv"
+        summary=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/_{offtake_price}price_{offtake_volume}volume_summary.csv"
     threads: 2
     resources: mem_mb=2000
     script: 'scripts/make_summary.py'

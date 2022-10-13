@@ -30,8 +30,8 @@ scenario:
          ] # controls both the brownfield fleet and tech costs projection
   participation: ['10',
                   ] #share [%] of CI load per zone following 247-CFE approach
-  offtake_price: [1,2,3,3.5,4,4.5,5]  # [EUR/kg] fixed offtake price of H2
-  offtake_volume: [200,  400]  # [MWh_H2 per h]
+  offtake_price: [1,2,3,3.5,4,4.5,5]  # [EUR/kg_H2] fixed offtake price of H2
+  offtake_volume: [200,  400]  # [MWh_H2 per h] fixed offtake volume per hour
 
 #data center
 ci:
