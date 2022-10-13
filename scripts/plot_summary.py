@@ -27,9 +27,9 @@ def used():
     plt.axhline(y = yl_ref, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(3.5,yl_ref-6,f'Reference case, fraction CFE={int(round(yl_ref,0))}'+'%', 
-            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
-    
+    plt.text(3.5,yl_ref-6,f'Reference case, fraction CFE={int(round(yl_ref,0))}'+'%',
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5))
+
     #Drop reference scenario before plotting
     ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
@@ -59,7 +59,7 @@ def ci_capacity():
     charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger capacity
 
     ldf = pd.concat([gen_inv, charge_inv, discharge_inv])
-    
+
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
     ldf.drop(to_drop, inplace=True)
 
@@ -137,7 +137,7 @@ def system_emissions():
 
     ldf = (df/1e6).loc['emissions']
     ldf.index = ldf.index.map(rename_scen)
-    
+
     yl_ref = ldf.loc['no\npolicy']
     yl_100RES = ldf.loc['100%\nRES']
     yl_end = ldf[-1]
@@ -146,15 +146,15 @@ def system_emissions():
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(3.3, yl_ref+0.3,f'Reference case, emissions {round(yl_ref,1)} [Mt]', 
-            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
-    
+    plt.text(3.3, yl_ref+0.3,f'Reference case, emissions {round(yl_ref,1)} [Mt]',
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5))
+
     #Drop reference scenario before plotting
     ldf.drop(ldf.index[0], inplace=True)
 
-    ldf.plot(kind="bar", ax=ax, 
+    ldf.plot(kind="bar", ax=ax,
         color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
- 
+
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
@@ -173,21 +173,21 @@ def ci_emisrate():
 
     ldf = df.loc['ci_emission_rate_true']
     ldf.index = ldf.index.map(rename_scen)
-   
+
     yl_ref = ldf.loc['no\npolicy']
     yl_100RES = ldf.loc['100%\nRES']
     plt.axhline(y = yl_ref, color = 'gray', linestyle="-", linewidth=1.5)
     plt.axhline(y = yl_100RES, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(1.5, yl_ref-0.06*yl_ref,f'Reference case, C&I emission rate {round(yl_ref,2)} [t/MWh]', 
-            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5)) 
-    
+    plt.text(1.5, yl_ref-0.06*yl_ref,f'Reference case, C&I emission rate {round(yl_ref,2)} [t/MWh]',
+            horizontalalignment='left', bbox=dict(facecolor='w', alpha=0.5))
+
     #Drop reference scenario before plotting
     ldf.drop(ldf.index[0], inplace=True)
 
     ldf.plot(kind="bar", ax=ax,
         color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
- 
+
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
@@ -259,7 +259,7 @@ def ci_costandrev():
                            "hydrogen_fuel_cell"]
 
     costs = df.loc[["ci_cost_" + t for t in techs]].rename({"ci_cost_" + t : t for t in techs}).multiply(1/df.loc["ci_demand_total"],axis=1)
-    
+
     to_drop = costs.index[(costs < 0.1).all(axis=1)]
     costs.drop(to_drop, inplace=True)
     revenues = - df.loc[["ci_average_revenue"]]
@@ -275,9 +275,9 @@ def ci_costandrev():
     plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
     plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE', 
-            horizontalalignment='left') 
-    
+    plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE',
+            horizontalalignment='left')
+
     #Drop reference scenario before plotting
     ldf.drop(ldf.columns[0], axis=1, inplace=True)
 
@@ -326,7 +326,7 @@ def system_capacity():
     ldf = ldf.groupby(rename_system_simple).sum()
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
-    
+
     plt.axvline(x = 0.5, color = 'gray', linestyle="--")
 
     #Drop reference scenario before plotting
@@ -417,7 +417,7 @@ def total_capacity_diff():
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
     charge_inv = df.loc[["ci_cap_" + t for t in clean_chargers]].rename({"ci_cap_" + t : t for t in clean_chargers})
     charge_inv = charge_inv.drop(['battery_charger']) # display only battery discharger capacity
-    
+
     ldf_ci = pd.concat([gen_inv, charge_inv, discharge_inv])
 
     to_drop = ldf_ci.index[(ldf_ci < 0.1).all(axis=1)]
@@ -459,7 +459,7 @@ def objective_rel():
     fig.set_size_inches((6,4.5))
 
     values = (df/1e9).loc['objective']
-    
+
     #The first scenario in config is reference case -> by default ref
     ref = values[0]
     l, scens = [], {}
@@ -475,7 +475,7 @@ def objective_rel():
 
     ldf.plot(kind="bar", ax=ax,
             color='#4a3a28', width=0.65, edgecolor = "black", linewidth=0.05, alpha=0.95)
- 
+
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
@@ -507,12 +507,12 @@ def objective_abs():
                 transparent=True)
 
 
-
+#%%
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='25')   
+        snakemake = mock_snakemake('plot_summary', palette='p1', zone='IE', year='2025', participation='10')
 
     #Windcards & Settings
     tech_palette = snakemake.wildcards.palette
@@ -535,10 +535,10 @@ if __name__ == "__main__":
     clean_chargers = [item.replace(' ', '_') for item in clean_chargers]
     clean_dischargers = [g for g in storage_dischargers]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
-    
-    exp_generators = ['offwind-ac-%s' % year, 
-                    'offwind-dc-%s' % year, 
-                    'onwind-%s' % year, 
+
+    exp_generators = ['offwind-ac-%s' % year,
+                    'offwind-dc-%s' % year,
+                    'onwind-%s' % year,
                     'solar-%s' % year]
     exp_links = ['OCGT-%s' % year]
     exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
@@ -626,9 +626,8 @@ if __name__ == "__main__":
     system_emissions()
     system_capacity()
     #objective_abs()
-    
+
     #diffs to reference case
     #objective_rel()
     system_capacity_diff()
     total_capacity_diff()
-
