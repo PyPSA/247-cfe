@@ -9,6 +9,8 @@ from pypsa.linopt import get_var, linexpr, join_exprs, define_constraints
 import logging
 logger = logging.getLogger(__name__)
 
+import sys
+
 # Suppress logging of the slack bus choices
 pypsa.pf.logger.setLevel(logging.WARNING)
 
@@ -218,7 +220,7 @@ def add_H2_offtake(n):
 solver_name = "gurobi"
 
 solver_options = {"method" : 2,
-                  #"crossover" : 0,
+                  "crossover" : 0,
                   "BarConvTol": 1.e-5}
 def solve(policy):
 
@@ -297,15 +299,19 @@ def solve(policy):
             print("setting excess limit on hourly matching")
             excess_constraints(n)
 
+    fn = getattr(snakemake.log, 'memory', None)
+    with memory_logger(filename=fn, interval=30.) as mem:
 
-    result, message = n.lopf(pyomo=False,
-           extra_functionality=extra_functionality,
-           solver_name=solver_name,
-           solver_options=solver_options)
+        result, message = n.lopf(pyomo=False,
+               extra_functionality=extra_functionality,
+               solver_name=solver_name,
+               solver_options=solver_options)
 
-    if result != "ok" or message != "optimal":
-        print(f"solver ended with {results} and {message}, so quitting")
-        sys.exit()
+        if result != "ok" or message != "optimal":
+            print(f"solver ended with {result} and {message}, so quitting")
+            sys.exit()
+
+    logger.info("Maximum memory usage: {}".format(mem.mem_usage))
 
     return n
 
