@@ -538,7 +538,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
   CFE generation above the demand can be stored and shifted to another hour where procured resources 
   generate less than the C\&I demand, sold to the regional grid as excess $ex_t$
-  at market prices, or curtailed. 
+  at {\bf market prices}, or curtailed. 
   The total amount of excess generation is constrained to a certain level on an annual basis. 
   In this study, the limit is set to 20\% of annual 24/7 participating customer's demand:
   \vspace{0.1cm}
@@ -552,6 +552,15 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   The constraint (\ref{eqn:excess}) gives the C\&I consumers the flexibility to sell 
   electricity to the regional grid, while avoiding the situation that sales to the grid 
   become significantly larger than supply to the C\&I's own demand.
+  }}
+
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+  The {\bf market prices} are derived from the dual variable of each zone's
+  energy balance constraint. An infinitely small relaxation of the 
+  constraint, i.e., one unit of load less to be met, returns the 
+  marginal costs of providing that unit, which can be used as the
+  electricity price indicator in a competitive market.
   }}
   }
 
@@ -1522,6 +1531,84 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 \end{frame}
 
 
+\begin{frame}{Base scenario: summary of costs for 24/7 participating consumers}
+
+  {\small 
+
+  Net procurement costs of achieving 98\% and 100\% CFE targets
+  (and \% increase compared to the 100\% annual renewable matching) 
+  for the base scenario (2020~\euro/MWh):
+  }
+  \begin{columns}[T]
+  \begin{column}{5cm}
+   \centering
+    \vspace{0.4cm}
+    \noindent\fbox{%
+    \parbox{\textwidth}{%
+    {\footnotesize
+    High CFE targets could have a \alert{much smaller cost premium} if long duration storage or 
+      clean dispatchable technologies like advanced geothermal are available.
+    }}}
+
+    \vspace{0.3cm}
+    \noindent\fbox{%
+    \parbox{\textwidth}{%
+    {\footnotesize
+    NB: This calculation assumes that the costs of 24/7 procurement 
+    are internalized by participants; i.e., C\&I participants are responsible 
+    for paying 100\% of the incremental system costs resulting from 24/7 
+    procurement.
+    }}}
+    
+  \end{column}
+
+  \begin{column}{9cm}
+  
+  \centering
+  {\footnotesize
+  \begin{table}[h]
+  \begin{tabular}{ccccc}
+    \hline
+    {\bf Zone} & {\bf Palette} &  {\bf 100\% RES} & {\bf 98\% CFE} & {\bf 100\% CFE} \\
+    \hline
+    \hline
+    IE & Palette 1 & 67.1 & 104.2(+55\%) & 229.4(+242\%) \\ 
+    \hline
+    IE & Palette 2 & 67.1 & 84.6(+26\%) & 98.6(+47\%) \\
+    \hline
+    IE & Palette 3 & 67.1 & 81.0(+21\%) & 88.1(+31\%) \\
+    \hline
+    \hline
+    DE & Palette 1 & 80.5 & 98.3(+22\%) & 193.5(+141\%) \\ 
+    \hline
+    DE & Palette 2 & 80.5 & 92.2(+15\%) & 113.5(+41\%) \\
+    \hline
+    DE & Palette 3 & 80.5 & 82.9(+3\%) & 88.6(+10\%) \\
+    \hline
+    \hline
+    DK1 & Palette 1 & 56.0 & 70.3(+26\%) & 153.7(+175\%) \\ 
+    \hline
+    DK1  & Palette 2 & 56.0 & 65.2(+16\%) & 84.7(+51\%) \\
+    \hline
+    DK1  &  Palette 3 & 56.0 & 62.7(+12\%) & 77.1(+38\%) \\
+    \hline
+    \hline
+    NL & Palette 1 & 63.7 & 91.1(+43\%) & 172.1(+170\%) \\ 
+    \hline
+    NL & Palette 2 & 63.7 & 78.6(+23\%)  & 92.2(+45\%) \\
+    \hline
+    NL &  Palette 3 & 63.7 & 73.5(+15\%) & 82.5(+29\%) \\
+  \end{tabular}
+  \end{table}
+  }
+
+\end{column}
+\end{columns}
+\end{frame}
+
+
+
+
 %----------------------------------------
 %The effects of moving to 2030
 
@@ -1850,6 +1937,84 @@ Another interesting result is that a CFE target of 90\% yields
 
 
 
+  \begin{frame}{2030 scenario: summary of costs for 24/7 participating consumers}
+
+    {\small 
+  
+    Net procurement costs of achieving 98\% and 100\% CFE targets
+    (and \% increase compared to the 100\% annual renewable matching) 
+    for the 2030 scenario (2020~\euro/MWh):
+    }
+    \begin{columns}[T]
+    \begin{column}{5cm}
+     \centering
+      \vspace{0.4cm}
+      \noindent\fbox{%
+      \parbox{\textwidth}{%
+      {\footnotesize
+      Similarly to the 2025 scenario, 100\% CFE could have a \alert{much smaller cost premium} if LDES or 
+        clean dispatchable technologies are available.
+      }}}
+
+      \vspace{0.3cm}
+      \noindent\fbox{%
+      \parbox{\textwidth}{%
+      {\footnotesize
+      NB: Counterintuitively, 100\% RES cost levels are slightly above
+      the 2025 scenario. This is driven by lower revenues from the excess
+      electricity sales to the regional grid due to the (short-term) 
+      \hrefc{https://doi.org/10.1016/j.eneco.2021.105275}{merit order effect} 
+      of renewable energies.
+      }}}
+      
+    \end{column}
+  
+    \begin{column}{9cm}
+    
+    \centering
+    {\footnotesize
+    \begin{table}[h]
+    \begin{tabular}{ccccc}
+      \hline
+      {\bf Zone} & {\bf Palette} &  {\bf 100\% RES} & {\bf 98\% CFE} & {\bf 100\% CFE} \\
+      \hline
+      \hline
+      IE & Palette 1 & 72.5 & 79.5(+10\%) & 192.4(+165\%) \\ 
+      \hline
+      IE & Palette 2 & 72.5 & 74.8(+3\%) & 85.8(+18\%) \\
+      \hline
+      IE & Palette 3 & 72.5 & 74.8(+3\%) & 80.4(+11\%) \\
+      \hline
+      \hline
+      DE & Palette 1 & 86.8 & 85.7(-1\%) & 156.7(+80\%) \\ 
+      \hline
+      DE & Palette 2 & 86.8 & 85.6(-1\%) & 102.3(+18\%) \\
+      \hline
+      DE & Palette 3 & 86.8 & 83.0(-4\%) & 89.2(+3\%) \\
+      \hline
+      \hline
+      DK1 & Palette 1 & 61.4 & 63.5(+3\%) & 121.9(+98\%) \\ 
+      \hline
+      DK1  & Palette 2 & 61.4 & 63.1(+3\%) & 74.8(+22\%) \\
+      \hline
+      DK1  &  Palette 3 & 61.4 & 63.1(+3\%) & 73.1(+19\%) \\
+      \hline
+      \hline
+      NL & Palette 1 & 67.4 & 75.1(+11\%) & 134.8(+100\%) \\ 
+      \hline
+      NL & Palette 2 & 67.4 & 71.3(+6\%)  & 79.5(+18\%) \\
+      \hline
+      NL &  Palette 3 & 67.4 & 71.1(+5\%) & 77.0(+14\%) \\
+    \end{tabular}
+    \end{table}
+    }
+    
+  \end{column}
+  \end{columns}
+  \end{frame}
+
+
+
 %----------------------------------------
 %- impact of participation
 %- impact of load profiles
@@ -2173,11 +2338,15 @@ Another interesting result is that a CFE target of 90\% yields
   }
 
   \vspace{.3cm}
-  All input data and code for this study is open and freely available at \\
-  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe}
+  The research on this project is done in open-source: \\
+  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe} \\
+  A fixed link to the input data and code for this study: \\
+  \hrefc{https://zenodo.org/record/7181236}{https://zenodo.org/record/7181236} \\
+  A fixed link to the complete pack of modelling results for this study: \\
+  \hrefc{https://doi.org/10.5281/zenodo.7180098}{ttps://doi.org/10.5281/zenodo.7180098} \\
 
   \vspace{.3cm}
-  For questions and inquiries related to this study, contact \\
+  For questions and inquiries related to this study, please contact \\
   Dr. Iegor Riepin, iegor.riepin@tu-berlin.de \\
   Prof. Tom Brown, t.brown@tu-berlin.de
 
