@@ -1,6 +1,4 @@
 
-
-
 import pypsa
 import pandas as pd
 import numpy as np
@@ -201,20 +199,45 @@ def add_dummies(n):
 def add_H2_offtake(n):
     """add fixed H2 offtake price for a certain volume
     """
-    H2_buses = n.buses[n.buses.carrier=="H2"].index
+    if policy != "ref":
+        H2_buses = pd.Index(["google H2"])
+        logger.info("Remove google H2 load.")
+        n.mremove("Load", ["google H2"])
+    else:
+        H2_buses = n.buses[(n.buses.carrier=="H2")
+                           & (n.buses.index.str.contains(snakemake.wildcards.zone))].index
     LHV_H2 = 33.33 # lower heating value [kWh/kg_H2]
     offtake_price = float(snakemake.wildcards.offtake_price) * LHV_H2
+    offtake_volume = snakemake.wildcards.offtake_volume
+    links_i = n.links[n.links.carrier=="H2 Electrolysis"].index
 
+    if offtake_volume == "fix_cap":
+        p_nom_extendable = True
+        p_nom = 0
+        logger.info("fix electrolysis capacities and no limit offtake")
+        n.links.loc[links_i, "p_nom_extendable"] = False
+    else:
+        p_nom_extendable=False
+        p_nom = float(offtake_volume)
+        logger.info("electrolysis capacities are optimised")
+        n.links.loc[links_i, "p_nom_extendable"] = True
+
+    logger.info("Add H2 offtake with offtake price {}".format(offtake_price))
     n.madd("Generator",
            H2_buses + " offtake",
            bus=H2_buses,
            carrier="offtake H2",
            marginal_cost=offtake_price,
-           p_nom=float(snakemake.wildcards.offtake_volume),
-           p_nom_extendable=False,
+           p_nom=p_nom,
+           p_nom_extendable=p_nom_extendable,
            p_max_pu=0,
            p_min_pu=-1)
 
+
+    # storage assumptions
+    store_i = n.stores[n.stores.carrier=="H2 Store"].index
+    store_type = snakemake.config["global"]["H2_store"]
+    n.stores.loc[store_i, "capital_cost"] = snakemake.config["global"]["H2_store_cost"][store_type][float(snakemake.wildcards.year)]
 
 
 solver_name = "gurobi"
@@ -300,18 +323,19 @@ def solve(policy):
             excess_constraints(n)
 
     fn = getattr(snakemake.log, 'memory', None)
-    with memory_logger(filename=fn, interval=30.) as mem:
 
-        result, message = n.lopf(pyomo=False,
-               extra_functionality=extra_functionality,
-               solver_name=solver_name,
-               solver_options=solver_options)
 
-        if result != "ok" or message != "optimal":
-            print(f"solver ended with {result} and {message}, so quitting")
-            sys.exit()
+    result, message = n.lopf(pyomo=False,
+           extra_functionality=extra_functionality,
+           solver_name=solver_name,
+           solver_options=solver_options,
+           solver_logfile=snakemake.log.solver)
 
-    logger.info("Maximum memory usage: {}".format(mem.mem_usage))
+    # if result != "ok" or message != "optimal":
+    #     print(f"solver ended with {result} and {message}, so quitting")
+    #     sys.exit()
+
+
 
     return n
 
@@ -322,9 +346,11 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network',
-                                policy="cfe", palette='p1', zone='IE', year='2025',
-                                participation='10',offtake_price=5,offtake_volume=400)
+        snakemake = mock_snakemake('resolve_network',
+                                policy="cfe", palette='p1', zone='DE', year='2025',
+                                participation='10',
+                                offtake_price=5,
+                                offtake_volume="fix_cap")
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])

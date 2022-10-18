@@ -605,6 +605,13 @@ def solve_network(n, policy, penetration, tech_palette):
     solver_options = snakemake.config['solving']['solver']
     solver_name = solver_options['name']
 
+    # storage assumptions
+    store_i = n.stores[n.stores.carrier=="H2 Store"].index
+    store_type = snakemake.config["global"]["H2_store"]
+    n.stores.loc[store_i, "capital_cost"] = snakemake.config["global"]["H2_store_cost"][store_type][float(snakemake.wildcards.year)]
+
+
+
     n.lopf(pyomo=False,
            extra_functionality=extra_functionality,
            formulation=formulation,
@@ -617,7 +624,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('solve_network',
+        snakemake = mock_snakemake('solve_base_network',
                                 policy="cfe", palette='p1', zone='DE', year='2025',
                                 participation='10')
 

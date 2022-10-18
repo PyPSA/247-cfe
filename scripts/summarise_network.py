@@ -30,10 +30,10 @@ def summarise_network(n, policy, tech_palette):
 
 
     # for calculation of system expansion beyond CI node in pypsa-eur-sec brownfield network for {year}
-    exp_generators = ['offwind-ac-%s' % year, 
-                    'offwind-dc-%s' % year, 
-                    'onwind-%s' % year, 
-                    'solar-%s' % year, 
+    exp_generators = ['offwind-ac-%s' % year,
+                    'offwind-dc-%s' % year,
+                    'onwind-%s' % year,
+                    'solar-%s' % year,
                     'solar rooftop-%s' % year]
     exp_links = ['OCGT-%s' % year]
     exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
@@ -43,20 +43,20 @@ def summarise_network(n, policy, tech_palette):
     grid_buses = n.buses.index[~n.buses.index.str.contains(name)]
     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
     grid_cfe = grid_cfe_df[f"iteration {n_iterations-1}"]
- 
+
     results = {}
     temp = {}
 
 
     # Processing, calculating and storing model results
-    
+
     results['objective'] = n.objective
-    
+
     # 1: Generation & imports at C&I node
 
     p_clean = n.generators_t.p[clean_gens].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
     p_storage = - n.links_t.p1[clean_dischargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) \
-                - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1) 
+                - n.links_t.p0[clean_chargers].multiply(n.snapshot_weightings["generators"],axis=0).sum(axis=1)
     p_demand = n.loads_t.p["google load"].multiply(n.snapshot_weightings["generators"],axis=0)
 
     p_diff = p_clean + p_storage - p_demand
@@ -88,11 +88,11 @@ def summarise_network(n, policy, tech_palette):
     hourly_emissions = n.links_t.p0[fossil_links].multiply(n.links.efficiency2[fossil_links],axis=1).sum(axis=1)
     load = n.loads_t.p[grid_loads].sum(axis=1)
 
-    results['system_emissions'] = hourly_emissions.sum() 
+    results['system_emissions'] = hourly_emissions.sum()
     results['system_emission_rate'] = hourly_emissions.sum() / load.sum()
 
     # 3: compute emissions & emission rates
-    
+
     country = geoscope(zone, area)['node']
     grid_clean_techs = snakemake.config['global']['grid_clean_techs']
 
@@ -119,7 +119,7 @@ def summarise_network(n, policy, tech_palette):
     clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units].sum(axis=1)
     clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
     dirty_grid_resources = (- n.links_t.p1[dirty_grid_links].sum(axis=1))
-    
+
     clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
     clean_country_ls = (- n.links_t.p1[clean_country_links].sum(axis=1))
     clean_country_sus = n.storage_units_t.p[clean_country_storage_units].sum(axis=1)
@@ -131,9 +131,9 @@ def summarise_network(n, policy, tech_palette):
     line_imp_subsetA[line_imp_subsetA < 0] = 0.
     line_imp_subsetB[line_imp_subsetB < 0] = 0.
 
-    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(country) & 
+    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(country) &
                         (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
-    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(country) & 
+    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(country) &
                         (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
     links_imp_subsetA[links_imp_subsetA < 0] = 0.
     links_imp_subsetB[links_imp_subsetB < 0] = 0.
@@ -141,7 +141,7 @@ def summarise_network(n, policy, tech_palette):
     country_import =   line_imp_subsetA + line_imp_subsetB + links_imp_subsetA + links_imp_subsetB
 
     grid_hourly_emissions = n.links_t.p0[dirty_grid_links].multiply(n.links.efficiency2[dirty_grid_links],axis=1).sum(axis=1)
-    
+
     grid_emission_rate =  grid_hourly_emissions / (clean_grid_resources + dirty_grid_resources)
 
     country_hourly_emissions = n.links_t.p0[dirty_country_links].multiply(n.links.efficiency2[dirty_country_links],axis=1).sum(axis=1)
@@ -150,10 +150,10 @@ def summarise_network(n, policy, tech_palette):
                                 (clean_country_resources + dirty_country_resources + country_import)
 
     ci_emissions_t = n.links_t.p0["google import"]*grid_supply_emission_rate
-    
+
     results['ci_emission_rate_true'] = ci_emissions_t.sum() / n.loads_t.p["google load"].sum()
 
-    #3.2: considering only country node(local bidding zone) 
+    #3.2: considering only country node(local bidding zone)
     country_load = n.loads_t.p[country_loads].sum(axis=1)
     emissions_factor_local = country_hourly_emissions / country_load
     results['ci_emission_rate_local'] = (n.links_t.p0["google import"]*emissions_factor_local).sum()/n.loads_t.p["google load"].sum()
@@ -161,7 +161,7 @@ def summarise_network(n, policy, tech_palette):
     #3.3: Our original ci_emission_rate (ignoring network congestions)
     emissions_factor = hourly_emissions / load #global average emissions
     results['ci_emission_rate_myopic'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
-    
+
     #3.3: Total CO2 emissions for 24/7 participating customers
     results['ci_emissions'] = (ci_emissions_t*n.snapshot_weightings["generators"]).sum()
 
@@ -184,8 +184,8 @@ def summarise_network(n, policy, tech_palette):
         else:
             results['ci_cap_' + discharger.replace(' ', '_')] = 0.
 
-    # Storing generation at CI node  
-    
+    # Storing generation at CI node
+
     for tech in clean_techs:
         results['ci_generation_' + tech] = n.generators_t.p[name + " " + tech].multiply(n.snapshot_weightings["generators"],axis=0).sum()
 
@@ -199,7 +199,7 @@ def summarise_network(n, policy, tech_palette):
 
     # Generators
     gen_expandable = n.generators[n.generators.p_nom_extendable == True] #all gens that can be expanded
-    
+
     for g in snakemake.config['additional_nodes']: # drop additional nodes
         if g in gen_expandable.index:
             gen_expandable = gen_expandable.drop(g)
@@ -224,7 +224,7 @@ def summarise_network(n, policy, tech_palette):
     #Chargers & Dischargers
     HV_links = n.links
     for l in n.links[n.links.index.str.contains("home battery")].index:
-        HV_links = HV_links.drop(l) #remove low voltage batteries 
+        HV_links = HV_links.drop(l) #remove low voltage batteries
 
     batteries = HV_links[HV_links.index.str.contains(f"battery charger"+"-{}".format(year))]
     electrolysis = HV_links[HV_links.index.str.contains(f"H2 Electrolysis"+"-{}".format(year))]
@@ -306,7 +306,7 @@ def summarise_network(n, policy, tech_palette):
     # 7: Other calculations
 
     results['zone_average_marginal_price'] = n.buses_t.marginal_price[node].sum() / len(n.snapshots)
-    
+
     # Storing system emissions and co2 price
     results["emissions"] = n.stores_t.e["co2 atmosphere"][-1]
 
@@ -315,8 +315,8 @@ def summarise_network(n, policy, tech_palette):
         weighted_sum = []
         for value, weight in zip(cfe, weights):
             weighted_sum.append(value * weight)
-        return sum(weighted_sum) / sum(weights) 
-    
+        return sum(weighted_sum) / sum(weights)
+
     system_grid_cfe_wavg = weighted_avg(grid_cfe, n.loads_t.p[grid_loads].sum(axis=1))
     results['system_grid_cfe_wavg'] = system_grid_cfe_wavg
     #print(system_grid_cfe_wavg)
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('summarise_network', policy="ref", palette='p3', zone='IE', year='2025', participation='25')
+        snakemake = mock_snakemake('summarise_network', policy="ref", palette='p1', zone='IE', year='2025', participation='25')
 
     #Wildcards
     policy = snakemake.wildcards.policy[:3]
@@ -372,7 +372,6 @@ if __name__ == "__main__":
                               index_col=0,
                               parse_dates=True)
     print(grid_cfe_df)
-    
+
 
     summarise_network(n, policy, tech_palette)
-

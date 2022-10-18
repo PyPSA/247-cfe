@@ -26,7 +26,9 @@ rule plot_summary_all:
     input:
         expand(RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf", **config["scenario"])
 
-
+rule summarise_all_offtake:
+    input:
+        expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/{policy}/offtake/offtake_summary.csv", **config["scenario"])
 rule merge_plots:
     input:
         used=RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf",
@@ -54,7 +56,8 @@ rule plot_summary:
 rule make_summary:
     input:
         expand(RDIR + "/networks/{{participation}}/{{year}}/{{zone}}/{{palette}}/{policy}_{offtake_price}price_{offtake_volume}volume.nc",
-               policy=config["scenario"]["policy"])
+               policy=config["scenario"]["policy"], offtake_price=config["scenario"]["offtake_price"],
+               offtake_volume=config["scenario"]["offtake_volume"],)
     output:
         summary=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/_{offtake_price}price_{offtake_volume}volume_summary.csv"
     threads: 2
@@ -75,11 +78,11 @@ if config['solve_network'] == 'solve':
             python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_python.log",
             memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/base_memory.log"
         threads: 12
-        resources: mem=8000
+        resources: mem_mb=8000
         script: "scripts/solve_network.py"
 
 if config['solve_network'] == 'solve':
-    rule solve_network:
+    rule resolve_network:
         input:
             base_network=RDIR + "/base/{participation}/{year}/{zone}/{palette}/base.nc"
         output:
@@ -89,8 +92,19 @@ if config['solve_network'] == 'solve':
             python=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume_python.log",
             memory=RDIR + "/logs/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume_memory.log"
         threads: 12
-        resources: mem=8000
+        resources: mem_mb=30000
         script: "scripts/resolve_network.py"
+
+rule summarise_offtake:
+    input:
+        networks=expand(RDIR + "/networks/{participation}/{year}/{zone}/{palette}/{policy}_{offtake_price}price_{offtake_volume}volume.nc", **config["scenario"])
+    output:
+        csvs=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/{policy}/offtake/offtake_summary.csv",
+        offtake_h2 = RDIR + "/graphs/{participation}/{year}/{zone}/{palette}/{policy}/offtake/offtake.pdf",
+        revenue_h2 = RDIR + "/graphs/{participation}/{year}/{zone}/{palette}/{policy}/offtake/revenue.pdf",
+    threads: 2
+    resources: mem=2000
+    script: "scripts/summarise_offtake.py"
 
 rule summarise_network:
     input:

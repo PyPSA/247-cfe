@@ -23,15 +23,23 @@ scenario:
   # cfe: no grid elec can be used to cover
   # exl: like cfe100 but excess limited to 20%
   palette: [ "p1", # onwind + solar + battery
+             # p2  # p1 + Long duration energy storage (LDES)
+             # p3  # p2 + Allam cycle with CCS + advanced dispatchable generator
             ]
   zone: [ "IE",
         ]
   year: ['2025',
          ] # controls both the brownfield fleet and tech costs projection
-  participation: ['10',
-                  ] #share [%] of CI load per zone following 247-CFE approach
-  offtake_price: [1,2,3,3.5,4,4.5,5]  # [EUR/kg_H2] fixed offtake price of H2
-  offtake_volume: [200,  400]  # [MWh_H2 per h] fixed offtake volume per hour
+  participation: ['10', '20'
+                  ] #share [%] of CI H2 load per zone following 247-CFE approach
+                  # load = ci_load * float(participation)/100  #C&I baseload MW
+                  # n.add("Load",
+                    # f"{name} H2",
+                    # carrier=f"{name} H2",
+                    # bus=f"{name} H2",
+                    # p_set=pd.Series(load,index=n.snapshots)) -> that should not matter with an offtake price?
+  offtake_price: [1,2,3,4,5]  # [EUR/kg_H2] fixed offtake price of H2
+  offtake_volume: [220,440,600, 800]  # [MWh_H2 per h] fixed offtake volume per hour
 
 #data center
 ci:
