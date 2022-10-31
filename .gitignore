@@ -14,7 +14,7 @@ gurobi.log
 *.org
 *~
 *.pdf
-*.ipynb
+
 *.csv
 *.pyc
 
