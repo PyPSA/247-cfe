@@ -10,6 +10,7 @@ gurobi.log
 /results
 /logs
 /workflow
+/talks
 
 *.org
 *~
