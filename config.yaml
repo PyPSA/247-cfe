@@ -12,34 +12,27 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: '220926-test'
+run: 'new_demand'
 
 #wildcards
 scenario:
-  policy:  ["ref", "grd", "res", "cfe","exl"]
+  policy:  ["ref", "grd", "res1p0","res1p2","res1p3", "cfe","exl1p0","exl1p2","exl1p3", "offgrid", "monthly"]
   # ref: no H2 demand
   # grd: H2 demand met from grid with no local procurement
   # res: H2 elec demand matched by procured wind and solar annually
   # cfe: no grid elec can be used to cover
   # exl: like cfe100 but excess limited to 20%
   palette: [ "p1", # onwind + solar + battery
-             # p2  # p1 + Long duration energy storage (LDES)
-             # p3  # p2 + Allam cycle with CCS + advanced dispatchable generator
             ]
-  zone: [ "IE",
+  zone: [ "DE",
         ]
   year: ['2025',
          ] # controls both the brownfield fleet and tech costs projection
-  participation: ['10', '20'
-                  ] #share [%] of CI H2 load per zone following 247-CFE approach
-                  # load = ci_load * float(participation)/100  #C&I baseload MW
-                  # n.add("Load",
-                    # f"{name} H2",
-                    # carrier=f"{name} H2",
-                    # bus=f"{name} H2",
-                    # p_set=pd.Series(load,index=n.snapshots)) -> that should not matter with an offtake price?
-  offtake_price: [1,2,3,4,5]  # [EUR/kg_H2] fixed offtake price of H2
-  offtake_volume: [220,440,600, 800]  # [MWh_H2 per h] fixed offtake volume per hour
+  participation: ['10',
+                  ] #share [%] of CI load per zone following 247-CFE approach
+  offtake_price: [1]  # [EUR/kg_H2] fixed offtake price of H2
+  offtake_volume: [3200]  # [MWh_H2 per h] fixed offtake volume per hour, 10 GB planned in DE by 2030 if run 100% 10GB*0.67=6700MWh/h
+  storage: ["underground", "tank", "flexibledemand", "nostore"]  # storage type at google node
 
 #data center
 ci:
@@ -77,6 +70,7 @@ additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU
 
 
 global:
+  must_run: False
   policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
   co2_share: 0.5 #pu  - rough target for 2030
@@ -89,6 +83,20 @@ global:
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
                     "hydro", "nuclear", "urban central solid biomass CHP"] #"solar rooftop"
   emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
+  # fix_capacities_electrolysis: True
+  H2_store_cost:
+    underground:
+      2025: 175.2
+      2030: 140.16
+    tank:
+      2025: 4774.79
+      2030: 4117.64
+    flexibledemand:
+      2025: 0
+      2030: 0
+    nostore:
+      2025: 1e6
+      2030: 1e6
 
 
 costs:
@@ -132,15 +140,36 @@ policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 
 #source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
 #data for NL is dummy
 res_target_2025:
+  # https://energy.ec.europa.eu/system/files/2019-03/ger_draft_necp_eng_0.pdf
   IE: 0.47
   DK: 0.9
-  DE: 0.45
+  DE: 0.45       # 33% wind and solar, 45% renewable overall,
   NL: 0.35
+  AT: 0.90      # 79% overall renewables in 2020 -> target 100% 2030  https://static.agora-energiewende.de/fileadmin/Projekte/2021/2020_01_EU-Annual-Review_2020/Data-file-Europe-Power-Sector-2020.xlsx
+  BE: 0.29  # 20% (2020) wind + solar, 6% Others
+  # CH:
+  CZ: 0.14     # 4% wind+solar 2020, 12% renewable overall (2020)
+  FR: 0.32         # 10% wind+solar 2020, 23% renewable overall
+  GB: 0.685         # 29% wind + solar 2020, 42% renewable overall
+  # LU:       # 39% wind + solar 2020, 72% renewable overall
+  # NO:
+  PL: 0.245       # 11% wind + solar 2020, 17% renewable overall
+  # SE:      # 17% wind + solar 2020, 68% renewable overall
 res_target_2030:
   IE: 0.7
   DK: 1.1
   DE: 0.8
   NL: 0.5
+  AT: 1.0 # https://windeurope.org/newsroom/news/austria-aims-to-have-100-renewable-electricity-by-2030/
+  BE: 0.32 # 32% https://windeurope.org/newsroom/news/belgium-energy-and-climate-plan-proposes-renewable-energy-target-of-18-3-by-2030/
+  # CH:
+  CZ: 0.17
+  FR: 0.4
+  GB: 0.95 # https://www.edie.net/energy-security-strategy-uk-targets-95-low-carbon-electricity-mix-by-2030-but-will-increase-oil-and-gas-production/
+  # LU:
+  # NO:
+  PL: 0.32  # table 1.1 https://iea.blob.core.windows.net/assets/b9ea5a7d-3e41-4318-a69e-f7d456ebb118/Poland2022.pdf
+  # SE:
 
 
 solving:
@@ -165,15 +194,25 @@ tech_colors:
   "local": "#b474b4"
   "PPA": "#b474b4"
   "grid": "#9ccc65"
+  "AC": "#9ccc65"
   "grid imports": "#9ccc65"
   "revenue": "g"
+  "electricity": '#110d63'
+  "export": "#e0e0e0"
+  "import": "#e0e0e0"
   # RES
   "wind": "#74c6f2"
   "offshore wind": "#6895dd"
+  "offwind": "#6895dd"
+  "offwind-dc": "#74c6f2"
+  "offwind-ac": "#6895dd"
   "onshore wind": "#74c6f2"
+  "onwind": "#74c6f2"
   "solar": "#ffef60"
   "solar rooftop": '#000000'
   # Clean Dispatchable
+  "nuclear": '#ff8c00'
+  "uranium": '#ffaf50'
   "advanced nuclear": "#df3439"
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
@@ -181,11 +220,31 @@ tech_colors:
   # Storage
   "battery": "#666666"
   "battery inverter": "#444444"
+  "battery charger": "#444444"
+  "battery discharger": "#444449"
   "battery storage": "#666666"
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
+  "H2 Fuel Cell": "#990090"
+  "H2 Store": '#bf13a0'
+  "offtake H": '#bf13a0'
   "hydrogen electrolysis": "#550055"
+  "H2 Electrolysis": "#550055"
+  "PHS": '#51dbcc'
+  "PHS charger": '#51dbcc'
+  "hydro": '#298c81'
+  "ror": '#3dbfb0'
   # Emitters
   "OCGT": "#d35050"
   "CCGT": "#b20101"
   "Gas OC": "#d35050"
+  "coal": '#545454'
+  "lignite":  '#826837'
+  "urban central solid biomass CHP": '#baa741'
+  "solid biomass": '#baa777'
+  "co2": '#f29dae'
+  "co2 stored": '#f2385a'
+  "oil": '#c9c9c9'
+  "H2 pipeline": '#f081dc'
+  "dummy": "red"
+  "gas": '#e05b09'

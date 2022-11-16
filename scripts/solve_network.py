@@ -201,13 +201,10 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
 
 def strip_network(n):
+    # buses to keep
     nodes_to_keep = geoscope(zone, area)['basenodes_to_keep']
-    new_nodes = []
-
-    for b in nodes_to_keep:
-        for s in snakemake.config['node_suffixes_to_keep']:
-            new_nodes.append(b + " " + s)
-
+    new_nodes = [b + " " + s for b in nodes_to_keep for s in
+                 snakemake.config["node_suffixes_to_keep"]]
     nodes_to_keep.extend(new_nodes)
     nodes_to_keep.extend(snakemake.config['additional_nodes'])
 
@@ -225,6 +222,7 @@ def strip_network(n):
             location_boolean = c.df.bus.isin(nodes_to_keep)
         to_keep = c.df.index[location_boolean & c.df.carrier.isin(carrier_to_keep)]
         to_drop = c.df.index.symmetric_difference(to_keep)
+        print(c.name, to_drop)
         n.mremove(c.name, to_drop)
 
 
@@ -246,7 +244,9 @@ def limit_resexp(n, year):
     ratio = snakemake.config['global'][f'limit_res_exp_{year}']
     node = geoscope(zone, area)['node']
 
-    res = n.generators[(~n.generators.index.str.contains('EU')) & (~n.generators.index.str.contains(name)) & (~n.generators.index.str.contains(f'{node}'))]
+    res = n.generators[(~n.generators.index.str.contains('EU'))
+                       & (~n.generators.index.str.contains(name))
+                       & (~n.generators.index.str.contains(f'{node}'))]
     fleet = res[res.p_nom_extendable==False]
 
     #fleet.groupby([fleet.carrier, fleet.bus]).p_nom.sum()
@@ -256,12 +256,14 @@ def limit_resexp(n, year):
     fleet["carrier_s"] = off_c.reindex(fleet.index).fillna(fleet.carrier)
 
     for bus in fleet.bus.unique():
-        for carrier in ['solar', 'onwind', 'offwind-ac', 'offwind-dc']:
-            p_nom_fleet = 0
-            p_nom_fleet = fleet.loc[(fleet.bus == bus) & (fleet.carrier_s == carrier), "p_nom"].sum()
-            #print(f'bus: {bus}, carrier: {carrier}' ,p_nom_fleet)
-            n.generators.loc[(n.generators.p_nom_extendable==True) & (n.generators.bus == bus) & \
-                             (n.generators.carrier == carrier), "p_nom_max"] = ratio * p_nom_fleet
+        if not bus[:2] in snakemake.config[f"res_target_{year}"].keys():
+            for carrier in ['solar', 'onwind', 'offwind-ac', 'offwind-dc']:
+                p_nom_fleet = 0
+                p_nom_fleet = fleet.loc[(fleet.bus == bus)
+                                        & (fleet.carrier_s == carrier), "p_nom"].sum()
+                #print(f'bus: {bus}, carrier: {carrier}' ,p_nom_fleet)
+                n.generators.loc[(n.generators.p_nom_extendable==True) & (n.generators.bus == bus) & \
+                                 (n.generators.carrier == carrier), "p_nom_max"] = ratio * p_nom_fleet
 
 
 def nuclear_policy(n):
@@ -531,42 +533,46 @@ def solve_network(n, policy, penetration, tech_palette):
 
     def country_res_constraints(n):
 
-        grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
+        country_targets = snakemake.config[f"res_target_{year}"]
 
-        grid_res_techs = snakemake.config['global']['grid_res_techs']
+        for ct in country_targets.keys():
 
-        grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+            grid_buses = n.buses.index[(n.buses.index.str[:2]==ct)]
 
-        country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
-        country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
-        country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
+            grid_res_techs = snakemake.config['global']['grid_res_techs']
 
-        #res_gens = n.generators_t.p[country_res_gens].sum(axis=1)
-        #res_links = (- n.links_t.p1[country_res_links].sum(axis=1))
-        #res_sus = n.storage_units_t.p[country_res_storage_units].sum(axis=1)
+            grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
-        weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
-                                  index = n.snapshots,
-                                  columns = country_res_gens)
-        weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
-                                  index = n.snapshots,
-                                  columns = country_res_links)
-        weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
-                                  index = n.snapshots,
-                                  columns = country_res_storage_units)
+            country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses)
+                                                  & n.generators.carrier.isin(grid_res_techs)]
+            country_res_links = n.links.index[n.links.bus1.isin(grid_buses)
+                                              & n.links.carrier.isin(grid_res_techs)]
+            country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses)
+                                                              & n.storage_units.carrier.isin(grid_res_techs)]
 
-        gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
-        links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
-        sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
-        lhs_temp = pd.concat([gens, links, sus], axis=1)
 
-        lhs = join_exprs(lhs_temp)
-        target = timescope(zone, year)["country_res_target"]
-        total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+            weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
+                                      index = n.snapshots,
+                                      columns = country_res_gens)
+            weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
+                                      index = n.snapshots,
+                                      columns = country_res_links)
+            weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
+                                      index = n.snapshots,
+                                      columns = country_res_storage_units)
 
-        logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
+            gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
+            links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
+            sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
+            lhs_temp = pd.concat([gens, links, sus], axis=1)
 
-        con = define_constraints(n, lhs, '=', target*total_load, 'countryRESconstraints','countryREStarget')
+            lhs = join_exprs(lhs_temp)
+            target = timescope(zone, year)["country_res_target"]
+            total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+
+            logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
+
+            con = define_constraints(n, lhs, '=', target*total_load, f'countryRESconstraints_{ct}',f'countryREStarget_{ct}')
 
 
     def add_battery_constraints(n):
@@ -598,18 +604,14 @@ def solve_network(n, policy, penetration, tech_palette):
         elif policy == "exl":
             print("setting excess limit on hourly matching")
             excess_constraints(n)
-
+    if snakemake.config["global"]["must_run"]:
+        coal_i = n.links[n.links.carrier.isin(["lignite","coal"])].index
+        n.links.loc[coal_i, "p_min_pu"] = 0.9
     n.consistency_check()
 
     formulation = snakemake.config['solving']['options']['formulation']
     solver_options = snakemake.config['solving']['solver']
     solver_name = solver_options['name']
-
-    # storage assumptions
-    store_i = n.stores[n.stores.carrier=="H2 Store"].index
-    store_type = snakemake.config["global"]["H2_store"]
-    n.stores.loc[store_i, "capital_cost"] = snakemake.config["global"]["H2_store_cost"][store_type][float(snakemake.wildcards.year)]
-
 
 
     n.lopf(pyomo=False,
@@ -673,7 +675,7 @@ if __name__ == "__main__":
         strip_network(n)
 
         shutdown_lineexp(n)
-        #limit_resexp(n,year)
+        limit_resexp(n,year)
         nuclear_policy(n)
         coal_policy(n)
         biomass_potential(n)

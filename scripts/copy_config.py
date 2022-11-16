@@ -6,7 +6,8 @@ import os
 files = [
     "config.yaml",
     "Snakefile",
-    "scripts/solve_network.py"
+    "scripts/solve_network.py",
+    "scripts/resolve_network.py",
 ]
 
 if __name__ == '__main__':

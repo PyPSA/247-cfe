@@ -1,4 +1,3 @@
-
 import pypsa
 import pandas as pd
 import numpy as np
@@ -97,33 +96,56 @@ def add_H2(n):
           lifetime=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "lifetime"]
           )
 
+    # add offtake
+    LHV_H2 = 33.33 # lower heating value [kWh/kg_H2]
+    offtake_price = float(snakemake.wildcards.offtake_price) * LHV_H2
+    offtake_volume = snakemake.wildcards.offtake_volume
+
+    # logger.info("Add H2 offtake with offtake price {}".format(offtake_price))
+    # n.add("Generator",
+    #        f"{name} H2" + " offtake",
+    #        bus=f"{name} H2",
+    #        carrier="offtake H2",
+    #        marginal_cost=offtake_price,
+    #        p_nom=offtake_volume,
+    #        p_nom_extendable=False,
+    #        p_max_pu=0,
+    #        p_min_pu=-1)
+
     n.add("Load",
           f"{name} H2",
           carrier=f"{name} H2",
           bus=f"{name} H2",
-          p_set=pd.Series(load,index=n.snapshots))
-
-    #cost-less storage to indivcate flexible demand
-    n.add("Store",
-          f"{name} H2 Store",
-          bus=f"{name} H2",
-          e_cyclic=True,
-          e_nom_extendable=False,
-          e_nom=load*8760,
-          carrier="H2 Store",
+          p_set=float(offtake_volume),
           )
 
-    if policy in ["res","cfe","exl"]:
+    # storage cost depending on wildcard
+    store_type = snakemake.wildcards.storage
+    if store_type != "nostore":
+        store_cost = snakemake.config["global"]["H2_store_cost"][store_type][float(snakemake.wildcards.year)]
+        n.add("Store",
+        f"{name} H2 Store",
+        bus=f"{name} H2",
+        e_cyclic=True,
+        e_nom_extendable=True,
+        # e_nom=load*8760,
+        carrier="H2 Store",
+        capital_cost = store_cost,
+		)
+
+    if any([x in policy for x in ["res", "cfe", "exl", "monthly"]]):
         n.add("Link",
               name + " export",
               bus0=name,
               bus1=node,
+              carrier="export",
               marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
               p_nom=1e6)
 
-    if policy in ["grd","res"]:
+    if any([x in policy for x in ["res", "grd", "monthly"]]):
         n.add("Link",
               name + " import",
+              carrier = "import",
               bus0=node,
               bus1=name,
               marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
@@ -188,62 +210,17 @@ def add_dummies(n):
 
     print("adding dummies to",elec_buses)
     n.madd("Generator",
-           elec_buses + " dummy",
-           bus=elec_buses,
-           carrier="dummy",
-           p_nom=1e6,
-           marginal_cost=1e3)
-
-
-
-def add_H2_offtake(n):
-    """add fixed H2 offtake price for a certain volume
-    """
-    if policy != "ref":
-        H2_buses = pd.Index(["google H2"])
-        logger.info("Remove google H2 load.")
-        n.mremove("Load", ["google H2"])
-    else:
-        H2_buses = n.buses[(n.buses.carrier=="H2")
-                           & (n.buses.index.str.contains(snakemake.wildcards.zone))].index
-    LHV_H2 = 33.33 # lower heating value [kWh/kg_H2]
-    offtake_price = float(snakemake.wildcards.offtake_price) * LHV_H2
-    offtake_volume = snakemake.wildcards.offtake_volume
-    links_i = n.links[n.links.carrier=="H2 Electrolysis"].index
-
-    if offtake_volume == "fix_cap":
-        p_nom_extendable = True
-        p_nom = 0
-        logger.info("fix electrolysis capacities and no limit offtake")
-        n.links.loc[links_i, "p_nom_extendable"] = False
-    else:
-        p_nom_extendable=False
-        p_nom = float(offtake_volume)
-        logger.info("electrolysis capacities are optimised")
-        n.links.loc[links_i, "p_nom_extendable"] = True
-
-    logger.info("Add H2 offtake with offtake price {}".format(offtake_price))
-    n.madd("Generator",
-           H2_buses + " offtake",
-           bus=H2_buses,
-           carrier="offtake H2",
-           marginal_cost=offtake_price,
-           p_nom=p_nom,
-           p_nom_extendable=p_nom_extendable,
-           p_max_pu=0,
-           p_min_pu=-1)
-
-
-    # storage assumptions
-    store_i = n.stores[n.stores.carrier=="H2 Store"].index
-    store_type = snakemake.config["global"]["H2_store"]
-    n.stores.loc[store_i, "capital_cost"] = snakemake.config["global"]["H2_store_cost"][store_type][float(snakemake.wildcards.year)]
+            elec_buses + " dummy",
+            bus=elec_buses,
+            carrier="dummy",
+            p_nom=1e3,
+            marginal_cost=1e6)
 
 
 solver_name = "gurobi"
 
 solver_options = {"method" : 2,
-                  "crossover" : 0,
+                  # "crossover" : 0,
                   "BarConvTol": 1.e-5}
 def solve(policy):
 
@@ -256,11 +233,13 @@ def solve(policy):
 
     add_dummies(n)
 
-    add_H2_offtake(n)
 
     def res_constraints(n):
 
-        res_gens = [f"{name} onwind",f"{name} solar"]
+        ci = snakemake.config['ci']
+        name = ci['name']
+
+        res_gens = [name + " " + g for g in ci['res_techs']]
 
         weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(res_gens)),
                                   index = n.snapshots,
@@ -269,11 +248,40 @@ def solve(policy):
 
         electrolysis = get_var(n, "Link", "p")[f"{name} H2 Electrolysis"]
 
-        load = join_exprs(linexpr((-n.snapshot_weightings["generators"],electrolysis)))
+        allowed_excess = float(policy.replace("res","").replace("p","."))
+        load = join_exprs(linexpr((-allowed_excess * n.snapshot_weightings["generators"],electrolysis)))
 
         lhs = res + "\n" + load
 
-        con = define_constraints(n, lhs, '=', 0., 'RESconstraints','REStarget')
+        con = define_constraints(n, lhs, '<=', 0., 'RESconstraints','REStarget')
+
+
+    def monthly_constraints(n):
+
+
+        ci = snakemake.config['ci']
+        name = ci['name']
+
+        res_gens = [name + " " + g for g in ci['res_techs']]
+
+        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(res_gens)),
+                                  index = n.snapshots,
+                                  columns = res_gens)
+        res = linexpr((weightings,get_var(n, "Generator", "p")[res_gens])).sum(axis=1) # single line sum
+        res = res.groupby(res.index.month).sum()
+
+        electrolysis = get_var(n, "Link", "p")[f"{name} H2 Electrolysis"]
+
+        # allowed_excess = float(policy.replace("monthly","").replace("p","."))
+        allowed_excess = 1
+        load = linexpr((-allowed_excess * n.snapshot_weightings["generators"],electrolysis))
+
+        load = load.groupby(load.index.month).sum()
+
+        for i in range(len(res.index)):
+            lhs = res.iloc[i] + "\n" + load.iloc[i]
+
+            con = define_constraints(n, lhs, '<=', 0., f'RESconstraints_{i}',f'REStarget_{i}')
 
     def excess_constraints(n):
 
@@ -286,7 +294,7 @@ def solve(policy):
 
         electrolysis = get_var(n, "Link", "p")[f"{name} H2 Electrolysis"]
 
-        allowed_excess = 1.2
+        allowed_excess = float(policy.replace("exl","").replace("p","."))
 
         load = join_exprs(linexpr((-allowed_excess*n.snapshot_weightings["generators"],electrolysis)))
 
@@ -315,10 +323,13 @@ def solve(policy):
 
         add_battery_constraints(n)
 
-        if policy == "res":
+        if "res" in policy:
             print("setting annual RES target")
             res_constraints(n)
-        elif policy == "exl":
+        if "monthly" in policy:
+            print("setting monthly RES target")
+            monthly_constraints(n)
+        elif "exl" in policy:
             print("setting excess limit on hourly matching")
             excess_constraints(n)
 
@@ -347,10 +358,11 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('resolve_network',
-                                policy="cfe", palette='p1', zone='DE', year='2025',
+                                policy="monthly", palette='p1', zone='DE', year='2025',
                                 participation='10',
-                                offtake_price=5,
-                                offtake_volume="fix_cap")
+                                offtake_price=1,
+                                offtake_volume="2000",
+                                storage="nostore")
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
