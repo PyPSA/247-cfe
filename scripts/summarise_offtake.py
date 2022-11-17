@@ -706,7 +706,7 @@ def plot_nodal_balances(nodal_supply_energy):
     snakemake.config['tech_colors']["biomass CHP"] =  snakemake.config['tech_colors']["urban central solid biomass CHP"]
 
     for elec_c in ["AC", "DC"]:
-        df.rename(lambda x: x.replace(elec_c, "import") if df.loc[x][0]>0 else x.replace(elec_c, "export"), inplace=True)
+        df.rename(lambda x: x.replace(elec_c, "import") if df.loc[x].iloc[0]>0 else x.replace(elec_c, "export"), inplace=True)
     df.rename(index=lambda x: "offshore wind" if "offwind" in x else x, inplace=True)
     df.rename(index=lambda x: "onshore wind" if "onwind" in x else x, inplace=True)
     df = df.groupby(df.index).sum()
@@ -1166,7 +1166,7 @@ weighted_prices.to_csv(snakemake.output.csvs_weighted_prices)
 curtailment.to_csv(snakemake.output.csvs_curtailment)
 costs.to_csv(snakemake.output.csvs_costs)
 nodal_costs.to_csv(snakemake.output.csvs_nodal_costs)
-h2_cost.to_csv(snakemake.output.csvs_2_cost)
+h2_cost.to_csv(snakemake.output.csvs_h2_costs)
 emission_rate.to_csv(snakemake.output.csvs_emission_rate)
 h2_gen_mix.to_csv(snakemake.output.csvs_h2_gen_mix)
 #%%
@@ -1174,13 +1174,13 @@ h2_gen_mix.to_csv(snakemake.output.csvs_h2_gen_mix)
 # emissions = pd.read_csv(snakemake.output.csvs_emissions ,index_col=[0,1,2,3,4])
 # cf = pd.read_csv(snakemake.output.csvs_cf,index_col=0, header=[0,1,2,3,4,5], parse_dates=True)
 # supply_energy = pd.read_csv(snakemake.output.csvs_cf, index_col=[0,1,2], header=[0,1,2,3,4])
-# nodal_supply_energy = pd.read_csv(snakemake.output.csvs_supply_energy, index_col=[0,1,2, 3], header=[0,1,2,3,4])
+# nodal_supply_energy = pd.read_csv(snakemake.output.csvs_nodal_supply_energy, index_col=[0,1,2, 3], header=[0,1,2,3,4])
 # nodal_capacities = pd.read_csv(snakemake.output.csvs_nodal_capacities, index_col=[0,1,2], header=[0,1,2,3,4])
 # weighted_prices = pd.read_csv(snakemake.output.csvs_weighted_prices, index_col=[0], header=[0,1,2,3,4,5])
 # curtailment = pd.read_csv(snakemake.output.csvs_curtailment, index_col=[0,1,2], header=[0,1,2,3,4])
 # costs = pd.read_csv(snakemake.output.csvs_costs, index_col=[0,1,2], header=[0,1,2,3,4])
 # nodal_costs = pd.read_csv(snakemake.output.csvs_nodal_costs, index_col=[0,1,2,3], header=[0,1,2,3,4])
-# h2_cost = pd.read_csv(snakemake.output.csvs_2_cost, index_col=[0,1], header=[0,1,2,3,4])
+# h2_cost = pd.read_csv(snakemake.output.csvs_h2_costs, index_col=[0,1], header=[0,1,2,3,4])
 # emission_rate = pd.read_csv(snakemake.output.csvs_emission_rate, index_col=[0], header=[0,1,2,3,4])
 # h2_gen_mix = pd.read_csv(snakemake.output.csvs_h2_gen_mix, index_col=[0,1], header=[0,1,2,3,4])
 
@@ -1230,6 +1230,7 @@ for volume in a.index.get_level_values(1).unique():
                                name=name)
 
 #%%
+wished_policies = ["grd", "res1p0", "offgrid"]
 res = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["solar", "onwind"])].droplevel(0, axis=1).drop("cfe", axis=1)
 store = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["H2 Store", "battery"])].droplevel(0, axis=1).drop("cfe", axis=1)
 supply_energy.drop("cfe", axis=1, level=1,inplace=True, errors="ignore")

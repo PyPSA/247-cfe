@@ -12,7 +12,7 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 'new_demand'
+run: 'new_demand3'
 
 #wildcards
 scenario:
@@ -24,14 +24,14 @@ scenario:
   # exl: like cfe100 but excess limited to 20%
   palette: [ "p1", # onwind + solar + battery
             ]
-  zone: [ "DE",
+  zone: [ "DE", "NL"
         ]
-  year: ['2025',
+  year: ['2025', '2030',
          ] # controls both the brownfield fleet and tech costs projection
   participation: ['10',
                   ] #share [%] of CI load per zone following 247-CFE approach
   offtake_price: [1]  # [EUR/kg_H2] fixed offtake price of H2
-  offtake_volume: [3200]  # [MWh_H2 per h] fixed offtake volume per hour, 10 GB planned in DE by 2030 if run 100% 10GB*0.67=6700MWh/h
+  offtake_volume: [2233,3200, 4467, 6700]  # [MWh_H2 per h] fixed offtake volume per hour, 10 GB planned in DE by 2030 if run 100% 10GB*0.67=6700MWh/h
   storage: ["underground", "tank", "flexibledemand", "nostore"]  # storage type at google node
 
 #data center

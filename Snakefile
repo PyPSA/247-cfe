@@ -28,7 +28,7 @@ rule plot_summary_all:
 
 rule summarise_all_offtake:
     input:
-        expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/offtake_summary.csv", **config["scenario"])
+        expand(RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/emissions.csv", **config["scenario"])
 rule merge_plots:
     input:
         used=RDIR + "/plots/{participation}/{year}/{zone}/{palette}/used.pdf",
@@ -103,6 +103,17 @@ rule summarise_offtake:
         offtake_volume=config["scenario"]["offtake_volume"],storage=config["scenario"]["storage"])
     output:
         csvs_emissions=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/emissions.csv",
+        csvs_cf=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/cf.csv",
+        csvs_supply_energy=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/supply_energy.csv",
+        csvs_nodal_supply_energy=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/nodal_supply_energy.csv",
+        csvs_nodal_capacities=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/nodal_capacities.csv",
+        csvs_weighted_prices=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/weighted_prices.csv",
+        csvs_curtailment=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/curtailment.csv",
+        csvs_costs=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/costs.csv",
+        csvs_nodal_costs=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/nodal_costs.csv",
+        csvs_h2_costs=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/h2_costs.csv",
+        csvs_emission_rate=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/emission_rate.csv",
+        csvs_h2_gen_mix=RDIR + "/csvs/{participation}/{year}/{zone}/{palette}/h2_gen_mix.csv",  
         cf_plot = RDIR + "/graphs/{participation}/{year}/{zone}/{palette}/cf_electrolysis.pdf",
     threads: 2
     resources: mem=2000
