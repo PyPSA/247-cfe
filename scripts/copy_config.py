@@ -8,6 +8,7 @@ files = [
     "Snakefile",
     "scripts/solve_network.py",
     "scripts/resolve_network.py",
+    "scripts/summarise_offtake.py"
 ]
 
 if __name__ == '__main__':
