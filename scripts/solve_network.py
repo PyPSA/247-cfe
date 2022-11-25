@@ -543,6 +543,8 @@ def solve_network(n, policy, penetration, tech_palette):
 
             grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
+
+
             country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses)
                                                   & n.generators.carrier.isin(grid_res_techs)]
             country_res_links = n.links.index[n.links.bus1.isin(grid_buses)
@@ -567,10 +569,13 @@ def solve_network(n, policy, penetration, tech_palette):
             lhs_temp = pd.concat([gens, links, sus], axis=1)
 
             lhs = join_exprs(lhs_temp)
-            target = timescope(zone, year)["country_res_target"]
+
+            target = timescope(ct, year)["country_res_target"]
+            if ct== zone:
+                target += res_share
             total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
 
-            logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
+            print(f"country RES constraints for {ct} {target} and total load {total_load}")
 
             con = define_constraints(n, lhs, '=', target*total_load, f'countryRESconstraints_{ct}',f'countryREStarget_{ct}')
 
@@ -621,14 +626,32 @@ def solve_network(n, policy, penetration, tech_palette):
            solver_options=solver_options,
            solver_logfile=snakemake.log.solver)
 
+    def freeze_capacities(n):
+
+        for name, attr in [("generators","p"),("links","p"),("stores","e")]:
+            df = getattr(n,name)
+            df[attr + "_nom_extendable"] = False
+            df[attr + "_nom"] = df[attr + "_nom_opt"]
+
+        #allow more emissions
+        n.stores.at["co2 atmosphere","e_nom"] *=2
+
+    freeze_capacities(n)
+
+    n.lopf(pyomo=False,
+           formulation=formulation,
+           solver_name=solver_name,
+           solver_options=solver_options,
+           solver_logfile=snakemake.log.solver)
+
 #%%
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_base_network',
-                                policy="cfe", palette='p1', zone='DE', year='2025',
-                                participation='10')
+                                policy="ref", palette='p1', zone='DE', year='2025',
+                                participation='10', res_share="p10")
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -656,6 +679,8 @@ if __name__ == "__main__":
 
     participation = snakemake.wildcards.participation
     print(f"solving with participation: {participation}")
+
+    res_share = float(snakemake.wildcards.res_share.replace("m","-").replace("p","."))
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
