@@ -98,7 +98,7 @@ def add_H2(n):
 
     # add offtake
     LHV_H2 = 33.33 # lower heating value [kWh/kg_H2]
-    offtake_price = float(snakemake.wildcards.offtake_price) * LHV_H2
+    # offtake_price = float(snakemake.wildcards.offtake_price) * LHV_H2
     offtake_volume = snakemake.wildcards.offtake_volume
 
     # logger.info("Add H2 offtake with offtake price {}".format(offtake_price))
@@ -360,7 +360,7 @@ if __name__ == "__main__":
         snakemake = mock_snakemake('resolve_network',
                                 policy="monthly", palette='p1', zone='DE', year='2025',
                                 participation='10',
-                                offtake_price=1,
+                                res_share="p0",
                                 offtake_volume="2000",
                                 storage="nostore")
 
