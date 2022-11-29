@@ -15,12 +15,12 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         import os
-        os.chdir("/home/lisa/mnt/247-cfe/scripts")
+        os.chdir("/home/lisa/Documents/247-cfe/scripts")
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('summarise_offtake', palette='p1',
                                    zone='DE', year='2025',  participation='10',
                                    policy="ref")
-        os.chdir("/home/lisa/mnt/247-cfe/")
+        os.chdir("/home/lisa/Documents/247-cfe/")
 
 LHV_H2 = 33.33 # lower heating value [kWh/kg_H2]
 
@@ -285,7 +285,7 @@ def calculate_weighted_prices(n, label, weighted_prices):
         "AC",
         "H2"
     ]))
-    cols = pd.MultiIndex.from_product([label.levels[0], label.levels[1], label.levels[2], label.levels[3],label.levels[4], ["google", "rest"]])
+    cols = pd.MultiIndex.from_product([label.levels[0], label.levels[1], label.levels[2], label.levels[3], ["google", "rest"]])
 
     weighted_prices = weighted_prices.reindex(columns = weighted_prices.columns.union(cols))
     link_loads = {"AC":  ["battery charger", "H2 Electrolysis"],
@@ -320,8 +320,8 @@ def calculate_weighted_prices(n, label, weighted_prices):
         load_rest = a.loc[:,~a.columns.str.contains("google")].mean(axis=1).mean()
         load_google = a.loc[:,a.columns.str.contains("google")].mean(axis=1).mean()
 
-        weighted_prices.loc[carrier,(label[0][0], label[0][1], label[0][2], label[0][3], label[0][4], "rest")] = load_rest
-        weighted_prices.loc[carrier,(label[0][0], label[0][1], label[0][2], label[0][3],label[0][4],"google")]= load_google
+        weighted_prices.loc[carrier,(label[0][0], label[0][1], label[0][2], label[0][3], "rest")] = load_rest
+        weighted_prices.loc[carrier,(label[0][0], label[0][1], label[0][2], label[0][3],"google")]= load_google
 
     return weighted_prices
 
@@ -638,29 +638,10 @@ def plot_series(network,label, carrier="AC"):
     supply.columns = supply.columns.str.replace("services ", "")
     supply.columns = supply.columns.str.replace("urban decentral ", "decentral ")
 
-    preferred_order = pd.Index(["electric demand",
-                                "transmission lines",
-                                "hydroelectricity",
-                                "hydro reservoir",
-                                "run of river",
-                                "pumped hydro storage",
-                                "CHP",
-                                "onshore wind",
-                                "offshore wind",
-                                "solar PV",
-                                "solar thermal",
-                                "building retrofitting",
-                                "ground heat pump",
-                                "air heat pump",
-                                "resistive heater",
-                                "OCGT",
-                                "gas boiler",
-                                "gas",
-                                "natural gas",
-                                "methanation",
-                                "hydrogen storage",
-                                "battery storage",
-                                "hot water storage"])
+    preferred_order = pd.Index([ "solar PV", "onshore wind", "batttery discharger",
+                                "purchase",
+                             "electrolysis",
+                             "battery charger", "sale"])
 
     supply.rename(columns=rename_techs, inplace=True)
     new_columns = (preferred_order.intersection(supply.columns)
@@ -674,6 +655,7 @@ def plot_series(network,label, carrier="AC"):
     snakemake.config["tech_colors"]["offtake H2"] = "#FFC0CB"
     supply.rename(index=lambda x: x.replace(year = int(year)),
                   inplace=True)
+
 
     starts = [f"{year}-03-01", f"{year}-12-21"]
     stops = [f"{year}-03-08", f"{year}-12-28"]
@@ -708,10 +690,12 @@ def plot_series(network,label, carrier="AC"):
         ax.set_ylabel("Power [GW]")
         fig.tight_layout()
 
-        fig.savefig(snakemake.output.cf_plot.split("/graphs/")[0] + "/maps/series-{}-{}-{}-{}-{}-{}-{}-{}.pdf".format(
-            zone,
+        run = snakemake.config["run"]
+        fig.savefig(snakemake.output.cf_plot.split("graphs/")[0] +
+                                                   "series-{}-{}-{}-{}-{}-{}-{}-{}.pdf".format(
+            zone,  label.to_list()[0][0],
             label.to_list()[0][1],label.to_list()[0][2],
-            label.to_list()[0][3], label.to_list()[0][4], start, stop, year),
+            label.to_list()[0][3],  start, stop, year),
             transparent=True)
 
 
@@ -1002,6 +986,7 @@ def plot_duration_curve(df, wished_policies, wished_order, volume, name=""):
 
 
 def plot_cf(df, wished_policies, wished_order, volume, name=""):
+    df = df.xs(res_share, level=1)
     cf_elec = df.loc[wished_policies].xs(volume, level=1)
     cf_elec = cf_elec.reindex(wished_order, level=1)
     cf_elec.rename(index=rename_scenarios,
@@ -1022,16 +1007,39 @@ def plot_cf(df, wished_policies, wished_order, volume, name=""):
     fig.savefig(snakemake.output.cf_plot,
                 bbox_inches="tight")
 
+def plot_cf_shares(df, wished_policies, wished_order, volume, name=""):
+    # df = df.xs(res_share, level=1)
+    cf_elec = df.loc[wished_policies].xs(volume, level=2)
+    cf_elec = cf_elec.reindex(wished_order, level=2)
+    cf_elec.rename(index=rename_scenarios,
+                   level=0,inplace=True)
+    for policy in cf_elec.index.levels[0]:
+        shares = cf_elec.index.get_level_values(1).unique()
+        fig, ax = plt.subplots(nrows=1, ncols=len(shares), sharey=True,
+                               figsize=(9,3.5))
+
+        for i, share in enumerate(shares):
+            cf_elec.loc[policy, share].plot(kind="bar", grid=True, ax=ax[i], title=share,
+                                     width=0.65)
+            ax[i].set_xlabel("")
+            ax[i].grid(alpha=0.3)
+            ax[i].set_axisbelow(True)
+        ax[0].set_ylabel("capacity factor")
+        fig.savefig(snakemake.output.cf_plot.split(".pdf")[0] + f"{policy}_resshare.pdf",
+                    bbox_inches="tight")
+
+    fig.savefig(snakemake.output.cf_plot,
+                bbox_inches="tight")
+
 def plot_consequential_emissions(emissions, supply_energy, wished_policies,
                                  wished_order, volume, name=""):
     # consequential emissions
-    emissions_v = emissions.loc[wished_policies+["ref"]].xs(float(volume), level=1)
+    emissions_v = emissions.loc[wished_policies+["ref"]].xs((float(res_share), float(volume)), level=[1,2])
     emissions_v = emissions_v.reindex(wished_order, level=1)
     emissions_v.rename(index=rename_scenarios,
                        level=0,inplace=True)
-    emissions_s = (supply_energy.loc["co2"].droplevel(0)
-                   .droplevel([0,2], axis=1)[wished_policies+["ref"]]
-                   .xs(volume,level=1, axis=1))
+    emissions_s = (supply_energy.loc["co2"].droplevel(0)[wished_policies+["ref"]]
+                   .xs((res_share, volume),level=[1,2], axis=1))
     emissions_s = emissions_s.reindex(wished_order, level=1, axis=1)
     emissions_s = emissions_s[emissions_s>0].dropna(axis=0).rename(index=lambda x:x.replace("2",""))
     emissions_s.rename(rename_scenarios,level=0,inplace=True, axis=1)
@@ -1059,22 +1067,92 @@ def plot_consequential_emissions(emissions, supply_energy, wished_policies,
         produced_H2 = float(volume)*8760 / LHV_H2
         em_p = emissions_s[policy].sub(emissions_s["ref"])/ produced_H2
 
-        em_p.sum().rename("net total").plot(ax=ax[i], lw=0, marker="o", color="black")
+        em_p.sum().rename("net total").plot(ax=ax[i], lw=0, marker="_", color="black",
+                                            markersize=20, markeredgewidth=3)
+        # em_p.sum().rename("net total").plot(ax=ax[i], kind="bar", color="black",
+        #                                     width=0.25, position=-1)
         em_p.T.plot(kind="bar", stacked=True, grid=True, ax=ax[i], title=policy,
                             width=0.65, legend=False,
                             color=[snakemake.config['tech_colors'][i] for i in em_p.index])
+        # import pyam
+
+        # from pyam.plotting import add_net_values_to_bar_plot
+        # add_net_values_to_bar_plot(ax[i], color='k')
+        # # fig.subplots_adjust(right=0.55)
 
         ax[i].set_xlabel("")
         ax[i].grid(alpha=0.3)
         ax[i].set_axisbelow(True)
     ax[0].set_ylabel("consequential emissions \n [kg$_{CO_2}$/kg$_{H_2}$]")
-    plt.legend(loc="lower left")
+    plt.legend(ncol=2)
     fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0]+ f"consequential_emissions_by_carrier_{volume}{name}.pdf",
                 bbox_inches="tight")
 
+def plot_consequential_emissions_share(emissions, supply_energy, wished_policies,
+                                 wished_order, volume, name=""):
+    # consequential emissions
+    emissions_v = emissions.loc[wished_policies+["ref"]].xs(float(volume), level=2)
+    emissions_v = emissions_v.reindex(wished_order, level=2)
+    emissions_v.rename(index=rename_scenarios,
+                       level=0,inplace=True)
+    emissions_s = (supply_energy.loc["co2"].droplevel(0)[wished_policies+["ref"]]
+                   .xs(volume,level=2, axis=1))
+    emissions_s = emissions_s.reindex(wished_order, level=2, axis=1)
+    emissions_s = emissions_s[emissions_s>0].dropna(axis=0).rename(index=lambda x:x.replace("2",""))
+    emissions_s.rename(rename_scenarios,level=0,inplace=True, axis=1)
+
+    nice_names = [rename_scenarios[scen] if scen in rename_scenarios.keys()
+                  else scen for scen in wished_policies]
+    for policy in nice_names:
+        shares = emissions_v.index.get_level_values(1).unique()
+        fig, ax = plt.subplots(nrows=1, ncols=len(shares), sharey=True,figsize=(9,3.5))
+        for i, share in enumerate(shares):
+            # annually produced H2 in [t_H2/a]
+            produced_H2 = float(volume)*8760 / LHV_H2
+            em_p = emissions_v.loc[policy, share].sub(emissions_v.loc["ref", share].mean())/ produced_H2
+
+            em_p.iloc[:,0].plot(kind="bar", grid=True, ax=ax[i], title=share,
+                                width=0.65)
+            ax[i].set_xlabel("")
+            ax[i].grid(alpha=0.3)
+            ax[i].set_axisbelow(True)
+        ax[0].set_ylabel("consequential emissions \n [kg$_{CO_2}$/kg$_{H_2}$]")
+        fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0]+ f"consequential_emissions_{policy}_RESshare.pdf",
+                    bbox_inches="tight")
+
+
+    for i, policy in enumerate(nice_names):
+        shares = emissions_s.columns.get_level_values(1).unique()
+        fig, ax = plt.subplots(nrows=1, ncols=len(shares), sharey=True,figsize=(9,3.5))
+        for i, share in enumerate(shares):
+            # annually produced H2 in [t_H2/a]
+            produced_H2 = float(volume)*8760 / LHV_H2
+            em_p = emissions_s[policy, share].sub(emissions_s["ref", share])/ produced_H2
+
+            em_p.sum().rename("net total").plot(ax=ax[i], lw=0, marker="_", color="black",
+                                                markersize=20, markeredgewidth=3)
+            # em_p.sum().rename("net total").plot(ax=ax[i], kind="bar", color="black",
+            #                                     width=0.25, position=-1)
+            em_p.T.plot(kind="bar", stacked=True, grid=True, ax=ax[i], title=share,
+                                width=0.65, legend=False,
+                                color=[snakemake.config['tech_colors'][i] for i in em_p.index])
+            # import pyam
+
+            # from pyam.plotting import add_net_values_to_bar_plot
+            # add_net_values_to_bar_plot(ax[i], color='k')
+            # # fig.subplots_adjust(right=0.55)
+
+            ax[i].set_xlabel("")
+            ax[i].grid(alpha=0.3)
+            ax[i].set_axisbelow(True)
+        ax[0].set_ylabel("consequential emissions \n [kg$_{CO_2}$/kg$_{H_2}$]")
+        plt.legend(ncol=2, bbox_to_anchor=(1,1))
+        fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0]+ f"consequential_emissions_by_carrier_{policy}-RESshare.pdf",
+                    bbox_inches="tight")
+
 def plot_attributional_emissions(attr_emissions, wished_policies, wished_order, volume, name=""):
     for consider_import in ['no imports', 'with imports']:
-        em_r = attr_emissions.loc[consider_import].droplevel([0,2], axis=1).xs(volume, level=1, axis=1)
+        em_r = attr_emissions.loc[consider_import].xs((res_share, volume), level=[1,2], axis=1)
         em_r = em_r.stack().reindex(wished_policies,axis=1).fillna(0).unstack()
         em_r = em_r.reindex(wished_order, axis=1, level=1)
         em_r.rename(columns=rename_scenarios,
@@ -1104,12 +1182,52 @@ def plot_attributional_emissions(attr_emissions, wished_policies, wished_order, 
             suffix = ""
         else:
             suffix = "_noimports"
-        plt.legend(bbox_to_anchor=(1,0.85), loc="upper left")
+        plt.legend(ncol=2, bbox_to_anchor=(1,1), loc="upper left") if len(wished_policies)==2  else  plt.legend(ncol=2)
+        # plt.legend(ncol=2) # bbox_to_anchor=(1,0.85), loc="upper left")
         plt.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"attributional_emissions_{volume}{name}{suffix}.pdf",
                     bbox_inches='tight')
 
+def plot_attributional_emissions_share(attr_emissions, wished_policies, wished_order, volume, name=""):
+    for consider_import in ['no imports', 'with imports']:
+        em_r = attr_emissions.loc[consider_import].xs(volume, level=2, axis=1)
+        em_r = em_r.stack().stack().reindex(wished_policies,axis=1).fillna(0).unstack().unstack()
+        em_r = em_r.reindex(wished_order, axis=1, level=2)
+        em_r.rename(columns=rename_scenarios,
+                           level=0,inplace=True)
+        nice_names = [rename_scenarios[scen] if scen in rename_scenarios.keys()
+                      else scen for scen in wished_policies]
+        for policy in nice_names:
+            shares = em_r.columns.levels[1]
+            # figsize=(4.5,3.5) if len(wished_policies)==2  else  (9,3.5)
+            fig, ax = plt.subplots(nrows=1, ncols=len(shares), sharey=True,figsize= (len(shares)*(4.5/2),3.5),
+                                   )
+            for i, share in enumerate(shares):
+                em_r[policy, share].T.plot(kind="bar", stacked=True, grid=True, ax=ax[i],
+                                    title=share,
+                                    color=[snakemake.config['tech_colors'][i] for i in em_r.index],
+                                    legend=False,
+                                     width=0.65)
+                ax[i].grid(alpha=0.3)
+                ax[i].set_axisbelow(True)
+                ax[i].set_xlabel("")
+                ax[i].axhline(y=1, linestyle="--", color="black")
+                ax[i].axhline(y=3, linestyle="--", color="black")
+                ax[i].axhline(y=10, linestyle="--", color="black")
+            ax[0].set_ylabel("attributional emissions\n [kg$_{CO_2}$/kg$_{H_2}$]")
+            ax[len(shares)-1].text(x= 3.6, y=0.8, s='carbon intensity of\nblue hydrogen')
+            ax[len(shares)-1].text(x= 3.6, y=9.8, s='carbon intensity of\ngrey hydrogen')
+            ax[len(shares)-1].text(x=3.6, y=2.8, s='EU threshold for \nlow-carbon hydrogen')
+            if consider_import == "with imports":
+                suffix = ""
+            else:
+                suffix = "_noimports"
+            plt.legend(ncol=2, bbox_to_anchor=(1,0.8), loc="upper left")
+            # plt.legend(ncol=2) # bbox_to_anchor=(1,0.85), loc="upper left")
+            plt.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"attributional_emissions_{policy}-RESshare_{suffix}.pdf",
+                        bbox_inches='tight')
+
 def plot_cost_breakdown(h2_cost, wished_policies, wished_order, volume, name=""):
-    costb = h2_cost.xs(volume, level=1, axis=1).droplevel(0)
+    costb = h2_cost.xs((res_share, volume), level=[1,2], axis=1).droplevel(0)
     costb = costb.stack().reindex(wished_policies, axis=1).fillna(0).unstack()
     costb = costb.reindex(wished_order, level=1, axis=1)
     costb.rename(columns=rename_scenarios,
@@ -1133,13 +1251,15 @@ def plot_cost_breakdown(h2_cost, wished_policies, wished_order, volume, name="")
 
     fig, ax = plt.subplots(nrows=1, ncols=len(wished_policies), sharey=True,figsize=(9,3.5))
     for i, policy in enumerate(nice_names):
-        singlecost.sum().loc[policy].rename("net total").plot(ax=ax[i], style="-o", lw=0, color="black")
+        singlecost.sum().loc[policy].rename("net total").plot(ax=ax[i], marker="_",
+                                                              lw=0, color="black",
+                                                              markersize=20, markeredgewidth=3)
         singlecost.T.loc[policy].plot(kind="bar", stacked=True, ax=ax[i], title=policy,
                  color=[snakemake.config['tech_colors'][i] for i in singlecost.index],
                  grid=True, legend=False,  width=0.65)
         ax[i].grid(alpha=0.3)
         ax[i].set_axisbelow(True)
-    not_grd = singlecost.columns.levels[0][~singlecost.columns.levels[0].str.contains("grid")]
+    not_grd = singlecost.columns!=(    'grid',        'nostore')
     ax[0].set_ylim([singlecost[singlecost<0].sum().min()*1.1, singlecost[singlecost>0].sum().loc[not_grd].max()*1.1])
     ax[0].set_ylabel("cost \n [Euro/kg$_{H_2}$]")
     plt.legend(bbox_to_anchor=(1,1))
@@ -1147,13 +1267,55 @@ def plot_cost_breakdown(h2_cost, wished_policies, wished_order, volume, name="")
                 bbox_inches='tight')
 
 
+def plot_cost_breakdown_shares(h2_cost, wished_policies, wished_order, volume, name=""):
+    costb = h2_cost.xs(volume, level=2, axis=1).droplevel(0)
+    costb = costb.stack().stack().reindex(wished_policies, axis=1).fillna(0).unstack().unstack()
+    costb = costb.reindex(wished_order, level=2, axis=1)
+    costb.rename(columns=rename_scenarios,
+                       level=0,inplace=True)
+    costb.loc["battery"] = costb[costb.index.str.contains("battery")].sum()
+    costb.drop(["battery charger", "battery discharger"], inplace=True)
+    singlecost = costb.drop(["H2 cost", "offtake H2"]).div(float(volume)*8760)
+    # convert EUR/MWh_H2 in Eur/kg_H2
+    singlecost = singlecost / 1e3 * LHV_H2
+    to_drop = singlecost.loc[abs(singlecost.sum(axis=1))<1].index
+    singlecost.drop(to_drop, inplace=True)
+    nice_names = [rename_scenarios[scen] if scen in rename_scenarios.keys()
+                  else scen for scen in wished_policies]
+
+
+    singlecost.rename(index=rename_techs, inplace=True)
+    wished_tech_order = ['sale', 'H2 store', 'battery',
+                         'electrolysis', 'onshore wind', 'solar PV', 'load shedding', 'purchase',]
+    singlecost = singlecost.reindex(index=wished_tech_order)
+
+    for policy in singlecost.columns.get_level_values(0).unique():
+        shares = singlecost.columns.get_level_values(1).unique()
+        fig, ax = plt.subplots(nrows=1, ncols=len(shares), sharey=True,figsize=(len(shares)*2.25,3.5))
+        for i, share in enumerate(shares):
+            cost_p = singlecost[policy,share]
+            cost_p.sum().rename("net total").plot(ax=ax[i], marker="_",
+                                                                  lw=0, color="black",
+                                                                  markersize=20, markeredgewidth=3)
+            cost_p.T.plot(kind="bar", stacked=True, ax=ax[i], title=share,
+                     color=[snakemake.config['tech_colors'][i] for i in singlecost.index],
+                     grid=True, legend=False,  width=0.65)
+            ax[i].grid(alpha=0.3)
+            ax[i].set_axisbelow(True)
+        not_grd = singlecost.columns!=(    'grid',        'nostore')
+        ax[0].set_ylim([cost_p[cost_p<0].sum().min()*1.1, cost_p[cost_p>0].sum().max()*1.1])
+        ax[0].set_ylabel("cost \n [Euro/kg$_{H_2}$]")
+        plt.legend(bbox_to_anchor=(1,1))
+        fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"costbreakdown_{policy}.pdf",
+                    bbox_inches='tight')
+
 def plot_shadow_prices(weighted_prices, wished_policies, wished_order, volume,
                        name="", carrier="AC"):
-    w_price = weighted_prices.droplevel([0,2], axis=1).xs((volume, "rest"), level=[1,3], axis=1)[wished_policies].loc[carrier]
+    w_price = weighted_prices.xs((res_share, volume, "rest"), level=[1,2, 4], axis=1)[wished_policies].loc[carrier]
     w_price.rename(rename_scenarios, level=0, inplace=True)
     nice_names = [rename_scenarios[scen] if scen in rename_scenarios.keys()
                   else scen for scen in wished_policies]
-    not_grd = w_price.index.levels[0][~w_price.index.levels[0].str.contains("grid")]
+    not_grd = w_price.index!=("grid", "nostore")
 
     fig, ax = plt.subplots(nrows=1, ncols=len(wished_policies),
                            sharey=True,figsize=(9,3.5))
@@ -1168,10 +1330,26 @@ def plot_shadow_prices(weighted_prices, wished_policies, wished_order, volume,
     fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"shadowprices_{volume}{name}_{carrier}_croped.pdf",
                 bbox_inches='tight')
 
+    no_hourly = [x for x in nice_names if "hourly" not in x]
+
+    if len(no_hourly)!=0:
+        fig, ax = plt.subplots(nrows=1, ncols=len(no_hourly),
+                               sharey=True,figsize=(9,3.5))
+        for i, policy in enumerate(no_hourly):
+            w_price.loc[policy].reindex(wished_order).plot(kind="bar", ax=ax[i],
+                                                     title=policy, grid=True, width=0.65)
+            ax[i].grid(alpha=0.3)
+            ax[i].set_axisbelow(True)
+
+        ax[0].set_ylabel("price \n [Euro/MWh]")
+        ax[0].set_ylim([0, w_price.loc[no_hourly].max()*1.1])
+        fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"shadowprices_{volume}{name}_{carrier}_croped_without_hourly.pdf",
+                    bbox_inches='tight')
+
 def plot_h2genmix(h2_gen_mix, wished_policies, wished_order, volume,
                        name=""):
 
-    gen_mix = h2_gen_mix.xs(volume, level=1, axis=1)[wished_policies]
+    gen_mix = h2_gen_mix.xs((res_share, volume), level=[1,2], axis=1)[wished_policies]
     gen_mix.rename(rename_scenarios, level=0, axis=1, inplace=True)
     nice_names = [rename_scenarios[scen] if scen in rename_scenarios.keys()
                   else scen for scen in wished_policies]
@@ -1223,47 +1401,44 @@ for network_path in snakemake.input:
     except OSError:
             print(network_path, " not solved yet.")
             continue
-    policy = network_path.split("/")[-1].split("_")[0]
-    price = float(network_path.split("price")[0].split("_")[-1])
+    wildcards = network_path.split(snakemake.config["run"])[1].split("/")[-1].split("_")
+    policy = wildcards[0]
+    year = network_path.split("/")[-4]
+    country = network_path.split("/")[-3]
+    target = snakemake.config[f"res_target_{year}"][country]
+    price = round(target + float(wildcards[1].replace("m","-").replace("p",".")), ndigits=2)
+    storage_type = wildcards[3].replace(".nc","")
     try:
-        volume = float(network_path.split("/")[-1].split("volume")[0].split("_")[-1])
+        volume = float(wildcards[2].replace("volume",""))
     except ValueError:
         volume = "fix_cap"
     assign_locations(n)
 
-    participation = network_path.split("networks/")[1][:2]
     weightings = n.snapshot_weightings.generators
-    storage_type = network_path.split("_")[-1].replace(".nc", "")
 
-    cols = pd.MultiIndex.from_product([[participation], [policy], [price], [volume], [storage_type]],
-                                      names=["participation", "policy", "price", "volume", "storage_type"])
-    if policy in ["grd", "res1p0", "res1p3", "offgrid", "exl1p3"]:
+
+    cols = pd.MultiIndex.from_product([[policy], [price], [volume], [storage_type]],
+                                      names=["policy", "price", "volume", "storage_type"])
+    if policy in ["grd", "res1p0", "offgrid"]:
         plot_series(n, cols)
-    # offtake H2
-    offtake_p = n.generators_t.p.loc[:,n.generators.carrier=="offtake H2"].mul(weightings, axis=0)
-    cols = pd.MultiIndex.from_product([[participation], [policy], [price],
-                                       [volume], [storage_type], offtake_p.columns],
-                                      names=["participation", "policy",
-                                             "price", "volume", "storage_type", "node"])
-    offtake_p.columns = cols
-    final = pd.concat([offtake_p, final], axis=1)
 
     # capacity factor
     p_nom_opt = n.links.p_nom_opt
     df = (n.links_t.p0/n.links.p_nom_opt)
     df.drop(df.columns[(p_nom_opt<10)], axis=1, inplace=True)
     df.dropna(axis=1, inplace=True)
-    cols = pd.MultiIndex.from_product([[participation], [policy], [price], [volume],
+    cols = pd.MultiIndex.from_product([[policy], [price], [volume],
                                        [storage_type], df.columns],
-                                      names=["participation", "policy", "price",
+                                      names=["policy", "price",
                                              "volume", "storage_type", "node"])
     df.columns = cols
     cf = pd.concat([cf, df], axis=1)
 
+    cols = pd.MultiIndex.from_product([ [policy], [price], [volume], [storage_type]],
+                                      names=["policy", "price", "volume", "storage_type"])
+
     # co2 emissions
     co2_emission = n.stores_t.e["co2 atmosphere"].iloc[-1]
-    cols = pd.MultiIndex.from_product([[participation], [policy], [price], [volume], [storage_type]],
-                                      names=["participation", "policy", "price", "volume", "storage_type"])
     co2_emission = pd.DataFrame([co2_emission], index=cols)
     emissions = pd.concat([emissions, co2_emission])
 
@@ -1291,11 +1466,10 @@ for network_path in snakemake.input:
     if "import" in n.links.carrier.unique():
         emission_rate, attr_emissions = calculate_emission_rate(n, cols, emission_rate, attr_emissions)
 
-    # plot_series(n,cols)
     if policy!="ref":
         h2_gen_mix = calculate_h2_generationmix(n, cols, h2_gen_mix)
 
-cf = cf.loc[:,cf.columns.get_level_values(5).str.contains("google H2 Electrolysis")]
+cf = cf.loc[:,cf.columns.get_level_values(4).str.contains("google H2 Electrolysis")]
 #%%
 emissions.to_csv(snakemake.output.csvs_emissions)
 cf.to_csv(snakemake.output.csvs_cf)
@@ -1312,27 +1486,24 @@ h2_gen_mix.to_csv(snakemake.output.csvs_h2_gen_mix)
 attr_emissions.to_csv(snakemake.output.csvs_attr_emissions)
 #%%
 
-emissions = pd.read_csv(snakemake.output.csvs_emissions ,index_col=[0,1,2,3,4])
-cf = pd.read_csv(snakemake.output.csvs_cf,index_col=0, header=[0,1,2,3,4,5], parse_dates=True)
-supply_energy = pd.read_csv(snakemake.output.csvs_supply_energy, index_col=[0,1,2], header=[0,1,2,3,4])
-nodal_supply_energy = pd.read_csv(snakemake.output.csvs_nodal_supply_energy, index_col=[0,1,2, 3], header=[0,1,2,3,4])
-nodal_capacities = pd.read_csv(snakemake.output.csvs_nodal_capacities, index_col=[0,1,2], header=[0,1,2,3,4])
-weighted_prices = pd.read_csv(snakemake.output.csvs_weighted_prices, index_col=[0], header=[0,1,2,3,4,5])
-curtailment = pd.read_csv(snakemake.output.csvs_curtailment, index_col=[0,1,2], header=[0,1,2,3,4])
-costs = pd.read_csv(snakemake.output.csvs_costs, index_col=[0,1,2], header=[0,1,2,3,4])
-nodal_costs = pd.read_csv(snakemake.output.csvs_nodal_costs, index_col=[0,1,2,3], header=[0,1,2,3,4])
-h2_cost = pd.read_csv(snakemake.output.csvs_h2_costs, index_col=[0,1], header=[0,1,2,3,4])
-emission_rate = pd.read_csv(snakemake.output.csvs_emission_rate, index_col=[0], header=[0,1,2,3,4])
-h2_gen_mix = pd.read_csv(snakemake.output.csvs_h2_gen_mix, index_col=[0,1], header=[0,1,2,3,4])
-attr_emissions = pd.read_csv(snakemake.output.csvs_attr_emissions, index_col=[0,1], header=[0,1,2,3,4])
+emissions = pd.read_csv(snakemake.output.csvs_emissions ,index_col=[0,1,2,3])
+cf = pd.read_csv(snakemake.output.csvs_cf,index_col=0, header=[0,1,2,3,4], parse_dates=True)
+supply_energy = pd.read_csv(snakemake.output.csvs_supply_energy, index_col=[0,1,2], header=[0,1,2,3])
+nodal_supply_energy = pd.read_csv(snakemake.output.csvs_nodal_supply_energy, index_col=[0,1,2, 3], header=[0,1,2,3])
+nodal_capacities = pd.read_csv(snakemake.output.csvs_nodal_capacities, index_col=[0,1,2], header=[0,1,2,3])
+weighted_prices = pd.read_csv(snakemake.output.csvs_weighted_prices, index_col=[0], header=[0,1,2,3,4])
+curtailment = pd.read_csv(snakemake.output.csvs_curtailment, index_col=[0,1,2], header=[0,1,2,3])
+costs = pd.read_csv(snakemake.output.csvs_costs, index_col=[0,1,2], header=[0,1,2,3])
+nodal_costs = pd.read_csv(snakemake.output.csvs_nodal_costs, index_col=[0,1,2,3], header=[0,1,2,3])
+h2_cost = pd.read_csv(snakemake.output.csvs_h2_costs, index_col=[0,1], header=[0,1,2,3])
+emission_rate = pd.read_csv(snakemake.output.csvs_emission_rate, index_col=[0], header=[0,1,2,3])
+h2_gen_mix = pd.read_csv(snakemake.output.csvs_h2_gen_mix, index_col=[0,1], header=[0,1,2,3])
+attr_emissions = pd.read_csv(snakemake.output.csvs_attr_emissions, index_col=[0,1], header=[0,1,2,3])
 
-policies = cf.columns.levels[1]
-participations = cf.columns.levels[0]
 
-a = cf.mean().droplevel([0,2, 5])
-emissions = emissions.droplevel([0, 2])
-h2_cost = h2_cost.droplevel([0,2], axis=1)
-h2_gen_mix = h2_gen_mix.rename(index=lambda x: x.replace("1","").replace("0","")).droplevel(0).droplevel([0,2], axis=1)
+a = cf.mean().droplevel([4])
+
+h2_gen_mix = h2_gen_mix.rename(index=lambda x: x.replace("1","").replace("0","")).droplevel(0)
 
 rename_scenarios = {"res1p0": "annually", "exl1p0": "hourly", "offgrid": "hourly",
                     "grd": "grid",
@@ -1346,8 +1517,11 @@ plot_scenarios = {"":["grd", "res1p0", "offgrid"],
                    "_without_hourly": ["grd", "res1p0"]
                   }
 wished_order = ["flexibledemand", "underground", "tank", "nostore"]
+year = snakemake.wildcards.year
+country = snakemake.wildcards.zone
+res_share = str(snakemake.config[f"res_target_{year}"][country])
 #%%
-for volume in a.index.get_level_values(1).unique():
+for volume in a.index.get_level_values(2).unique():
     for name, wished_policies in plot_scenarios.items():
         print(name)
         # capacity factors
@@ -1355,8 +1529,8 @@ for volume in a.index.get_level_values(1).unique():
 
         # consequential emissions
         plot_consequential_emissions(emissions, supply_energy,
-                                     wished_policies, wished_order,
-                                     volume, name=name)
+                                      wished_policies, wished_order,
+                                      volume, name=name)
 
         # attributional emissions
         plot_attributional_emissions(attr_emissions, wished_policies, wished_order,
@@ -1367,24 +1541,25 @@ for volume in a.index.get_level_values(1).unique():
 
         # shadow prices
         plot_shadow_prices(weighted_prices, wished_policies, wished_order, volume,
-                               name=name, carrier="AC")
+                                name=name, carrier="AC")
 
         # generation mix of H2
         plot_h2genmix(h2_gen_mix, wished_policies, wished_order, volume,
-                               name=name)
+                                name=name)
+#%%
 
 #%%
 wished_policies = ["grd", "res1p0", "offgrid"]
-res = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["solar", "onwind"])].droplevel(0, axis=1).drop("cfe", axis=1)
-store = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["H2 Store", "battery"])].droplevel(0, axis=1).drop("cfe", axis=1)
-supply_energy.drop("cfe", axis=1, level=1,inplace=True, errors="ignore")
+res = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["solar", "onwind"])].drop("cfe", axis=1)
+store = nodal_capacities.loc[nodal_capacities.index.get_level_values(2).isin(["H2 Store", "battery"])].drop("cfe", axis=1)
+supply_energy.drop("cfe", axis=1, level=0,inplace=True, errors="ignore")
 for volume in res.columns.levels[2]:
 
-    caps = res.xs(volume, level=2, axis=1).xs("google", level=1).droplevel(0).droplevel(1, axis=1).reindex(wished_policies, level=0, axis=1).fillna(0)
+    caps = res.xs((res_share, volume), level=[1,2], axis=1).xs("google", level=1).droplevel(0).reindex(wished_policies, level=0, axis=1).fillna(0)
     caps = caps.stack().reindex(wished_policies, axis=1).fillna(0).unstack()
     caps = caps.reindex(wished_order, level=1, axis=1)
     caps.rename(columns=rename_scenarios,
-                       level=0,inplace=True)
+                        level=0,inplace=True)
     caps.rename(index=rename_techs, inplace=True)
     fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, figsize=(9,3.5))
     for i, policy in enumerate(['grid', 'annually',  'hourly']):
@@ -1404,11 +1579,11 @@ for volume in res.columns.levels[2]:
     plt.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"capacities_RES_{volume}volume.pdf",
                     bbox_inches='tight')
 
-    caps = store.xs(volume, level=2, axis=1).xs("google", level=1).droplevel(0).droplevel(1, axis=1).reindex(wished_policies, level=0, axis=1).fillna(0)
+    caps = store.xs((res_share, volume), level=[1,2], axis=1).xs("google", level=1).droplevel(0).reindex(wished_policies, level=0, axis=1).fillna(0)
     caps = caps.stack().reindex(wished_policies, axis=1).fillna(0).unstack()
     caps = caps.reindex(wished_order, level=1, axis=1)
     caps.rename(columns=rename_scenarios,
-                       level=0,inplace=True)
+                        level=0,inplace=True)
     caps.rename(index=rename_techs, inplace=True)
     caps.drop("flexibledemand", level=1, axis=1, inplace=True)
     fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, figsize=(9,3.5))
@@ -1433,7 +1608,7 @@ for volume in res.columns.levels[2]:
 
 
 
-    c = curtailment.xs((volume), level=3, axis=1).droplevel(0, axis=1).droplevel(1, axis=1).reindex(wished_policies, level=0, axis=1).fillna(1)
+    c = curtailment.xs((res_share, volume), level=[1,2], axis=1).reindex(wished_policies, level=0, axis=1).fillna(1)
     res_car = ["solar", "onwind", "all"]
     snakemake.config['tech_colors']["all"] = "b"
     for carrier in res_car:
@@ -1451,8 +1626,8 @@ for volume in res.columns.levels[2]:
         fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, figsize=(9,3.5))
         for i, policy in enumerate(['grid', 'annually',  'hourly']):
             ((1-d[policy])*100).plot(kind="bar", grid=True, ax=ax[i], color=snakemake.config['tech_colors'][carrier],
-                                     width=0.65,
-                                                 title=policy, legend=False)
+                                      width=0.65,
+                                                  title=policy, legend=False)
             ax[i].grid(alpha=0.3)
             ax[i].set_axisbelow(True)
         ax[0].set_ylabel("curtailment \n [%]")
@@ -1460,16 +1635,44 @@ for volume in res.columns.levels[2]:
         # plt.legend(bbox_to_anchor=(1,1))
         fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"curtailment_{volume}volume_{carrier}.pdf",
                     bbox_inches='tight')
+
+    traffic = supply_energy.loc["AC"].droplevel(0).loc[["export0", "import1"]][["grd", "res1p0", "monthly"]].xs((res_share, volume), level=[1,2], axis=1).fillna(0)
+    traffic.rename(columns=rename_scenarios,
+                      inplace=True)
+    traffic = traffic.reindex(wished_order, level=1, axis=1)
+    traffic.rename(index=lambda x:rename_techs[x.replace("0","").replace("1","")], inplace=True)
+    fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, figsize=(9,3.5))
+    for i, policy in enumerate(['grid', 'annually', "monthly"]):
+        (traffic[policy]/1e6).T.plot(kind="bar", grid=True, ax=ax[i], color=[snakemake.config['tech_colors'][i] for i in traffic.index],
+                                  width=0.65, stacked=True,
+                                              title=policy, legend=False)
+        ax[i].grid(alpha=0.3)
+        ax[i].set_axisbelow(True)
+    ax[0].set_ylabel("energy \n [TWh]")
+    plt.legend()
+    fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"export_import_{volume}volume.pdf",
+                bbox_inches='tight')
+#%%
+volume = "3200.0"
+plot_cf_shares(a, wished_policies, wished_order, volume)
+plot_consequential_emissions_share(emissions, supply_energy, wished_policies,
+                                 wished_order, volume, name="")
+plot_attributional_emissions_share(attr_emissions, wished_policies, wished_order,
+                                   volume, name="")
+plot_cost_breakdown_shares(h2_cost, wished_policies, wished_order, volume,
+                           name="")
 #%%
 # plot_nodal_balances(nodal_supply_energy)
 # #%%
+# base_year = snakemake.wildcards.year
+# base_ct = snakemake.wildcards.zone
 # tot_generation = {}
-# scenarios = [("DE", "2025"), ("DE", "2030"), ("NL", "2025")]
+# scenarios =  [("DE", "2025"),  ("NL", "2025")] #  [("DE", "2025"), ("DE", "2030"), ("NL", "2025")]
 # for scenario in scenarios:
 #     ct = scenario[0]
 #     year = scenario[1]
-#     input_path = f'/home/lisa/mnt/247-cfe/results/new_demand3/csvs/10/{year}/{ct}/p1/nodal_supply_energy.csv'
-#     tot_generation[scenario] = pd.read_csv(input_path, index_col=[0,1,2, 3], header=[0,1,2,3,4]).xs(ct, level=2).droplevel([0,2], axis=1)
+#     input_path = snakemake.output.csvs_nodal_supply_energy.replace(base_year, year).replace(base_ct, ct)
+#     tot_generation[scenario] = pd.read_csv(input_path, index_col=[0,1,2, 3], header=[0,1,2,3]).xs(ct, level=2).xs(res_share, level=1, axis=1)
 # #%%
 # tot_generation = pd.concat(tot_generation, axis=1)
 # co2_carriers = ["co2", "co2 stored", "process emissions"]
@@ -1529,5 +1732,5 @@ for volume in res.columns.levels[2]:
 # ax.set_axisbelow(True)
 # plt.ylabel("share of generation \n [%]")
 # plt.legend(bbox_to_anchor=(1,1))
-# fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"energy-{zone}-{k}-noimports.pdf",
+# fig.savefig(snakemake.output.cf_plot.split("cf_ele")[0] + f"energy-{k}-noimports.pdf",
 #             bbox_inches='tight')
