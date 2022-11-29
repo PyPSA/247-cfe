@@ -125,6 +125,8 @@ def cost_parametrization(n):
     for carrier in ['lignite', 'coal', 'gas']:
         n.generators.loc[n.generators.index.str.contains(f'EU {carrier}'), 'marginal_cost'] = snakemake.config['costs'][f'price_{carrier}']
     #n.generators[n.generators.index.str.contains('EU')].T
+    # adjust wrongly set VOM of onshore wind
+    n.generators.loc[n.generators.carrier=="onwind", "marginal_cost"] = 0.015
 
 
 def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
@@ -258,7 +260,6 @@ def limit_resexp(n, year):
     for bus in fleet.bus.unique():
         if not bus[:2] in snakemake.config[f"res_target_{year}"].keys():
             for carrier in ['solar', 'onwind', 'offwind-ac', 'offwind-dc']:
-                p_nom_fleet = 0
                 p_nom_fleet = fleet.loc[(fleet.bus == bus)
                                         & (fleet.carrier_s == carrier), "p_nom"].sum()
                 #print(f'bus: {bus}, carrier: {carrier}' ,p_nom_fleet)
@@ -539,11 +540,11 @@ def solve_network(n, policy, penetration, tech_palette):
 
             grid_buses = n.buses.index[(n.buses.index.str[:2]==ct)]
 
+            if grid_buses.empty: continue
+
             grid_res_techs = snakemake.config['global']['grid_res_techs']
 
             grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-
-
 
             country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses)
                                                   & n.generators.carrier.isin(grid_res_techs)]
@@ -571,7 +572,7 @@ def solve_network(n, policy, penetration, tech_palette):
             lhs = join_exprs(lhs_temp)
 
             target = timescope(ct, year)["country_res_target"]
-            if ct== zone:
+            if ct == zone:
                 target += res_share
             total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
 
