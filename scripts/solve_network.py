@@ -13,6 +13,8 @@ pypsa.pf.logger.setLevel(logging.WARNING)
 from vresutils.benchmark import memory_logger
 from _helpers import override_component_attrs
 
+from pypsa.optimization.optimize import optimize
+
 
 def palette(tech_palette):
     '''
@@ -619,7 +621,7 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_dischargers = palette(tech_palette)[3]
 
     if policy == "ref":
-        n_iterations = 2
+        n_iterations = 1 # 2 temp change
     elif policy == "res":
         n_iterations = 2
         res_gens = [name + " " + g for g in ci['res_techs']]
@@ -685,44 +687,66 @@ def solve_network(n, policy, penetration, tech_palette):
         con = define_constraints(n, lhs, '=', penetration*total_load, 'RESconstraints','REStarget')
 
 
+    # def country_res_constraints(n):
+
+    #     grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
+
+    #     grid_res_techs = snakemake.config['global']['grid_res_techs']
+
+    #     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
+    #     country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
+    #     country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
+    #     country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
+
+    #     #res_gens = n.generators_t.p[country_res_gens].sum(axis=1)
+    #     #res_links = (- n.links_t.p1[country_res_links].sum(axis=1))
+    #     #res_sus = n.storage_units_t.p[country_res_storage_units].sum(axis=1)
+        
+    #     weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
+    #                               index = n.snapshots,
+    #                               columns = country_res_gens)
+    #     weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
+    #                               index = n.snapshots,
+    #                               columns = country_res_links)
+    #     weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
+    #                               index = n.snapshots,
+    #                               columns = country_res_storage_units)
+
+    #     gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
+    #     links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
+    #     sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
+    #     lhs_temp = pd.concat([gens, links, sus], axis=1)
+    #     lhs = join_exprs(lhs_temp)
+
+    #     target = timescope(zone, year)["country_res_target"]
+    #     total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+
+    #     logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
+
+    #     con = define_constraints(n, lhs, '=', target*total_load, 'countryRESconstraints','countryREStarget')
+    
+    
     def country_res_constraints(n):
 
         grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
-
         grid_res_techs = snakemake.config['global']['grid_res_techs']
-
         grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
         country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
         country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
         country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
 
-        #res_gens = n.generators_t.p[country_res_gens].sum(axis=1)
-        #res_links = (- n.links_t.p1[country_res_links].sum(axis=1))
-        #res_sus = n.storage_units_t.p[country_res_storage_units].sum(axis=1)
-        
-        weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
-                                  index = n.snapshots,
-                                  columns = country_res_gens)
-        weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
-                                  index = n.snapshots,
-                                  columns = country_res_links)
-        weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
-                                  index = n.snapshots,
-                                  columns = country_res_storage_units)
+        weights = n.snapshot_weightings["generators"]
+        gens = n.model['Generator-p'].loc[:,country_res_gens] * weights
+        links = n.model['Link-p'].loc[:,country_res_links] * n.links.loc[country_res_links, "efficiency"] * weights
+        sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
+        lhs = gens.sum() + sus.sum()
 
-        gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
-        links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
-        sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
-        lhs_temp = pd.concat([gens, links, sus], axis=1)
-
-        lhs = join_exprs(lhs_temp)
         target = timescope(zone, year)["country_res_target"]
-        total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+        total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*weights).sum() # number
 
-        logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
-
-        con = define_constraints(n, lhs, '=', target*total_load, 'countryRESconstraints','countryREStarget')
+        n.model.add_constraints(lhs == target*total_load, name="country_res_constraints")
 
 
     def add_battery_constraints(n):
@@ -745,7 +769,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
     def extra_functionality(n, snapshots):
 
-        add_battery_constraints(n)
+        #add_battery_constraints(n)
         country_res_constraints(n)
 
         if policy == "ref":
@@ -757,7 +781,7 @@ def solve_network(n, policy, penetration, tech_palette):
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
-            excess_constraints(n)
+            #excess_constraints(n)
         else:
             print(f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}.")
             sys.exit()
@@ -774,12 +798,28 @@ def solve_network(n, policy, penetration, tech_palette):
 
         grid_supply_cfe = grid_cfe_df[f"iteration {i}"]
 
+        n.optimize.create_model()
+
         n.lopf(pyomo=False,
                extra_functionality=extra_functionality,
                formulation=formulation,
                solver_name=solver_name,
                solver_options=solver_options,
                solver_logfile=snakemake.log.solver)
+
+        # extra_functionality(n, n.snapshots)
+
+        # n.optimize.solve_model(
+        #        solver_name=solver_name,
+        #        solver_options=solver_options,
+        #        solver_logfile=snakemake.log.solver)
+
+        # optimize(
+        #        n,
+        #        extra_functionality=extra_functionality,
+        #        solver_name=solver_name,
+        #        solver_options=solver_options,
+        #        solver_logfile=snakemake.log.solver)
 
         grid_cfe_df[f"iteration {i+1}"] = calculate_grid_cfe(n)
         #print(grid_cfe_df)
@@ -792,7 +832,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="cfe80", palette='p3', zone='IE', year='2025', participation='10')
+                                policy="res100", palette='p1', zone='IE', year='2030', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python,
                     level=snakemake.config['logging_level'])
@@ -830,6 +870,12 @@ if __name__ == "__main__":
                           Nyears,
                           snakemake.config['costs']['lifetime'],
                           year)
+
+
+    #Temp model reduction
+    nhours = 1000
+    n.set_snapshots(n.snapshots[:nhours])
+    n.snapshot_weightings[:] = 8760.0 / nhours
 
 
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
