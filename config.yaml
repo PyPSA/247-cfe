@@ -170,6 +170,8 @@ tech_colors:
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
   "NG-Allam": "#540b0e"
+  'hydroelectricity': '#298c81'
+  'nuclear': '#ff8c00'
   # Storage
   "battery": "#666666"
   "battery inverter": "#444444"
@@ -177,7 +179,17 @@ tech_colors:
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
   "hydrogen electrolysis": "#550055"
+  'pumped hydro storage': '#51dbcc'
   # Emitters
   "OCGT": "#d35050"
   "CCGT": "#b20101"
   "Gas OC": "#d35050"
+  'hard coal': '#545454'
+  'lignite': '#826837'
+  'oil': "#808080"
+  # biomass
+  'solid biomass': '#baa741'
+  # power transmission
+  "lines": '#6c9459'
+  "transmission lines": '#6c9459'
+  "electricity distribution grid": '#97ad8c'
