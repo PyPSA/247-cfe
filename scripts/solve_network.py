@@ -634,100 +634,51 @@ def solve_network(n, policy, penetration, tech_palette):
 
     def cfe_constraints(n):
 
-        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(clean_gens)),
-                                  index = n.snapshots,
-                                  columns = clean_gens)
-        gen_sum = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[clean_gens]))) # single line sum
+        weights = n.snapshot_weightings["generators"]
 
-        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],n.links.loc[storage_dischargers,"efficiency"]),
-                                  index = n.snapshots,
-                                  columns = storage_dischargers)
-        discharge_sum = join_exprs(linexpr((weightings, get_var(n, "Link", "p")[storage_dischargers])))
+        gen_sum = (n.model['Generator-p'].loc[:,clean_gens] * weights).sum()
+        discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
+                         n.links.loc[storage_dischargers, "efficiency"] * weights).sum()
+        charge_sum = -1*(n.model['Link-p'].loc[:,storage_chargers] * weights).sum()
+        n.links.loc[storage_dischargers,"efficiency"]
+        ci_export = n.model['Link-p'].loc[:,[name + " export"]]
+        ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
+        grid_sum = (
+            (-1*ci_export*weights) + 
+            (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
+            ).sum() # linear expr
 
-        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(storage_chargers)),
-                                  index = n.snapshots,
-                                  columns = storage_chargers)
-        charge_sum = join_exprs(linexpr((-weightings, get_var(n, "Link", "p")[storage_chargers])))
-
-        gexport = get_var(n, "Link", "p")[name + " export"] # a series
-        gimport = get_var(n, "Link", "p")[name + " import"] # a series
-        grid_sum = join_exprs(linexpr((-n.snapshot_weightings["generators"],gexport),
-                                      (n.links.at[name + " import","efficiency"]*grid_supply_cfe*n.snapshot_weightings["generators"],gimport))) # single line sum
-
-        lhs = gen_sum + '\n' + discharge_sum  + '\n' + charge_sum + '\n' + grid_sum
-        total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
-        con = define_constraints(n, lhs, '>=', penetration*total_load, 'CFEconstraints','CFEtarget')
+        lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
+        total_load = (n.loads_t.p_set[name + " load"]*weights).sum() # number
+        
+        n.model.add_constraints(lhs >= penetration*total_load, name="CFE_constraint")
 
 
     def excess_constraints(n):
         
-        gexport = get_var(n, "Link", "p")[name + " export"] # a series
-        
-        excess = linexpr((n.snapshot_weightings["generators"], gexport)).sum(axis=0)
-        lhs = excess
+        weights = n.snapshot_weightings["generators"]
 
-        total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum()
+        ci_export = n.model['Link-p'].loc[:,[name + " export"]]
+        excess =  (ci_export * weights).sum()
 
+        total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
         share = 0.2 # max(0., penetration - 0.8) -> no sliding share
-        rhs = share * total_load
-
-        con = define_constraints(n, lhs, '<=', rhs, 'Excess_constraint')
-
-
-    def res_constraints(n):
         
-        weightings = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(res_gens)),
-                                  index = n.snapshots,
-                                  columns = res_gens)
-        lhs = join_exprs(linexpr((weightings,get_var(n, "Generator", "p")[res_gens]))) # single line sum
-
-        total_load = (n.loads_t.p_set[name + " load"]*n.snapshot_weightings["generators"]).sum() # number
-
-        # (lhs '>=' penetration*total_load) ?
-        con = define_constraints(n, lhs, '=', penetration*total_load, 'RESconstraints','REStarget')
+        n.model.add_constraints(excess <= share*total_load, name="Excess_constraint")
 
 
-    # def country_res_constraints(n):
-
-    #     grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
-
-    #     grid_res_techs = snakemake.config['global']['grid_res_techs']
-
-    #     grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-
-    #     country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
-    #     country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
-    #     country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
-
-    #     #res_gens = n.generators_t.p[country_res_gens].sum(axis=1)
-    #     #res_links = (- n.links_t.p1[country_res_links].sum(axis=1))
-    #     #res_sus = n.storage_units_t.p[country_res_storage_units].sum(axis=1)
+    def res_constraints(n): #done
         
-    #     weigt_gens = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_gens)),
-    #                               index = n.snapshots,
-    #                               columns = country_res_gens)
-    #     weigt_links = pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_links)),
-    #                               index = n.snapshots,
-    #                               columns = country_res_links)
-    #     weigt_sus= pd.DataFrame(np.outer(n.snapshot_weightings["generators"],[1.]*len(country_res_storage_units)),
-    #                               index = n.snapshots,
-    #                               columns = country_res_storage_units)
+        weights = n.snapshot_weightings["generators"]
 
-    #     gens = linexpr((weigt_gens, get_var(n, "Generator", "p")[country_res_gens]))
-    #     links = linexpr((weigt_links*n.links.loc[country_res_links, "efficiency"].values, get_var(n, "Link", "p")[country_res_links]))
-    #     sus = linexpr((weigt_sus, get_var(n, "StorageUnit", "p_dispatch")[country_res_storage_units]))
-    #     lhs_temp = pd.concat([gens, links, sus], axis=1)
-    #     lhs = join_exprs(lhs_temp)
+        lhs = (n.model['Generator-p'].loc[:,res_gens] * weights).sum()
+        total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
 
-    #     target = timescope(zone, year)["country_res_target"]
-    #     total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*n.snapshot_weightings["generators"]).sum() # number
+        # Note equality sign
+        n.model.add_constraints(lhs == penetration*total_load, name="100RES_annual_constraint")
 
-    #     logger.info(f"country RES constraints for {country_res_gens} and total load {total_load}")
 
-    #     con = define_constraints(n, lhs, '=', target*total_load, 'countryRESconstraints','countryREStarget')
-    
-    
-    def country_res_constraints(n):
+    def country_res_constraints(n): #done
 
         grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
         grid_res_techs = snakemake.config['global']['grid_res_techs']
@@ -741,7 +692,7 @@ def solve_network(n, policy, penetration, tech_palette):
         gens = n.model['Generator-p'].loc[:,country_res_gens] * weights
         links = n.model['Link-p'].loc[:,country_res_links] * n.links.loc[country_res_links, "efficiency"] * weights
         sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
-        lhs = gens.sum() + sus.sum()
+        lhs = gens.sum() + sus.sum() + links.sum()
 
         target = timescope(zone, year)["country_res_target"]
         total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*weights).sum() # number
@@ -781,7 +732,7 @@ def solve_network(n, policy, penetration, tech_palette):
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
-            #excess_constraints(n)
+            excess_constraints(n)
         else:
             print(f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}.")
             sys.exit()
@@ -800,19 +751,19 @@ def solve_network(n, policy, penetration, tech_palette):
 
         n.optimize.create_model()
 
-        n.lopf(pyomo=False,
-               extra_functionality=extra_functionality,
-               formulation=formulation,
-               solver_name=solver_name,
-               solver_options=solver_options,
-               solver_logfile=snakemake.log.solver)
-
-        # extra_functionality(n, n.snapshots)
-
-        # n.optimize.solve_model(
+        # n.lopf(pyomo=False,
+        #        extra_functionality=extra_functionality,
+        #        formulation=formulation,
         #        solver_name=solver_name,
         #        solver_options=solver_options,
         #        solver_logfile=snakemake.log.solver)
+
+        extra_functionality(n, n.snapshots)
+
+        n.optimize.solve_model(
+               solver_name=solver_name,
+               log_fn=snakemake.log.solver,
+               **solver_options)
 
         # optimize(
         #        n,
