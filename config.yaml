@@ -12,7 +12,7 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 'lopf-res-1000h-extraCRES+RES'
+run: 'test'
 
 #wildcards
 scenario:
@@ -145,10 +145,10 @@ solving:
     threads: 4
     method: 2 # barrier
     crossover: 0
-    BarConvTol: 1.e-5
+    BarConvTol: 1.e-6
     Seed: 123
     AggFill: 0
-    PreDual: 0
+    PreDual: 0 
     GURO_PAR_BARDENSETHRESH: 200
 
 

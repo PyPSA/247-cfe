@@ -620,19 +620,17 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_chargers = palette(tech_palette)[2]
     storage_dischargers = palette(tech_palette)[3]
 
-    if policy == "ref":
-        n_iterations = 1 # 2 temp change
-    elif policy == "res":
-        n_iterations = 2
+    n_iterations = snakemake.config['solving']['options']['n_iterations']
+
+    if policy == "res":
         res_gens = [name + " " + g for g in ci['res_techs']]
     elif policy == "cfe":
-        n_iterations = snakemake.config['solving']['options']['n_iterations']
         clean_gens = [name + " " + g for g in clean_techs]
         storage_dischargers = [name + " " + g for g in storage_dischargers]
         storage_chargers = [name + " " + g for g in storage_chargers]
 
 
-    def cfe_constraints(n):
+    def cfe_constraints(n): #done
 
         weights = n.snapshot_weightings["generators"]
 
@@ -654,7 +652,7 @@ def solve_network(n, policy, penetration, tech_palette):
         n.model.add_constraints(lhs >= penetration*total_load, name="CFE_constraint")
 
 
-    def excess_constraints(n):
+    def excess_constraints(n): #done
         
         weights = n.snapshot_weightings["generators"]
 
@@ -701,26 +699,25 @@ def solve_network(n, policy, penetration, tech_palette):
 
 
     def add_battery_constraints(n):
+        """
+        Add constraint ensuring that charger = discharger:
+         1 * charger_size - efficiency * discharger_size = 0
+        """
+        discharger_bool = n.links.index.str.contains("battery discharger")
+        charger_bool = n.links.index.str.contains("battery charger")
 
-        chargers_b = n.links.carrier.str.contains("battery charger")
-        chargers = n.links.index[chargers_b & n.links.p_nom_extendable]
-        dischargers = chargers.str.replace("charger", "discharger")
+        dischargers_ext= n.links[discharger_bool].query("p_nom_extendable").index
+        chargers_ext= n.links[charger_bool].query("p_nom_extendable").index
 
-        if chargers.empty or ('Link', 'p_nom') not in n.variables.index:
-            return
-
-        link_p_nom = get_var(n, "Link", "p_nom")
-
-        lhs = linexpr((1,link_p_nom[chargers]),
-                      (-n.links.loc[dischargers, "efficiency"].values,
-                       link_p_nom[dischargers].values))
-
-        define_constraints(n, lhs, "=", 0, 'Link', 'charger_ratio')
+        eff = n.links.efficiency[dischargers_ext].values
+        lhs = n.model["Link-p_nom"].loc[chargers_ext] - n.model["Link-p_nom"].loc[dischargers_ext] * eff
+        
+        n.model.add_constraints(lhs == 0, name="Link-charger_ratio")
 
 
     def extra_functionality(n, snapshots):
 
-        #add_battery_constraints(n)
+        add_battery_constraints(n)
         country_res_constraints(n)
 
         if policy == "ref":
@@ -750,27 +747,13 @@ def solve_network(n, policy, penetration, tech_palette):
         grid_supply_cfe = grid_cfe_df[f"iteration {i}"]
 
         n.optimize.create_model()
-
-        # n.lopf(pyomo=False,
-        #        extra_functionality=extra_functionality,
-        #        formulation=formulation,
-        #        solver_name=solver_name,
-        #        solver_options=solver_options,
-        #        solver_logfile=snakemake.log.solver)
-
+        
         extra_functionality(n, n.snapshots)
 
         n.optimize.solve_model(
                solver_name=solver_name,
                log_fn=snakemake.log.solver,
                **solver_options)
-
-        # optimize(
-        #        n,
-        #        extra_functionality=extra_functionality,
-        #        solver_name=solver_name,
-        #        solver_options=solver_options,
-        #        solver_logfile=snakemake.log.solver)
 
         grid_cfe_df[f"iteration {i+1}"] = calculate_grid_cfe(n)
         #print(grid_cfe_df)
@@ -783,32 +766,26 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('solve_network', 
-                                policy="res100", palette='p1', zone='IE', year='2030', participation='10')
+                    policy="cfe100", palette='p1', zone='IE', year='2030', participation='10')
 
-    logging.basicConfig(filename=snakemake.log.python,
-                    level=snakemake.config['logging_level'])
+    logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100 if policy != "ref" else 0
-    print(f"solving network for policy {policy} and penetration {penetration}")
-
     tech_palette = snakemake.wildcards.palette
-    print(f"solving network for palette: {tech_palette}")
-
     zone = snakemake.wildcards.zone
-    print(f"solving network for bidding zone: {zone}")
-
     year = snakemake.wildcards.year
-    print(f"solving network year: {year}")
-
     area = snakemake.config['area']
-    print(f"solving with geoscope: {area}")
-
     participation = snakemake.wildcards.participation
-    print(f"solving with participation: {participation}")
-
     profile_shape = snakemake.config['ci']['profile_shape']
+
+    print(f"solving network for policy {policy} and penetration {penetration}")
+    print(f"solving network for palette: {tech_palette}")
+    print(f"solving network for bidding zone: {zone}")
+    print(f"solving network year: {year}")
+    print(f"solving with geoscope: {area}")
+    print(f"solving with participation: {participation}")
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
@@ -822,26 +799,23 @@ if __name__ == "__main__":
                           snakemake.config['costs']['lifetime'],
                           year)
 
-
     #Temp model reduction
-    nhours = 1000
-    n.set_snapshots(n.snapshots[:nhours])
-    n.snapshot_weightings[:] = 8760.0 / nhours
-
+    # nhours = 1000
+    # n.set_snapshots(n.snapshots[:nhours])
+    # n.snapshot_weightings[:] = 8760.0 / nhours
 
     with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
         strip_network(n)
 
         shutdown_lineexp(n)
-        #limit_resexp(n,year)
         nuclear_policy(n)
         coal_policy(n)
         biomass_potential(n)
+        #limit_resexp(n,year)
+
         cost_parametrization(n)
-
         load_profile(n, zone, profile_shape)
-
         add_ci(n, participation, year)
 
         solve_network(n, policy, penetration, tech_palette)
