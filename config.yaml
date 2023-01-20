@@ -12,25 +12,25 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 'report'
+run: 'test'
 
 #wildcards
 scenario:
-  policy:  ["ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
+  policy:  ["res100",] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
-             "p2", # onwind + solar + battery + LDES
-             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
+             #"p2", # onwind + solar + battery + LDES
+             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
   zone: [ "IE",
-          "DK",
-          "DE",
-          "NL"
+          #"DK",
+          #"DE",
+          #"NL"
         ]
-  year: ['2025', 
-         '2030'
+  year: ['2030', 
+         #'2030'
          ] # controls both the brownfield fleet and tech costs projection
   participation: ['10', 
-                  '25'
+                  #'25'
                   ] #share [%] of CI load per zone following 247-CFE approach
 
 #data center
@@ -42,7 +42,7 @@ ci:
 #regional coverage of the model: "regions" or "EU"
   #"regions" -> strips the model to country where CI load is located + all neighboring countries 
   #"EU" -> keeps the whole European power system (full ENTSO-E area)
-area: "EU"
+area: "regions"
 
 
 ###################
@@ -145,10 +145,10 @@ solving:
     threads: 4
     method: 2 # barrier
     crossover: 0
-    BarConvTol: 1.e-5
+    BarConvTol: 1.e-6
     Seed: 123
     AggFill: 0
-    PreDual: 0
+    PreDual: 0 
     GURO_PAR_BARDENSETHRESH: 200
 
 

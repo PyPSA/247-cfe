@@ -48,6 +48,7 @@ def mock_snakemake(rulename, **wildcards):
     from packaging.version import Version, parse
 
     script_dir = Path(__file__).parent.resolve()
+    #comment for a debug
     assert Path.cwd().resolve() == script_dir, \
       f'mock_snakemake has to be run from the repository scripts directory {script_dir}'
     os.chdir(script_dir.parent)
