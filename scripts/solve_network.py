@@ -1,19 +1,16 @@
 
 import pypsa, numpy as np, pandas as pd
-from pypsa.linopt import get_var, linexpr, join_exprs, define_constraints
-from vresutils.costdata import annuity
 
 import logging
 logger = logging.getLogger(__name__)
 import sys
+import os
 
 # Suppress logging of the slack bus choices
 pypsa.pf.logger.setLevel(logging.WARNING)
-
+from vresutils.costdata import annuity
 from vresutils.benchmark import memory_logger
 from _helpers import override_component_attrs
-
-from pypsa.optimization.optimize import optimize
 
 
 def palette(tech_palette):
@@ -765,8 +762,9 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    policy="cfe100", palette='p1', zone='IE', year='2030', participation='10')
+                    policy="cfe100", palette='p1', zone='IE', year='2025', participation='10')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
