@@ -33,7 +33,7 @@ if __name__ == "__main__":
     policy = 'cfe100'
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
-    snakemake.output.plot = f"{folder}/balance.png"
+    snakemake.output = f"{folder}/balance.pdf"
     solved_network = f"{folder}/networks/{scenario}/{policy}.nc"
 
     n = pypsa.Network(solved_network)
@@ -43,18 +43,29 @@ node = 'google'
 weights = n.snapshot_weightings.generators
 
 rename = {
-    'google H2 Electrolysis': 'Hydrogen storage',
-    'google H2 Fuel Cell': 'Hydrogen storage',
-    'google battery charger': 'Battery storage',
-    'google battery discharger': 'Battery storage',
-    'google export': 'Import/export',
-    'google import': 'Import/export',
-    'vcc12': 'Spatial shifting',	
-    'vcc21': 'Spatial shifting',
-    'google onwind': 'Wind',	
-    'google solar': 'Solar PV',
-    'google load': 'Load',
+    'google H2 Electrolysis': 'hydrogen storage',
+    'google H2 Fuel Cell': 'hydrogen storage',
+    'google battery charger': 'battery storage',
+    'google battery discharger': 'battery storage',
+    'google export': 'grid',
+    'google import': 'grid',
+    'vcc12': 'spatial shifting',	
+    'vcc21': 'spatial shifting',
+    'google onwind': 'wind',	
+    'google solar': 'solar',
+    'google load': 'load',
 }
+preferred_order = pd.Index([
+    "advanced dispatchable",
+    "NG-Allam",
+    "wind",
+    "solar",
+    "load",
+    "battery storage",
+    "hydrogen storage",
+    'grid',
+    'spatial shifting',
+    ])
 
 def retrieve_nb(n, node):
     '''
@@ -62,6 +73,7 @@ def retrieve_nb(n, node):
     This simple function works only for the Data center nodes: 
         -> lines and links are bidirectional AND their subsets are exclusive.
         -> links include fossil gens
+    NB {-1} multiplier is a nodal balance sign
     '''
 
     components=['Generator', 'Load', 'StorageUnit', 'Store', 'Link', 'Line']
@@ -73,7 +85,7 @@ def retrieve_nb(n, node):
             nodal_balance = nodal_balance.join(n.generators_t.p[node_generators])
         if i == 'Load':
             node_loads = n.loads.query('bus==@node').index
-            nodal_balance = nodal_balance.join(n.loads_t.p_set[node_loads])
+            nodal_balance = nodal_balance.join(-1*n.loads_t.p_set[node_loads])
         if i == 'Link':
             node_export_links = n.links.query('bus0==@node').index
             node_import_links = n.links.query('bus1==@node').index
@@ -94,4 +106,65 @@ def retrieve_nb(n, node):
 
     return nodal_balance
 
-retrieve_nb(n, 'google')
+#retrieve_nb(n, 'google')
+
+
+def plot_nb(n node, 
+            start='2013-03-01 00:00:00', 
+            stop='2013-03-08 00:00:00'):
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((6,4.5))
+
+    tech_colors = snakemake.config['tech_colors']
+    df = retrieve_nb(n, node)
+
+    #format time & set a range to display
+    ldf = df.loc[start:stop,:]
+    duration = (pd.to_datetime(stop)-pd.to_datetime(start)).days
+    ldf.index = pd.to_datetime(ldf.index, format='%%Y-%m-%d %H:%M:%S').strftime('%m.%d %H:%M')
+
+    #get colors
+    for item in ldf.columns:
+        if item not in tech_colors:
+            print("Warning!",item,"not in config/tech_colors")
+
+    #set logical order
+    new_index = preferred_order.intersection(ldf.columns).append(ldf.columns.difference(preferred_order))
+    ldf = ldf.loc[:,new_index]
+
+    # yl_end = ldf.loc[:,ldf.columns[-1]].sum()
+    # plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
+    # plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
+    # plt.axvline(x = 0.5, color = 'gray', linestyle="--")
+    # plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE', 
+    #         horizontalalignment='left') 
+    
+
+    ldf.plot(kind="bar",stacked=True,
+            color=tech_colors, 
+            ax=ax, width=1, edgecolor = "black", linewidth=0.05)
+
+    # netc=ldf.sum()
+    # x = 0
+    # for i in range(len(netc)):
+    #     ax.scatter(x = x, y = netc[i], color='black', marker="_")
+    #     x += 1
+    # ax.scatter([], [], color='black', marker="_", label='net cost')
+
+    plt.xticks(rotation=90)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    #ax.set_xlabel("Hours")
+    ax.set(xlabel=None)
+    ax.xaxis.set_major_locator(plt.MaxNLocator((duration*2)))
+
+    ax.set_ylabel("Nodal balance [MW*h/h]")
+    ax.legend(loc="upper left", ncol = 3, prop={"size":8})
+    #ax.set_ylim(top=yl_end*1.5)
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output)
+
+
+plot_nb(n, node, '2013-05-01 00:00:00', '2013-05-07 21:00:00')
