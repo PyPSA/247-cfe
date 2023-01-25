@@ -15,33 +15,6 @@ import pypsa
 from pypsa.descriptors import Dict
 from pypsa.plot import add_legend_patches
 
-if __name__ == "__main__":
-    # Detect running outside of snakemake and mock snakemake for testing
-    if 'snakemake' not in globals():
-        #from _helpers import mock_snakemake
-        #snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='10')   
-
-        snakemake = Dict()
-        with open(f"../config.yaml",'r') as f:
-            snakemake.config = yaml.safe_load(f)
-
-        snakemake.input = Dict()
-        snakemake.output = Dict()
-
-
-    folder="../results/test-duo"
-    scenario="10/2025/IE/p2"
-    policy = 'cfe100'
-
-    #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
-    snakemake.output = f"{folder}/balance.pdf"
-    solved_network = f"{folder}/networks/{scenario}/{policy}.nc"
-
-    n = pypsa.Network(solved_network)
-
-node = 'google'
-#node = 'GB0 0'
-weights = n.snapshot_weightings.generators
 
 rename = {
     'google H2 Electrolysis': 'hydrogen storage',
@@ -55,9 +28,12 @@ rename = {
     'google onwind': 'wind',	
     'google solar': 'solar',
     'google load': 'load',
-}
+    'google adv_geothermal': "clean dispatchable",
+    'google allam_ccs': "NG-Allam",
+    }
+
 preferred_order = pd.Index([
-    "advanced dispatchable",
+    "clean dispatchable",
     "NG-Allam",
     "solar",
     "wind",
@@ -67,6 +43,7 @@ preferred_order = pd.Index([
     'grid',
     'spatial shifting',
     ])
+
 
 def retrieve_nb(n, node):
     '''
@@ -106,8 +83,6 @@ def retrieve_nb(n, node):
         nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
 
     return nodal_balance
-
-#retrieve_nb(n, 'google')
 
 
 def plot_nb(n, node, 
@@ -167,8 +142,33 @@ def plot_nb(n, node,
     fig.tight_layout()
     fig.savefig(snakemake.output, 
                 bbox_inches = Bbox([[0,0],[7.7,4.5]])
-                #bbox_inches = 'tight'
                 )
 
 
-plot_nb(n, node, '2013-04-01 00:00:00', '2013-04-08 00:00:00')
+if __name__ == "__main__":
+    # Detect running outside of snakemake and mock snakemake for testing
+    if 'snakemake' not in globals():
+        #from _helpers import mock_snakemake
+        #snakemake = mock_snakemake('plot_summary', 
+        #   palette='p3', zone='DK', year='2030', participation='10')   
+        snakemake = Dict()
+        with open(f"../config.yaml",'r') as f:
+            snakemake.config = yaml.safe_load(f)
+
+        snakemake.input = Dict()
+        snakemake.output = Dict()
+
+
+    folder="../results/test-duo"
+    scenario="10/2025/DK/p2"
+    policy = 'cfe100'
+
+    #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
+    snakemake.output = f"{folder}/balance.pdf"
+    solved_network = f"{folder}/networks/{scenario}/{policy}.nc"
+
+    n = pypsa.Network(solved_network)
+    node = 'google'
+
+
+plot_nb(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')

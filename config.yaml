@@ -170,6 +170,7 @@ tech_colors:
   "advanced nuclear": "#df3439"
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
+  "clean dispatchable": "#99582a"
   "NG-Allam": "#540b0e"
   'hydroelectricity': '#298c81'
   'nuclear': '#ff8c00'
