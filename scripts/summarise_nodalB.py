@@ -12,7 +12,7 @@ import yaml
 import pypsa
 
 from pypsa.descriptors import Dict
-
+from pypsa.plot import add_legend_patches
 
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
@@ -58,8 +58,8 @@ rename = {
 preferred_order = pd.Index([
     "advanced dispatchable",
     "NG-Allam",
-    "wind",
     "solar",
+    "wind",
     "load",
     "battery storage",
     "hydrogen storage",
@@ -109,7 +109,7 @@ def retrieve_nb(n, node):
 #retrieve_nb(n, 'google')
 
 
-def plot_nb(n node, 
+def plot_nb(n, node, 
             start='2013-03-01 00:00:00', 
             stop='2013-03-08 00:00:00'):
 
@@ -140,31 +140,36 @@ def plot_nb(n node,
     # plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE', 
     #         horizontalalignment='left') 
     
-
     ldf.plot(kind="bar",stacked=True,
             color=tech_colors, 
             ax=ax, width=1, edgecolor = "black", linewidth=0.05)
 
-    # netc=ldf.sum()
-    # x = 0
-    # for i in range(len(netc)):
-    #     ax.scatter(x = x, y = netc[i], color='black', marker="_")
-    #     x += 1
-    # ax.scatter([], [], color='black', marker="_", label='net cost')
+    #visually ensure net energy balance at the node
+    net_balance=ldf.sum(axis=1)
+    x = 0
+    for i in range(len(net_balance)):
+        ax.scatter(x = x, y = net_balance[i], color='black', marker="_")
+        x += 1
 
     plt.xticks(rotation=90)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     #ax.set_xlabel("Hours")
     ax.set(xlabel=None)
-    ax.xaxis.set_major_locator(plt.MaxNLocator((duration*2)))
+    ax.xaxis.set_major_locator(plt.MaxNLocator((duration*2+1)))
 
     ax.set_ylabel("Nodal balance [MW*h/h]")
-    ax.legend(loc="upper left", ncol = 3, prop={"size":8})
+    #ax.legend(loc="upper left", ncol = 3, prop={"size":8})
     #ax.set_ylim(top=yl_end*1.5)
 
-    fig.tight_layout()
+    add_legend_patches(
+        ax,
+        colors = [tech_colors[c] for c in ldf.columns],
+        labels= ldf.columns,
+        legend_kw= dict(bbox_to_anchor=(1, 1), loc = "upper left", frameon = False))
+
+    #fig.tight_layout()
     fig.savefig(snakemake.output)
 
 
-plot_nb(n, node, '2013-05-01 00:00:00', '2013-05-07 21:00:00')
+plot_nb(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
