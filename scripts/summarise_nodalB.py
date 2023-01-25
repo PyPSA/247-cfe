@@ -8,6 +8,7 @@ if you can ;)
 import pandas as pd
 import matplotlib.colors as mc
 import matplotlib.pyplot as plt
+from matplotlib.transforms import Bbox
 import yaml
 import pypsa
 
@@ -132,17 +133,12 @@ def plot_nb(n, node,
     #set logical order
     new_index = preferred_order.intersection(ldf.columns).append(ldf.columns.difference(preferred_order))
     ldf = ldf.loc[:,new_index]
-
-    # yl_end = ldf.loc[:,ldf.columns[-1]].sum()
-    # plt.axhline(y = yl_end, color = 'gray', linestyle="--", linewidth=0.8)
-    # plt.axhline(y = 0, color = 'black', linestyle="-", linewidth=0.1)
-    # plt.axvline(x = 0.5, color = 'gray', linestyle="--")
-    # plt.text(0.6, yl_end+1,f'net cost at 100% 24x7 CFE', 
-    #         horizontalalignment='left') 
     
     ldf.plot(kind="bar",stacked=True,
             color=tech_colors, 
-            ax=ax, width=1, edgecolor = "black", linewidth=0.05)
+            ax=ax, width=1, 
+            edgecolor = "black", linewidth=0.05
+            )
 
     #visually ensure net energy balance at the node
     net_balance=ldf.sum(axis=1)
@@ -160,16 +156,19 @@ def plot_nb(n, node,
 
     ax.set_ylabel("Nodal balance [MW*h/h]")
     #ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    #ax.set_ylim(top=yl_end*1.5)
 
     add_legend_patches(
         ax,
         colors = [tech_colors[c] for c in ldf.columns],
         labels= ldf.columns,
-        legend_kw= dict(bbox_to_anchor=(1, 1), loc = "upper left", frameon = False))
+        legend_kw= dict(bbox_to_anchor=(1, 1), loc = "upper left", frameon = False,
+        ))
 
-    #fig.tight_layout()
-    fig.savefig(snakemake.output)
+    fig.tight_layout()
+    fig.savefig(snakemake.output, 
+                bbox_inches = Bbox([[0,0],[7.7,4.5]])
+                #bbox_inches = 'tight'
+                )
 
 
-plot_nb(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
+plot_nb(n, node, '2013-04-01 00:00:00', '2013-04-08 00:00:00')
