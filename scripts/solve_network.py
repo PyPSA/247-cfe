@@ -53,24 +53,20 @@ def geoscope(zone, area):
 
     if zone == 'IE':
         d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
-        d['country_nodes'] = ["IE5 0"]
-        d['node'] = "IE5 0"
+        d['country_nodes'] = ["IE5 0"] #TODO a list here
 
     elif zone == 'DK':
         d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
         d['country_nodes'] = ["DK1 0", "DK2 0"]
-        d['node'] = "DK1 0"
 
     elif zone == 'DE':
         d['basenodes_to_keep'] = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
                                   'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']
         d['country_nodes'] = ['DE1 0']
-        d['node'] = 'DE1 0'
 
     elif zone == 'NL':
         d['basenodes_to_keep'] = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
         d['country_nodes'] = ['NL1 0']
-        d['node'] = 'NL1 0'
 
     else: 
         print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL'. Now is {zone}.")
@@ -737,11 +733,21 @@ def solve_network(n, policy, penetration, tech_palette):
     solver_options = snakemake.config['solving']['solver']
     solver_name = solver_options['name']
 
-    grid_cfe_df = pd.DataFrame(0.,index=n.snapshots,columns=[f"iteration {i}" for i in range(n_iterations+1)])
+    #CFE dataframe  
+    values = [f"iteration {i}" for i in range(n_iterations+1)]
+
+    def create_tuples(locations, values):
+        # Use a nested list comprehension to create the list of tuples
+        tuples_list = [(location, value) for location in locations for value in values]
+        return tuples_list
+
+    cols = pd.MultiIndex.from_tuples(create_tuples(locations, values))
+    grid_cfe_df = pd.DataFrame(0., index=n.snapshots, columns=cols)
+
 
     for i in range(n_iterations):
 
-        grid_supply_cfe = grid_cfe_df[f"iteration {i}"]
+        grid_supply_cfe = grid_cfe_df[locations[0]].filter(like='iteration 0', axis=1) #TODO expand constraint coordinates
 
         n.optimize.create_model()
         
@@ -752,8 +758,9 @@ def solve_network(n, policy, penetration, tech_palette):
                log_fn=snakemake.log.solver,
                **solver_options)
 
-        grid_cfe_df[f"iteration {i+1}"] = calculate_grid_cfe(n)
-        #print(grid_cfe_df)
+        for location, name in zip(locations, names):
+            grid_cfe_df.loc[:, (f'{location}',f"iteration {i+1}")] = calculate_grid_cfe(n, name=name, node=node)
+
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
@@ -778,12 +785,17 @@ if __name__ == "__main__":
     participation = snakemake.wildcards.participation
     profile_shape = snakemake.config['ci']['profile_shape']
 
+    datacenters = snakemake.config['ci']['datacenters']
+    locations = list(datacenters.keys())
+    names = list(datacenters.values())
+
     print(f"solving network for policy {policy} and penetration {penetration}")
     print(f"solving network for palette: {tech_palette}")
     print(f"solving network for bidding zone: {zone}")
     print(f"solving network year: {year}")
     print(f"solving with geoscope: {area}")
     print(f"solving with participation: {participation}")
+    print(f"solving with datacenters: {datacenters}")
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],

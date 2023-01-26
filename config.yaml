@@ -33,9 +33,10 @@ scenario:
                   #'25'
                   ] #share [%] of CI load per zone following 247-CFE approach
 
-#data center
+
 ci:
-  name: "google"
+  #dict of (location zone: datacenters name) pairs
+  datacenters: {"IE5 0": "google", "GB5 0": "google-2"} 
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   res_techs: ["onwind","solar"]
 
