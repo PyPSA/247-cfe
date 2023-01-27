@@ -15,7 +15,7 @@ from _helpers import override_component_attrs
 
 def palette(tech_palette):
     '''
-    Define technology palette at CI node based on wildcard value
+    Define technology palette available for C&I clean energy buyers
     '''
 
     if tech_palette == 'p1':
@@ -45,35 +45,21 @@ def palette(tech_palette):
 
 def geoscope(zone, area):
     '''
-    basenodes_to_keep -> geographical scope of the model
-    country_nodes -> scope for national RES policy constraint
-    node -> zone where C&I load is located
+    zone: controls basenodes_to_keep list -> sets geographical scope of the model
+    area: solve small networks ('regions') or the whole EU ('EU')
+    country_nodes -> countries subject to national RES policy constraints
     '''
-    d = dict(); 
+    d = dict() 
 
-    if zone == 'IE':
-        d['basenodes_to_keep'] = ["IE5 0", "GB0 0", "GB5 0"]
-        d['country_nodes'] = ["IE5 0"] #TODO a list here
+    #A few toy regional networks for test & play purposes and the whole network
+    #NB zone is used as a wildcard, while area as a switcher option; thus these are not merged
 
-    elif zone == 'DK':
-        d['basenodes_to_keep'] = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
-        d['country_nodes'] = ["DK1 0", "DK2 0"]
-
-    elif zone == 'DE':
-        d['basenodes_to_keep'] = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
-                                  'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']
-        d['country_nodes'] = ['DE1 0']
-
-    elif zone == 'NL':
-        d['basenodes_to_keep'] = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
-        d['country_nodes'] = ['NL1 0']
-
-    else: 
-        print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL'. Now is {zone}.")
-        sys.exit()
-    
-    if area == 'EU': 
-        d['basenodes_to_keep'] = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
+    IRELAND = ["IE5 0", "GB0 0", "GB5 0"]
+    DENMARK = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
+    GERMANY = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
+              'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']
+    NETHERLANDS = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
+    EU = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
             'CH1 0', 'CZ1 0',  'DE1 0',  'DK1 0',  'DK2 0', 
             'EE6 0', 'ES1 0',  'ES4 0',  'FI2 0',  'FR1 0',
             'GB0 0', 'GB5 0',  'GR1 0',  'HR1 0',  'HU1 0',
@@ -81,6 +67,34 @@ def geoscope(zone, area):
             'LV6 0', 'ME1 0',  'MK1 0',  'NL1 0',  'NO2 0',
             'PL1 0', 'PT1 0',  'RO1 0',  'RS1 0',  'SE2 0',
             'SI1 0', 'SK1 0']
+
+    if zone == 'IE': d['basenodes_to_keep'] = IRELAND
+    elif zone == 'DK': d['basenodes_to_keep'] = DENMARK
+    elif zone == 'DE': d['basenodes_to_keep'] = GERMANY  
+    elif zone == 'NL': d['basenodes_to_keep'] = NETHERLANDS   
+    elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
+    else: 
+        print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL', 'GB'. Now is {zone}.")
+        sys.exit()
+    
+    if area == 'EU': d['basenodes_to_keep'] = EU
+
+    #set country nodes for possible locations of DCs
+    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0']
+    temp = dict() 
+
+    for node in locations:
+        if node not in possible_locations:
+            print(f"Possible locations for data centers are in 'IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0'") 
+            print(f"You placed it in {node}.")
+            sys.exit()
+
+    if 'IE5 0' in locations: temp['IE5 0'] = ['IE5 0']
+    if 'DK1 0' in locations: temp['DK1 0'] = ['DK1 0', 'DK2 0']
+    if 'DE1 0' in locations: temp['DE1 0'] = ['DE1 0']
+    if 'NL1 0' in locations: temp['NL1 0'] = ['NL1 0']
+    if 'GB5 0' in locations: temp['GB5 0'] = ['GB0 0', 'GB5 0']
+    d['country_nodes'] = temp
 
     return d
 
@@ -525,12 +539,10 @@ def add_ci(n, participation, year):
               )
 
 
-def calculate_grid_cfe(n):
+def calculate_grid_cfe(n, name, node):
 
-    name = snakemake.config['ci']['name']
-    country = geoscope(zone, area)['node'] 
-    grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(country)]
-    country_buses = n.buses.index[n.buses.index.str.contains(country)]
+    grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(node)]
+    country_buses = n.buses.index[n.buses.index.str.contains(node)]
 
     clean_techs = pd.Index(snakemake.config['global']['grid_clean_techs'])
     emitters = pd.Index(snakemake.config['global']['emitters'])
@@ -579,14 +591,14 @@ def calculate_grid_cfe(n):
     # NB lines and links are bidirectional, thus we track imports for both subsets 
     # of interconnectors: where [country] node is bus0 and bus1. Subsets are exclusive.
     
-    line_imp_subsetA = n.lines_t.p1.loc[:,n.lines.bus0.str.contains(country)].sum(axis=1)
-    line_imp_subsetB = n.lines_t.p0.loc[:,n.lines.bus1.str.contains(country)].sum(axis=1)
+    line_imp_subsetA = n.lines_t.p1.loc[:,n.lines.bus0.str.contains(node)].sum(axis=1)
+    line_imp_subsetB = n.lines_t.p0.loc[:,n.lines.bus1.str.contains(node)].sum(axis=1)
     line_imp_subsetA[line_imp_subsetA < 0] = 0.
     line_imp_subsetB[line_imp_subsetB < 0] = 0.
 
-    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(country) & 
+    links_imp_subsetA = n.links_t.p1.loc[:,n.links.bus0.str.contains(node) & 
                         (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
-    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(country) & 
+    links_imp_subsetB = n.links_t.p0.loc[:,n.links.bus1.str.contains(node) & 
                         (n.links.carrier == "DC") & ~(n.links.index.str.contains(name))].sum(axis=1)
     links_imp_subsetA[links_imp_subsetA < 0] = 0.
     links_imp_subsetB[links_imp_subsetB < 0] = 0.
@@ -597,7 +609,7 @@ def calculate_grid_cfe(n):
                     (clean_country_resources + dirty_country_resources + country_import)
 
 
-    print("Grid_supply_CFE has following stats:")
+    print(f"Grid_supply_CFE for {node} has following stats:")
     print(grid_supply_cfe.describe())
 
     return grid_supply_cfe
@@ -605,90 +617,108 @@ def calculate_grid_cfe(n):
 
 def solve_network(n, policy, penetration, tech_palette):
     
-    ci = snakemake.config['ci']
-    name = ci['name']
+    name = names[0]
+    node = locations[0]
+    name2 = names[1]
+    node2 = locations[1]
 
+    n_iterations = 2 #snakemake.config['solving']['options']['n_iterations']
+
+    #techs for RES annual matching
+    res_techs = snakemake.config['ci']['res_techs']
+
+    #techs for CFE hourly matching
     clean_techs = palette(tech_palette)[0]
     storage_techs = palette(tech_palette)[1]
-    storage_chargers = palette(tech_palette)[2]
-    storage_dischargers = palette(tech_palette)[3]
-
-    n_iterations = snakemake.config['solving']['options']['n_iterations']
-
-    if policy == "res":
-        res_gens = [name + " " + g for g in ci['res_techs']]
-    elif policy == "cfe":
-        clean_gens = [name + " " + g for g in clean_techs]
-        storage_dischargers = [name + " " + g for g in storage_dischargers]
-        storage_chargers = [name + " " + g for g in storage_chargers]
+    storage_charge_techs = palette(tech_palette)[2]
+    storage_discharge_techs = palette(tech_palette)[3]
 
 
-    def cfe_constraints(n): #done
+    def cfe_constraints(n):
 
-        weights = n.snapshot_weightings["generators"]
+        weights = n.snapshot_weightings["generators"] 
 
-        gen_sum = (n.model['Generator-p'].loc[:,clean_gens] * weights).sum()
+        for location, name in datacenters.items():
+
+            clean_gens = [name + " " + g for g in clean_techs]
+            storage_dischargers = [name + " " + g for g in storage_charge_techs]
+            storage_chargers = [name + " " + g for g in storage_discharge_techs]
+
+            gen_sum = (n.model['Generator-p'].loc[:,clean_gens] * weights).sum()
+            discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
         discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
-                         n.links.loc[storage_dischargers, "efficiency"] * weights).sum()
-        charge_sum = -1*(n.model['Link-p'].loc[:,storage_chargers] * weights).sum()
-        n.links.loc[storage_dischargers,"efficiency"]
-        ci_export = n.model['Link-p'].loc[:,[name + " export"]]
+            discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
+                            n.links.loc[storage_dischargers, "efficiency"] * weights).sum()
+            charge_sum = -1*(n.model['Link-p'].loc[:,storage_chargers] * weights).sum()
+
+            ci_export = n.model['Link-p'].loc[:,[name + " export"]]
+            ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
         ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
-        grid_sum = (
+            ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
+            grid_sum = (
+                (-1*ci_export*weights) + 
             (-1*ci_export*weights) + 
-            (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
-            ).sum() # linear expr
+                (-1*ci_export*weights) + 
+                (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
+                ).sum() # linear expr
 
-        lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
-        total_load = (n.loads_t.p_set[name + " load"]*weights).sum() # number
-        
-        n.model.add_constraints(lhs >= penetration*total_load, name="CFE_constraint")
-
-
-    def excess_constraints(n): #done
-        
-        weights = n.snapshot_weightings["generators"]
-
-        ci_export = n.model['Link-p'].loc[:,[name + " export"]]
-        excess =  (ci_export * weights).sum()
-
-        total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
-        share = 0.2 # max(0., penetration - 0.8) -> no sliding share
-        
-        n.model.add_constraints(excess <= share*total_load, name="Excess_constraint")
+            lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
+            total_load = (n.loads_t.p_set[name + " load"]*weights).sum()
+            
+            n.model.add_constraints(lhs >= penetration*total_load, name=f"CFE_constraint_{name}")
 
 
-    def res_constraints(n): #done
+    def excess_constraints(n):
         
         weights = n.snapshot_weightings["generators"]
 
-        lhs = (n.model['Generator-p'].loc[:,res_gens] * weights).sum()
-        total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
+        for location, name in datacenters.items():
+            ci_export = n.model['Link-p'].loc[:,[name + " export"]]
+            excess =  (ci_export * weights).sum()
+            total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
+            share = 0.2 # max(0., penetration - 0.8) -> no sliding share
+            
+            n.model.add_constraints(excess <= share*total_load, name=f"Excess_constraint_{name}")
 
-        # Note equality sign
-        n.model.add_constraints(lhs == penetration*total_load, name="100RES_annual_constraint")
+
+    def res_constraints(n):
+        
+        weights = n.snapshot_weightings["generators"]
+
+        for location, name in datacenters.items():
+            res_gens = [name + " " + g for g in res_techs]
+            lhs = (n.model['Generator-p'].loc[:,res_gens] * weights).sum()
+            total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
+
+            # Note equality sign
+            n.model.add_constraints(lhs == penetration*total_load, name=f"100RES_annual_matching_{name}")
 
 
-    def country_res_constraints(n): #done
-
-        grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'])]
-        grid_res_techs = snakemake.config['global']['grid_res_techs']
-        grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
-
-        country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
-        country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
-        country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
+    def country_res_constraints(n):
 
         weights = n.snapshot_weightings["generators"]
-        gens = n.model['Generator-p'].loc[:,country_res_gens] * weights
-        links = n.model['Link-p'].loc[:,country_res_links] * n.links.loc[country_res_links, "efficiency"] * weights
-        sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
-        lhs = gens.sum() + sus.sum() + links.sum()
 
-        target = timescope(zone, year)["country_res_target"]
-        total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*weights).sum() # number
+        for location, name in datacenters.items():
 
-        n.model.add_constraints(lhs == target*total_load, name="country_res_constraints")
+            zone = n.buses.loc[f'{location}',:].country
+
+            grid_res_techs = snakemake.config['global']['grid_res_techs']
+            grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'][location])]
+            grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
+
+            country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
+            country_res_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(grid_res_techs)]
+            country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(grid_res_techs)]
+
+            gens = n.model['Generator-p'].loc[:,country_res_gens] * weights
+            links = n.model['Link-p'].loc[:,country_res_links] * n.links.loc[country_res_links, "efficiency"] * weights
+            sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
+            lhs = gens.sum() + sus.sum() + links.sum()
+
+            target = timescope(zone, year)["country_res_target"]
+            total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*weights).sum() # number
+
+            n.model.add_constraints(lhs == target*total_load, name=f"country_res_constraints_{zone}")
 
 
     def add_battery_constraints(n):

@@ -129,12 +129,13 @@ res_target_2025:
   DK: 0.9
   DE: 0.45
   NL: 0.35
+  GB: 0.685 
 res_target_2030:
   IE: 0.7
   DK: 1.1
   DE: 0.8
   NL: 0.5
-
+  GB: 0.95 
 
 solving:
   #tmpdir: "path/to/tmp"
