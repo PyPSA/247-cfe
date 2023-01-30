@@ -359,184 +359,200 @@ def co2_policy(n, year):
             n.generators.at[f"EU {carrier}","marginal_cost"] += co2_price*costs.at[carrier, 'CO2 intensity'] 
 
 
-    #local C&I properties
-    name = snakemake.config['ci']['name']
-    node = geoscope(zone, area)['node']
+def add_ci(n, participation, year):
+    '''
+    Add C&I buyer(s)
+    '''
 
     #tech_palette options
     clean_techs = palette(tech_palette)[0]
     storage_techs = palette(tech_palette)[1]
 
+    for location, name in datacenters.items():
 
-    n.add("Bus",
-          name)
-
-    n.add("Link",
-          name + " export",
-          bus0=name,
-          bus1=node,
-          marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-          p_nom=1e6)
-
-    n.add("Link",
-          name + " import",
-          bus0=node,
-          bus1=name,
-          marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-          p_nom=1e6)
-
-
-    #Add C&I load
-    n.add("Load",
-          name + " load",
-          carrier=name,
-          bus=name,
-          p_set=load_profile(n, zone, profile_shape))
-
-    #C&I following 24/7 approach is a share of all C&I load -> thus substract it from node's profile
-    n.loads_t.p_set[f'{node}'] -= n.loads_t.p_set[f'{name}'+' load']
-
-
-    #Add generators 
-    #baseload clean energy generator
-    if "green hydrogen OCGT" in clean_techs:
-        n.add("Generator",
-              name + " green hydrogen OCGT",
-              carrier="green hydrogen OCGT",
-              bus=name,
-              p_nom_extendable = True if policy == "cfe" else False,
-              capital_cost=costs.at['OCGT', 'fixed'],
-              marginal_cost=costs.at['OCGT', 'VOM']  + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
-
-    #baseload clean energy generator
-    if "adv_nuclear" in clean_techs:      
-        n.add("Generator",
-              f"{name} adv_nuclear",
-              bus = name,
-              carrier = 'nuclear',
-              capital_cost = costs.loc['adv_nuclear']['fixed'],
-              marginal_cost= costs.loc['adv_nuclear']['VOM']  + costs.loc['adv_nuclear']['fuel']/costs.loc['adv_nuclear']['efficiency'],
-              p_nom_extendable = True if policy == "cfe" else False,
-              lifetime = costs.loc['adv_nuclear']['lifetime']
-              )
-    
-    #baseload clean energy generator
-    if "allam_ccs" in clean_techs:      
-        n.add("Generator",
-              f"{name} allam_ccs",
-              bus = name,
-              carrier = 'gas',
-              capital_cost = costs.loc['allam_ccs']['fixed'] + costs.loc['allam_ccs']['FOM-abs'],
-              marginal_cost = costs.loc['allam_ccs']['VOM'] + \
-                              costs.loc['allam_ccs']['fuel']/costs.loc['allam_ccs']['efficiency'] + \
-                              costs.loc['allam_ccs']['co2_seq']*costs.at['gas', 'CO2 intensity']/costs.loc['allam_ccs']['efficiency'],
-              p_nom_extendable = True if policy == "cfe" else False,
-              lifetime = costs.loc['allam_ccs']['lifetime'],
-              efficiency = costs.loc['allam_ccs']['efficiency'],
-              )
-
-    #baseload clean energy generator
-    if "adv_geothermal" in clean_techs:      
-        n.add("Generator",
-              f"{name} adv_geothermal",
-              bus = name,
-              #carrier = '',
-              capital_cost = costs.loc['adv_geothermal']['fixed'],
-              marginal_cost= costs.loc['adv_geothermal']['VOM'],
-              p_nom_extendable = True if policy == "cfe" else False,
-              lifetime = costs.loc['adv_geothermal']['lifetime']
-              )
-    
-    #RES generator
-    for carrier in ["onwind","solar"]:
-        if carrier not in clean_techs:
-            continue
-        gen_template = node+" "+carrier+"-{}".format(year)
-        n.add("Generator",
-              f"{name} {carrier}",
-              carrier=carrier,
-              bus=name,
-              p_nom_extendable=False if policy == "ref" else True,
-              p_max_pu=n.generators_t.p_max_pu[gen_template],
-              capital_cost=n.generators.at[gen_template,"capital_cost"],
-              marginal_cost=n.generators.at[gen_template,"marginal_cost"])
-
-    #Add storage tech
-    if "battery" in storage_techs:
+        # Add C&I bus
         n.add("Bus",
-              f"{name} battery",
-              carrier="battery"
-              )
-
-        n.add("Store",
-              f"{name} battery",
-              bus=f"{name} battery",
-              e_cyclic=True,
-              e_nom_extendable=True if policy == "cfe" else False,
-              carrier="battery",
-              capital_cost=n.stores.at[f"{node} battery"+"-{}".format(year), "capital_cost"],
-              lifetime=n.stores.at[f"{node} battery"+"-{}".format(year), "lifetime"]
-              )
+            name)
 
         n.add("Link",
-              f"{name} battery charger",
-              bus0=name,
-              bus1=f"{name} battery",
-              carrier="battery charger",
-              efficiency=n.links.at[f"{node} battery charger"+"-{}".format(year), "efficiency"],
-              capital_cost=n.links.at[f"{node} battery charger"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True if policy == "cfe" else False,
-              lifetime=n.links.at[f"{node} battery charger"+"-{}".format(year), "lifetime"] 
-              )
+            f'{name}' + " export",
+            bus0=name,
+            bus1=location,
+            marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+            p_nom=1e6)
 
         n.add("Link",
-              f"{name} battery discharger",
-              bus0=f"{name} battery",
-              bus1=name,
-              carrier="battery discharger",
-              efficiency=n.links.at[f"{node} battery discharger"+"-{}".format(year), "efficiency"],
-              marginal_cost=n.links.at[f"{node} battery discharger"+"-{}".format(year), "marginal_cost"],
-              p_nom_extendable=True if policy == "cfe" else False,
-              lifetime=n.links.at[f"{node} battery discharger"+"-{}".format(year), "lifetime"]
-              )
+            f'{name}' + " import",
+            bus0=location,
+            bus1=name,
+            marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+            p_nom=1e6)
 
-    if "hydrogen" in storage_techs:
-        n.add("Bus",
-              f"{name} H2",
-              carrier="H2"
-              )
+        # Add C&I load
+        n.add("Load",
+            f'{name}' + " load",
+            carrier="electricity",
+            bus=name,
+            p_set=load_profile(n, zone, profile_shape))
 
-        n.add("Store",
-              f"{name} H2 Store",
-              bus=f"{name} H2",
-              e_cyclic=True,
-              e_nom_extendable=True if policy == "cfe" else False,
-              carrier="H2 Store",
-              capital_cost=costs.at["hydrogen storage underground","fixed"],
-              lifetime=costs.at["hydrogen storage underground","lifetime"],
-              )        
+        #C&I following 24/7 approach is a share of C&I load -> substract it from node's profile
+        n.loads_t.p_set[location]  -= n.loads_t.p_set[f'{name}'+' load']
 
-        n.add("Link",
-              f"{name} H2 Electrolysis",
-              bus0=name,
-              bus1=f"{name} H2",
-              carrier="H2 Electrolysis",
-              efficiency=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True if policy == "cfe" else False,
-              lifetime=n.links.at[f"{node} H2 Electrolysis"+"-{}".format(year), "lifetime"] 
-              )
+        # Add clean firm advanced generators 
+        if "green hydrogen OCGT" in clean_techs:
+            n.add("Generator",
+                f"{name} green hydrogen OCGT",
+                carrier="green hydrogen OCGT",
+                bus=name,
+                p_nom_extendable = True if policy == "cfe" else False,
+                capital_cost=costs.at['OCGT', 'fixed'],
+                marginal_cost=costs.at['OCGT', 'VOM'] + snakemake.config['costs']['price_green_hydrogen']/0.033/costs.at['OCGT', 'efficiency']) 
+                #hydrogen cost in EUR/kg, 0.033 MWhLHV/kg
 
-        n.add("Link",
-              f"{name} H2 Fuel Cell",
-              bus0=f"{name} H2",
-              bus1=name,
-              carrier="H2 Fuel Cell",
-              efficiency=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "efficiency"],
-              capital_cost=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "capital_cost"],
-              p_nom_extendable=True if policy == "cfe" else False,
-              lifetime=n.links.at[f"{node} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
-              )
+        if "adv_nuclear" in clean_techs:      
+            n.add("Generator",
+                f"{name} adv_nuclear",
+                bus = name,
+                carrier = 'nuclear',
+                capital_cost = costs.loc['adv_nuclear']['fixed'],
+                marginal_cost= costs.loc['adv_nuclear']['VOM']  + costs.loc['adv_nuclear']['fuel']/costs.loc['adv_nuclear']['efficiency'],
+                p_nom_extendable = True if policy == "cfe" else False,
+                lifetime = costs.loc['adv_nuclear']['lifetime']
+                )
+        
+        if "allam_ccs" in clean_techs:      
+            n.add("Generator",
+                f"{name} allam_ccs",
+                bus = name,
+                carrier = 'gas',
+                capital_cost = costs.loc['allam_ccs']['fixed'] + costs.loc['allam_ccs']['FOM-abs'],
+                marginal_cost = costs.loc['allam_ccs']['VOM'] + \
+                                costs.loc['allam_ccs']['fuel']/costs.loc['allam_ccs']['efficiency'] + \
+                                costs.loc['allam_ccs']['co2_seq']*costs.at['gas', 'CO2 intensity']/costs.loc['allam_ccs']['efficiency'],
+                p_nom_extendable = True if policy == "cfe" else False,
+                lifetime = costs.loc['allam_ccs']['lifetime'],
+                efficiency = costs.loc['allam_ccs']['efficiency'],
+                )
+
+        if "adv_geothermal" in clean_techs:      
+            n.add("Generator",
+                f"{name} adv_geothermal",
+                bus = name,
+                #carrier = '',
+                capital_cost = costs.loc['adv_geothermal']['fixed'],
+                marginal_cost= costs.loc['adv_geothermal']['VOM'],
+                p_nom_extendable = True if policy == "cfe" else False,
+                lifetime = costs.loc['adv_geothermal']['lifetime']
+                )
+    
+        # Add RES generators
+        for carrier in ["onwind","solar"]:
+            if carrier not in clean_techs:
+                continue
+            gen_template = location+" "+carrier+f"-{year}"
+
+            n.add("Generator",
+                f"{name} {carrier}",
+                carrier=carrier,
+                bus=name,
+                p_nom_extendable=False if policy == "ref" else True,
+                p_max_pu=n.generators_t.p_max_pu[gen_template],
+                capital_cost=n.generators.at[gen_template,"capital_cost"],
+                marginal_cost=n.generators.at[gen_template,"marginal_cost"])
+
+        # Add storage techs
+        if "battery" in storage_techs:
+            n.add("Bus",
+                f"{name} battery",
+                carrier="battery"
+                )
+
+            n.add("Store",
+                f"{name} battery",
+                bus=f"{name} battery",
+                e_cyclic=True,
+                e_nom_extendable=True if policy == "cfe" else False,
+                carrier="battery",
+                capital_cost=n.stores.at[f"{location} battery"+"-{}".format(year), "capital_cost"],
+                lifetime=n.stores.at[f"{location} battery"+"-{}".format(year), "lifetime"]
+                )
+
+            n.add("Link",
+                f"{name} battery charger",
+                bus0=name,
+                bus1=f"{name} battery",
+                carrier="battery charger",
+                efficiency=n.links.at[f"{location} battery charger"+"-{}".format(year), "efficiency"],
+                capital_cost=n.links.at[f"{location} battery charger"+"-{}".format(year), "capital_cost"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=n.links.at[f"{location} battery charger"+"-{}".format(year), "lifetime"] 
+                )
+
+            n.add("Link",
+                f"{name} battery discharger",
+                bus0=f"{name} battery",
+                bus1=name,
+                carrier="battery discharger",
+                efficiency=n.links.at[f"{location} battery discharger"+"-{}".format(year), "efficiency"],
+                marginal_cost=n.links.at[f"{location} battery discharger"+"-{}".format(year), "marginal_cost"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=n.links.at[f"{location} battery discharger"+"-{}".format(year), "lifetime"]
+                )
+
+        if "hydrogen" in storage_techs:
+            n.add("Bus",
+                f"{name} H2",
+                carrier="H2"
+                )
+
+            n.add("Store",
+                f"{name} H2 Store",
+                bus=f"{name} H2",
+                e_cyclic=True,
+                e_nom_extendable=True if policy == "cfe" else False,
+                carrier="H2 Store",
+                capital_cost=costs.at["hydrogen storage underground","fixed"],
+                lifetime=costs.at["hydrogen storage underground","lifetime"],
+                )        
+
+            n.add("Link",
+                f"{name} H2 Electrolysis",
+                bus0=name,
+                bus1=f"{name} H2",
+                carrier="H2 Electrolysis",
+                efficiency=n.links.at[f"{location} H2 Electrolysis"+"-{}".format(year), "efficiency"],
+                capital_cost=n.links.at[f"{location} H2 Electrolysis"+"-{}".format(year), "capital_cost"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=n.links.at[f"{location} H2 Electrolysis"+"-{}".format(year), "lifetime"] 
+                )
+
+            n.add("Link",
+                f"{name} H2 Fuel Cell",
+                bus0=f"{name} H2",
+                bus1=name,
+                carrier="H2 Fuel Cell",
+                efficiency=n.links.at[f"{location} H2 Fuel Cell"+"-{}".format(year), "efficiency"],
+                capital_cost=n.links.at[f"{location} H2 Fuel Cell"+"-{}".format(year), "capital_cost"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=n.links.at[f"{location} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
+                )
+
+    # # Add virtual links (out of general add loop)
+    # n.add("Link",
+    #     'vcc12',
+    #     bus0=names[0],
+    #     bus1=names[1],
+    #     carrier='virtual_link',
+    #     marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+    #     p_nom=0)
+
+    # n.add("Link",
+    #     'vcc21',
+    #     bus0=names[1],
+    #     bus1=names[0],
+    #     carrier='virtual_link',
+    #     marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+    #     p_nom=0)
 
 
 def calculate_grid_cfe(n, name, node):
@@ -617,12 +633,7 @@ def calculate_grid_cfe(n, name, node):
 
 def solve_network(n, policy, penetration, tech_palette):
     
-    name = names[0]
-    node = locations[0]
-    name2 = names[1]
-    node2 = locations[1]
-
-    n_iterations = 2 #snakemake.config['solving']['options']['n_iterations']
+    n_iterations = snakemake.config['solving']['options']['n_iterations']
 
     #techs for RES annual matching
     res_techs = snakemake.config['ci']['res_techs']
@@ -641,23 +652,17 @@ def solve_network(n, policy, penetration, tech_palette):
         for location, name in datacenters.items():
 
             clean_gens = [name + " " + g for g in clean_techs]
-            storage_dischargers = [name + " " + g for g in storage_charge_techs]
-            storage_chargers = [name + " " + g for g in storage_discharge_techs]
+            storage_dischargers = [name + " " + g for g in storage_discharge_techs]
+            storage_chargers = [name + " " + g for g in storage_charge_techs]
 
             gen_sum = (n.model['Generator-p'].loc[:,clean_gens] * weights).sum()
-            discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
-        discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
             discharge_sum = (n.model['Link-p'].loc[:,storage_dischargers] * 
                             n.links.loc[storage_dischargers, "efficiency"] * weights).sum()
             charge_sum = -1*(n.model['Link-p'].loc[:,storage_chargers] * weights).sum()
 
             ci_export = n.model['Link-p'].loc[:,[name + " export"]]
             ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
-        ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
-            ci_import = n.model['Link-p'].loc[:,[name + " import"]] 
             grid_sum = (
-                (-1*ci_export*weights) + 
-            (-1*ci_export*weights) + 
                 (-1*ci_export*weights) + 
                 (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
                 ).sum() # linear expr
@@ -777,7 +782,9 @@ def solve_network(n, policy, penetration, tech_palette):
 
     for i in range(n_iterations):
 
-        grid_supply_cfe = grid_cfe_df[locations[0]].filter(like='iteration 0', axis=1) #TODO expand constraint coordinates
+        for location, name in zip(locations, names):
+            grid_supply_cfe = grid_cfe_df.loc[:, (location,f"iteration {i}")] 
+            print(grid_supply_cfe.describe())
 
         n.optimize.create_model()
         
@@ -789,8 +796,7 @@ def solve_network(n, policy, penetration, tech_palette):
                **solver_options)
 
         for location, name in zip(locations, names):
-            grid_cfe_df.loc[:, (f'{location}',f"iteration {i+1}")] = calculate_grid_cfe(n, name=name, node=node)
-
+            grid_cfe_df.loc[:, (f'{location}',f"iteration {i+1}")] = calculate_grid_cfe(n, name=name, node=location)
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
@@ -856,6 +862,7 @@ if __name__ == "__main__":
         cost_parametrization(n)
         co2_policy(n, year)
         load_profile(n, zone, profile_shape)
+        
         add_ci(n, participation, year)
 
         solve_network(n, policy, penetration, tech_palette)
