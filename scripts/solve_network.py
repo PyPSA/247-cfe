@@ -537,22 +537,24 @@ def add_ci(n, participation, year):
                 lifetime=n.links.at[f"{location} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
                 )
 
-    # # Add virtual links (out of general add loop)
-    # n.add("Link",
-    #     'vcc12',
-    #     bus0=names[0],
-    #     bus1=names[1],
-    #     carrier='virtual_link',
-    #     marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-    #     p_nom=0)
+def add_vl(n):
+    'Add virtual links connecting data centers across physical network'
 
-    # n.add("Link",
-    #     'vcc21',
-    #     bus0=names[1],
-    #     bus1=names[0],
-    #     carrier='virtual_link',
-    #     marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-    #     p_nom=0)
+    n.add("Link",
+        'vcc12',
+        bus0=names[0],
+        bus1=names[1],
+        carrier='virtual_link',
+        marginal_cost=0.01, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+        p_nom=1e6)
+
+    n.add("Link",
+        'vcc21',
+        bus0=names[1],
+        bus1=names[0],
+        carrier='virtual_link',
+        marginal_cost=0.01, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+        p_nom=1e6)
 
 
 def calculate_grid_cfe(n, name, node):
@@ -643,6 +645,27 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_techs = palette(tech_palette)[1]
     storage_charge_techs = palette(tech_palette)[2]
     storage_discharge_techs = palette(tech_palette)[3]
+
+    def vl_constraints(n):
+
+        delta = 0.5
+        weights = n.snapshot_weightings["generators"] 
+        vls = n.links[n.links.carrier=='virtual_link']
+
+        for location, name in datacenters.items():
+        
+            vls_snd = vls.query('bus0==@name').index
+            vls_rec = vls.query('bus1==@name').index
+
+            snd = n.model['Link-p'].loc[:, vls_snd].sum(dims=["Link"])
+            rec = n.model['Link-p'].loc[:, vls_rec].sum(dims=["Link"])
+            load = n.loads_t.p_set[name + " load"]
+            #requested_load = load + rec - snd
+            rhs_up = load*(1+delta) - load
+            rhs_lo = load*(1-delta) - load
+
+            n.model.add_constraints(rec - snd <= rhs_up, name=f"vl_limit-upper_{name}")
+            n.model.add_constraints(rec - snd >= rhs_lo, name=f"vl_limit-lower_{name}")
 
 
     def cfe_constraints(n):
@@ -752,6 +775,7 @@ def solve_network(n, policy, penetration, tech_palette):
             print("no target set")
         elif policy == "cfe":
             print("setting CFE target of",penetration)
+            vl_constraints(n)
             cfe_constraints(n)
             excess_constraints(n)
         elif policy == "res":
