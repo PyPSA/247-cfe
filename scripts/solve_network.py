@@ -359,7 +359,7 @@ def co2_policy(n, year):
             n.generators.at[f"EU {carrier}","marginal_cost"] += co2_price*costs.at[carrier, 'CO2 intensity'] 
 
 
-def add_ci(n, participation, year):
+def add_ci(n, year):
     '''
     Add C&I buyer(s)
     '''
@@ -646,9 +646,10 @@ def solve_network(n, policy, penetration, tech_palette):
     storage_charge_techs = palette(tech_palette)[2]
     storage_discharge_techs = palette(tech_palette)[3]
 
+
     def vl_constraints(n):
 
-        delta = 0.5
+        delta = float(flexibility)/100 
         weights = n.snapshot_weightings["generators"] 
         vls = n.links[n.links.carrier=='virtual_link']
 
@@ -831,7 +832,8 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    policy="cfe100", palette='p1', zone='IE', year='2025', participation='10')
+                    policy="cfe100", palette='p2', zone='IE', year='2025', participation='10',
+                    flexibility='20')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -848,6 +850,7 @@ if __name__ == "__main__":
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
     names = list(datacenters.values())
+    flexibility = snakemake.wildcards.flexibility
 
     print(f"solving network for policy {policy} and penetration {penetration}")
     print(f"solving network for palette: {tech_palette}")
@@ -856,6 +859,7 @@ if __name__ == "__main__":
     print(f"solving with geoscope: {area}")
     print(f"solving with participation: {participation}")
     print(f"solving with datacenters: {datacenters}")
+    print(f"solving with flexibility: {flexibility}")
 
     # When running via snakemake
     n = pypsa.Network(timescope(zone, year)['network_file'],
@@ -887,7 +891,8 @@ if __name__ == "__main__":
         co2_policy(n, year)
         load_profile(n, zone, profile_shape)
         
-        add_ci(n, participation, year)
+        add_ci(n, year)
+        add_vl(n)
 
         solve_network(n, policy, penetration, tech_palette)
 
