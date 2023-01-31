@@ -157,7 +157,7 @@ solving:
 
 tech_colors:
   #CI
-  "load": #808080',
+  "load": "#808080"
   "local": "#b474b4"
   "PPA": "#b474b4"
   "grid": "#9ccc65"
