@@ -90,7 +90,7 @@ def ci_costandrev():
     ax.set_axisbelow(True)
     ax.set_ylabel("24/7 CFE cost and revenue [€/MWh]")
     ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    ax.set_ylim(top=yl_end*1.5)
+    ax.set_ylim(top=max(ldf.sum())*1.5)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_costandrev.pdf"), transparent=True)
@@ -113,6 +113,9 @@ def ci_generation():
     ldf.rename(index=rename_ci_capacity, level=0, inplace=True) 
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
+
+    yl = df.loc['ci_demand_total'][0]/1000
+    plt.axhline(y = yl, color = 'gray', linestyle="--", linewidth=0.8)
 
     (ldf).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -196,8 +199,10 @@ if __name__ == "__main__":
         "hydrogen electrolysis",
         "hydrogen fuel cell"])
 
-    rename_scen = {'0': '0%',
-                    '20': '20%',
+    rename_scen = {'0': '0%\n',
+                   '5': '5%\n',
+                    '20': '20%\n',
+                    '50': '50%\n',
                     }
 
     df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
