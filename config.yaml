@@ -16,7 +16,7 @@ run: 'test'
 
 #wildcards
 scenario:
-  flex: ['20'] #possible deviation [%] of requested/nominal CI load 
+  flexibility: ['0', '5', '20', '50'] #possible deviation [%] of requested/nominal CI load 
   policy:  ["cfe100",] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
              #"p2", # onwind + solar + battery + LDES
@@ -30,15 +30,12 @@ scenario:
   year: ['2030', 
          #'2030'
          ] # controls both the brownfield fleet and tech costs projection
-  participation: ['10', 
-                  #'25'
-                  ] #share [%] of CI load per zone following 247-CFE approach
-
 
 ci:
   #dict of (location zone: datacenters name) pairs
   datacenters: {"IE5 0": "google", "GB5 0": "google-2"} 
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
+  load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
 
 #regional coverage of the model: "regions" or "EU"

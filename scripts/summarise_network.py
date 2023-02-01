@@ -342,8 +342,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('summarise_network',
-                    policy="cfe100", palette='p2', zone='IE', year='2025', participation='10',
-                    flexibility='20')
+                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
@@ -352,7 +351,6 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
     area = snakemake.config['area']
-    participation = snakemake.wildcards.participation
 
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
@@ -364,7 +362,6 @@ if __name__ == "__main__":
     print(f"Summary for bidding zone: {zone}")
     print(f"Summary for year: {year}")
     print(f"Summary for geoscope: {area}")
-    print(f"Summary for participation: {participation}")
     print(f"Summary for datacenters: {datacenters}")
     print(f"Summary for flexibility: {flexibility}")
 

@@ -12,7 +12,7 @@ def create_tuples(scenarios, locations):
 
 def summarise_scalars():
 
-    fns = list(filter(lambda k: ('{}'.format(participation+'/'+year+'/'+zone+'/'+tech_palette+'/'+policy)) in k, snakemake.input))
+    fns = list(filter(lambda k: ('{}'.format(year+'/'+zone+'/'+tech_palette+'/'+policy)) in k, snakemake.input))
     
     # create empty dataframe with flex_scenario & locations as multi-columns
     scenarios = [fn[fn.rfind("/")+1:-5] for fn in fns]
@@ -40,14 +40,12 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('make_summary', palette='p1', zone='IE', year='2025',  participation='10',
-        policy='cfe100')    
+        snakemake = mock_snakemake('make_summary', year='2025', zone='IE', palette='p1', policy="cfe100")  
     
     # When running via snakemake
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    participation = snakemake.wildcards.participation
     policy = snakemake.wildcards.policy 
     datacenters = snakemake.config['ci']['datacenters']
 

@@ -134,8 +134,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', participation='10', year='2025', zone='IE', palette='p1', 
-        policy='cfe100')   
+        snakemake = mock_snakemake('plot_summary', year='2025', zone='IE', palette='p1', policy="cfe100")   
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
@@ -144,10 +143,8 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
     area = snakemake.config['area']
-    participation = snakemake.wildcards.participation
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
-
 
     #techs for CFE hourly matching
     clean_techs = palette(tech_palette)[0]

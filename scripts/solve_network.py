@@ -136,7 +136,7 @@ def cost_parametrization(n):
     #n.generators[n.generators.index.str.contains('EU')].T
 
 
-def load_profile(n, zone, profile_shape):
+def load_profile(n, profile_shape):
     '''
     create daily load profile for 24/7 CFE buyers based on config setting
     '''
@@ -162,11 +162,10 @@ def load_profile(n, zone, profile_shape):
         print(f"'profile_shape' option must be one of 'baseload', 'datacenter' or 'industry'. Now is {profile_shape}.")
         sys.exit()
 
-    ci_load = snakemake.config['ci_load'][f'{zone}']
-    load = ci_load * float(participation)/100  #C&I baseload MW
+    load = snakemake.config['ci']['load'] #data center nominal load in MW
 
-    load_day = load*8 #24h with 3h sampling. to avoid use of hard-coded value
-    load_profile_day = pd.Series(shape*load_day*3)
+    load_day = load*24 #24h 
+    load_profile_day = pd.Series(shape*load_day) #3H (or any n-hour) sampling is in
     load_profile_year = pd.concat([load_profile_day]*int(len(n.snapshots)/8))
     
     profile = load_profile_year.set_axis(n.snapshots)
@@ -393,7 +392,7 @@ def add_ci(n, year):
             f'{name}' + " load",
             carrier="electricity",
             bus=name,
-            p_set=load_profile(n, zone, profile_shape))
+            p_set=load_profile(n, profile_shape))
 
         #C&I following 24/7 approach is a share of C&I load -> substract it from node's profile
         n.loads_t.p_set[location]  -= n.loads_t.p_set[f'{name}'+' load']
@@ -832,8 +831,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    policy="cfe100", palette='p2', zone='IE', year='2025', participation='10',
-                    flexibility='20')
+                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -844,7 +842,6 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
     area = snakemake.config['area']
-    participation = snakemake.wildcards.participation
     profile_shape = snakemake.config['ci']['profile_shape']
 
     datacenters = snakemake.config['ci']['datacenters']
@@ -857,7 +854,6 @@ if __name__ == "__main__":
     print(f"solving network for bidding zone: {zone}")
     print(f"solving network year: {year}")
     print(f"solving with geoscope: {area}")
-    print(f"solving with participation: {participation}")
     print(f"solving with datacenters: {datacenters}")
     print(f"solving with flexibility: {flexibility}")
 
@@ -889,7 +885,7 @@ if __name__ == "__main__":
         #limit_resexp(n,year)
         cost_parametrization(n)
         co2_policy(n, year)
-        load_profile(n, zone, profile_shape)
+        load_profile(n, profile_shape)
         
         add_ci(n, year)
         add_vl(n)
@@ -898,5 +894,40 @@ if __name__ == "__main__":
 
         n.export_to_netcdf(snakemake.output.network)
 
-    logger.info("Maximum memory usage: {}".format(mem.mem_usage))
+    logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
+# ##############################################################################
+
+# # %%
+# n.generators.filter(like='google', axis=0).T
+# # %%
+# n.stores.filter(like='google', axis=0).T
+# # %%
+# n.links.filter(like='google', axis=0).T
+# # %%
+# n.loads_t.p_set
+
+# # %%
+# n.links_t.p0.filter(like='vcc').round(2)[:100].plot()
+# # %%
+# n.links.filter(like='vcc', axis=0).T
+# # %%
+# n.links_t.p0[['google import', 'google export']].round(2)[:100].plot()
+
+# # %%
+# n.links_t.p0[['google-2 import', 'google-2 export']].round(2)[:100].plot()
+
+# # %%
+# bus_carriers = n.buses.carrier.unique()
+# # %%
+# supply_energy = pd.DataFrame()
+
+# #%%
+# a = n.generators_t.p[country_res_gens].sum(axis=1)
+# b = -n.links_t.p1.loc[:,country_res_links].sum(axis=1)
+# c = n.storage_units_t.p_dispatch.loc[:,country_res_storage_units].sum(axis=1)
+
+# n.links[n.links.carrier=='virtual_link'].index
+# vcc = n.links[n.links.carrier=='virtual_link'].index
+# n.links_t.p0[vcc][:100].plot()
+# (n.links_t.p0['vcc12']-n.links_t.p0['vcc21'])[:].plot(kind="bar")
