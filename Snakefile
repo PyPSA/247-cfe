@@ -10,7 +10,8 @@ CDIR = config['costs_dir']
 
 rule merge_all_plots:
     input: 
-        expand(RDIR + "/plots/{year}/{zone}/{palette}/SUMMARY.pdf", **config['scenario'])
+        expand(RDIR + "/plots/{year}/{zone}/{palette}/{policy}/SUMMARY.pdf", 
+        **config['scenario'])
 
 
 rule plot_summary_all_networks:
@@ -39,10 +40,10 @@ rule solve_all_networks:
 
 rule merge_plots:
     input:
-        used=RDIR + "/plots/{year}/{zone}/{palette}/used.pdf",
+        used=RDIR + "/plots/{year}/{zone}/{palette}/{policy}/used.pdf",
         config=RDIR + '/configs/config.yaml'
     output:
-        final=RDIR + "/plots/{year}/{zone}/{palette}/SUMMARY.pdf"
+        final=RDIR + "/plots/{year}/{zone}/{palette}/{policy}/SUMMARY.pdf"
     threads: 2
     resources: mem_mb=2000
     script:
