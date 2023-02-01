@@ -57,8 +57,11 @@ def geoscope(zone, area):
     IRELAND = ["IE5 0", "GB0 0", "GB5 0"]
     DENMARK = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
     GERMANY = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
-              'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']
+              'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']         
     NETHERLANDS = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
+
+    IEDK = IRELAND + ["DK1 0", "DK2 0"] + ['FR1 0', 'LU1 0', 'DE1 0', 'BE1 0', 'NL1 0', 'NO2 0', 'SE2 0']
+
     EU = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
             'CH1 0', 'CZ1 0',  'DE1 0',  'DK1 0',  'DK2 0', 
             'EE6 0', 'ES1 0',  'ES4 0',  'FI2 0',  'FR1 0',
@@ -73,6 +76,7 @@ def geoscope(zone, area):
     elif zone == 'DE': d['basenodes_to_keep'] = GERMANY  
     elif zone == 'NL': d['basenodes_to_keep'] = NETHERLANDS   
     elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
+    elif zone == 'IEDK': d['basenodes_to_keep'] = IEDK
     else: 
         print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL', 'GB'. Now is {zone}.")
         sys.exit()
@@ -99,7 +103,7 @@ def geoscope(zone, area):
     return d
 
 
-def timescope(zone, year):
+def timescope(year):
     '''
     country_res_target -> value of national RES policy constraint for {year} and {zone}
     coal_phaseout -> countries that implement coal phase-out policy until {year}
@@ -109,7 +113,6 @@ def timescope(zone, year):
     
     d = dict(); 
 
-    d['country_res_target'] = snakemake.config[f'res_target_{year}'][f'{zone}']
     d['coal_phaseout'] = snakemake.config[f'policy_{year}']
 
     if year == '2030':
@@ -324,7 +327,7 @@ def coal_policy(n):
     remove coal PPs fleet for countries with coal phase-out policy for {year}
     '''
    
-    countries = timescope(zone, year)['coal_phaseout']
+    countries = timescope(year)['coal_phaseout']
 
     for country in countries:
         n.links.loc[n.links['bus1'].str.contains(f'{country}') & (n.links.index.str.contains('coal')), 'p_nom'] = 0
@@ -743,7 +746,7 @@ def solve_network(n, policy, penetration, tech_palette):
             sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
             lhs = gens.sum() + sus.sum() + links.sum()
 
-            target = timescope(zone, year)["country_res_target"]
+            target = snakemake.config[f'res_target_{year}'][f'{zone}']
             total_load = (n.loads_t.p_set[grid_loads].sum(axis=1)*weights).sum() # number
 
             n.model.add_constraints(lhs == target*total_load, name=f"country_res_constraints_{zone}")
@@ -792,7 +795,7 @@ def solve_network(n, policy, penetration, tech_palette):
     solver_options = snakemake.config['solving']['solver']
     solver_name = solver_options['name']
 
-    #CFE dataframe  
+    # CFE dataframe  
     values = [f"iteration {i}" for i in range(n_iterations+1)]
 
     def create_tuples(locations, values):
@@ -831,7 +834,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
+                    year='2025', zone='IEDK', palette='p1', policy="cfe100", flexibility='0')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -858,11 +861,11 @@ if __name__ == "__main__":
     print(f"solving with flexibility: {flexibility}")
 
     # When running via snakemake
-    n = pypsa.Network(timescope(zone, year)['network_file'],
+    n = pypsa.Network(timescope(year)['network_file'],
                       override_component_attrs=override_component_attrs())
 
     Nyears = 1 # years in simulation
-    costs = prepare_costs(timescope(zone, year)['costs_projection'],
+    costs = prepare_costs(timescope(year)['costs_projection'],
                           snakemake.config['costs']['USD2013_to_EUR2013'],
                           snakemake.config['costs']['discountrate'],
                           Nyears,
