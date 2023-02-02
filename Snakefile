@@ -40,7 +40,7 @@ rule solve_all_networks:
 
 rule merge_plots:
     input:
-        used=RDIR + "/plots/{year}/{zone}/{palette}/{policy}/used.pdf",
+        plot=RDIR + "/plots/{year}/{zone}/{palette}/{policy}/capacity.pdf",
         config=RDIR + '/configs/config.yaml'
     output:
         final=RDIR + "/plots/{year}/{zone}/{palette}/{policy}/SUMMARY.pdf"

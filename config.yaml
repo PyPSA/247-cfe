@@ -33,8 +33,8 @@ scenario:
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:
-  #datacenters: {"IE5 0": "google", "GB5 0": "google-2"}   # datacenter (location: name) pairs
-  datacenters: {"IE5 0": "google", "DK1 0": "google-2"}   # datacenter (location: name) pairs
+  #datacenters: {"IE5 0": "dublin", "GB0 0": "frederica"}   # datacenter (location: name) pairs
+  datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}   # datacenter (location: name) pairs
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]

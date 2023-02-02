@@ -84,7 +84,7 @@ def geoscope(zone, area):
     if area == 'EU': d['basenodes_to_keep'] = EU
 
     #set country nodes for possible locations of DCs
-    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0']
+    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB0 0']
     temp = dict() 
 
     for node in locations:
@@ -97,7 +97,7 @@ def geoscope(zone, area):
     if 'DK1 0' in locations: temp['DK1 0'] = ['DK1 0', 'DK2 0']
     if 'DE1 0' in locations: temp['DE1 0'] = ['DE1 0']
     if 'NL1 0' in locations: temp['NL1 0'] = ['NL1 0']
-    if 'GB5 0' in locations: temp['GB5 0'] = ['GB0 0', 'GB5 0']
+    if 'GB0 0' in locations: temp['GB0 0'] = ['GB0 0', 'GB5 0']
     d['country_nodes'] = temp
 
     return d
@@ -572,20 +572,10 @@ def calculate_grid_cfe(n, name, node):
     clean_grid_storage_units = n.storage_units.index[n.storage_units.bus.isin(grid_buses) & n.storage_units.carrier.isin(clean_techs)]
     dirty_grid_links = n.links.index[n.links.bus1.isin(grid_buses) & n.links.carrier.isin(emitters)]
 
-    logger.info(f"clean grid generators are {clean_grid_generators}")
-    logger.info(f"clean grid links are {clean_grid_links}")
-    logger.info(f"clean grid storage units are {clean_grid_storage_units}")
-    logger.info(f"dirty grid links are {dirty_grid_links}")
-
     clean_country_generators = n.generators.index[n.generators.bus.isin(country_buses) & n.generators.carrier.isin(clean_techs)]
     clean_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(clean_techs)]
     clean_country_storage_units = n.storage_units.index[n.storage_units.bus.isin(country_buses) & n.storage_units.carrier.isin(clean_techs)]
     dirty_country_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(emitters)]
-
-    logger.info(f"clean country generators are {clean_country_generators}")
-    logger.info(f"clean country links are {clean_country_links}")
-    logger.info(f"clean country storage units are {clean_country_storage_units}")
-    logger.info(f"dirty country links are {dirty_country_links}")
 
     clean_grid_gens = n.generators_t.p[clean_grid_generators].sum(axis=1)
     clean_grid_ls = (- n.links_t.p1[clean_grid_links].sum(axis=1))
@@ -902,11 +892,11 @@ if __name__ == "__main__":
 # ##############################################################################
 
 # # %%
-# n.generators.filter(like='google', axis=0).T
+# n.generators.filter(like='dublin', axis=0).T
 # # %%
-# n.stores.filter(like='google', axis=0).T
+# n.stores.filter(like='dublin', axis=0).T
 # # %%
-# n.links.filter(like='google', axis=0).T
+# n.links.filter(like='dublin', axis=0).T
 # # %%
 # n.loads_t.p_set
 
@@ -915,10 +905,7 @@ if __name__ == "__main__":
 # # %%
 # n.links.filter(like='vcc', axis=0).T
 # # %%
-# n.links_t.p0[['google import', 'google export']].round(2)[:100].plot()
-
-# # %%
-# n.links_t.p0[['google-2 import', 'google-2 export']].round(2)[:100].plot()
+# n.links_t.p0[['dublin import', 'dublin export']].round(2)[:100].plot()
 
 # # %%
 # bus_carriers = n.buses.carrier.unique()

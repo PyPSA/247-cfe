@@ -61,7 +61,7 @@ def summarise_network(n, policy, tech_palette):
         p_clean = n.generators_t.p[clean_gens].multiply(weights,axis=0).sum(axis=1)
         p_storage = - n.links_t.p1[clean_dischargers].multiply(weights,axis=0).sum(axis=1) \
                     - n.links_t.p0[clean_chargers].multiply(weights,axis=0).sum(axis=1) 
-        p_demand = n.loads_t.p["google load"].multiply(weights,axis=0)
+        p_demand = n.loads_t.p[f"{name} load"].multiply(weights,axis=0)
 
         p_diff = p_clean + p_storage - p_demand
         excess = p_diff.copy()
@@ -152,18 +152,18 @@ def summarise_network(n, policy, tech_palette):
         grid_supply_emission_rate = (country_hourly_emissions + country_import*grid_emission_rate) / \
                                     (clean_country_resources + dirty_country_resources + country_import)
 
-        ci_emissions_t = n.links_t.p0["google import"]*grid_supply_emission_rate
+        ci_emissions_t = n.links_t.p0[f"{name} import"]*grid_supply_emission_rate
         
-        results[f'{location}']['ci_emission_rate_true'] = ci_emissions_t.sum() / n.loads_t.p["google load"].sum()
+        results[f'{location}']['ci_emission_rate_true'] = ci_emissions_t.sum() / n.loads_t.p[f"{name} load"].sum()
 
         #3.2: considering only country node(local bidding zone) 
         country_load = n.loads_t.p[country_loads].sum(axis=1)
         emissions_factor_local = country_hourly_emissions / country_load
-        results[f'{location}']['ci_emission_rate_local'] = (n.links_t.p0["google import"]*emissions_factor_local).sum()/n.loads_t.p["google load"].sum()
+        results[f'{location}']['ci_emission_rate_local'] = (n.links_t.p0[f"{name} import"]*emissions_factor_local).sum()/n.loads_t.p[f"{name} load"].sum()
 
         #3.3: Our original ci_emission_rate (ignoring network congestions)
         emissions_factor = hourly_emissions / load #global average emissions
-        results[f'{location}']['ci_emission_rate_myopic'] = (n.links_t.p0["google import"]*emissions_factor).sum()/n.loads_t.p["google load"].sum()
+        results[f'{location}']['ci_emission_rate_myopic'] = (n.links_t.p0[f"{name} import"]*emissions_factor).sum()/n.loads_t.p[f"{name} load"].sum()
         
         #3.3: Total CO2 emissions for 24/7 participating customers
         results[f'{location}']['ci_emissions'] = (ci_emissions_t*weights).sum()
@@ -211,7 +211,7 @@ def summarise_network(n, policy, tech_palette):
             if g in gen_expandable.index:
                 gen_expandable = gen_expandable.drop(g)
 
-        system_gens = gen_expandable[~gen_expandable.index.str.contains('google')] # drop google gens
+        system_gens = gen_expandable[~gen_expandable.index.str.contains(f'{name}')] # drop google gens
 
         for gen in exp_generators:
             temp['system_optcap_' + gen] = system_gens.loc[system_gens.index.str.contains(f'{gen}'), 'p_nom_opt'].sum()
