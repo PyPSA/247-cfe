@@ -31,15 +31,15 @@ def ci_capacity():
     ldf.rename(index=rename_ci_capacity, level=0, inplace=True) 
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
-
     (ldf).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
+    ax.set_xticklabels([''.join(item) for item in ldf.columns.tolist()])
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_ylim([0,max(ldf.sum())*1.3])
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
     #ax.set_xlabel("CFE target")
     ax.set_ylabel("DC portfolio capacity [MW]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
@@ -86,6 +86,7 @@ def ci_costandrev():
     #ax.legend(handlers = [dots])
 
     plt.xticks(rotation=0)
+    ax.set_xticklabels([''.join(item) for item in ldf.columns.tolist()])
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_ylabel("24/7 CFE cost and revenue [€/MWh]")
@@ -121,6 +122,7 @@ def ci_generation():
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
+    ax.set_xticklabels([''.join(item) for item in ldf.columns.tolist()])
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_ylim([0,max(ldf.sum())*1.3])
@@ -137,7 +139,7 @@ if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
-        snakemake = mock_snakemake('plot_summary', year='2025', zone='IE', palette='p1', policy="cfe100")   
+        snakemake = mock_snakemake('plot_summary', year='2025', zone='IEDK', palette='p1', policy="cfe100")   
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
@@ -201,8 +203,9 @@ if __name__ == "__main__":
 
     rename_scen = {'0': '0%\n',
                    '5': '5%\n',
+                   '10': '10%\n',
                     '20': '20%\n',
-                    '50': '50%\n',
+                    '40': '40%\n',
                     }
 
     df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
