@@ -406,7 +406,7 @@ ci_generation()
 flexibilities = snakemake.config['scenario']['flexibility']
 
 for flex in flexibilities:
-    n = pypsa.Network(snakemake.input.networks+f'/{flex}.nc')
+    n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
 
     for node in names:
         plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
