@@ -547,7 +547,7 @@ def add_vl(n):
         bus0=names[0],
         bus1=names[1],
         carrier='virtual_link',
-        marginal_cost=0.01, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+        marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
         p_nom=1e6)
 
     n.add("Link",
@@ -555,7 +555,7 @@ def add_vl(n):
         bus0=names[1],
         bus1=names[0],
         carrier='virtual_link',
-        marginal_cost=0.01, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+        marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
         p_nom=1e6)
 
 
