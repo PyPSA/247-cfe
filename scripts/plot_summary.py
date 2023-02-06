@@ -375,14 +375,18 @@ if __name__ == "__main__":
         f'{name} solar': 'solar',
         f'{name} load': 'load',
         f'{name} adv_geothermal': "clean dispatchable",
-        f'{name} allam_ccs': "NG-Allam"}
+        f'{name} allam_ccs': "NG-Allam",
+        f'{name} DSM-delayout': 'temporal shift',
+        f'{name} DSM-delayin': 'temporal shift',
+        }
         rename = rename | temp
 
-    links = {
-        'vcc12': 'spatial shifting',	
-        'vcc21': 'spatial shifting'}
+    virtual_links = {
+        'vcc12': 'spatial shift',	
+        'vcc21': 'spatial shift'
+        }
 
-    rename = rename | links
+    rename = rename | virtual_links
     
     preferred_order_balances = pd.Index([
         "clean dispatchable",
@@ -393,11 +397,13 @@ if __name__ == "__main__":
         "battery storage",
         "hydrogen storage",
         'grid',
-        'spatial shifting',
+        'spatial shift',
+        'temporal shift',
         ])
 
 
 df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
+%matplotlib inline
 
 ci_capacity()
 ci_costandrev()
@@ -405,10 +411,14 @@ ci_generation()
 
 flexibilities = snakemake.config['scenario']['flexibility']
 
+#flex=flexibilities[-1]
 for flex in flexibilities:
+
     n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
 
+    #node=names[0]
     for node in names:
+        
         plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
         plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
         plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
