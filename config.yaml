@@ -34,10 +34,13 @@ scenario:
 
 ci:
   #datacenters: {"IE5 0": "dublin", "GB0 0": "frederica"}   # datacenter (location: name) pairs
-  datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}   # datacenter (location: name) pairs
+  datacenters: {"IE5 0": "dublin"} #, "DK1 0": "frederica"}   # datacenter (location: name) pairs
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
+  spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+
 
 #regional coverage of the model: "regions" or "EU"
   #"regions" -> strips the model to country where CI load is located + all neighboring countries 

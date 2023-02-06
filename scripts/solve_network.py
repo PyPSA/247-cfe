@@ -559,6 +559,48 @@ def add_vl(n):
         p_nom=1e6)
 
 
+def add_dsm(n):
+    'Add option to shift loads over time, aka temporal DSM'
+
+    for location, name in datacenters.items():
+
+        n.add("Bus",
+            f"{name} DSM",
+            carrier="dsm"
+            )
+
+        n.add("Store",
+            f"{name} DSM",
+            bus=f"{name} DSM",
+            carrier="dsm",
+            e_cyclic=True,
+            e_nom =1e6,
+            p_nom_extendable=False
+            )        
+
+        n.add("Link",
+            f"{name} DSM-delayout",
+            bus0=name,
+            bus1=f"{name} DSM",
+            carrier="dsm",
+            efficiency=1,
+            p_nom=1e6,
+            marginal_cost=0.1,
+            p_nom_extendable=False,
+            )
+
+        n.add("Link",
+            f"{name} DSM-delayin",
+            bus0=f"{name} DSM",
+            bus1=name,
+            carrier="dsm",
+            efficiency=1,
+            p_nom=1e6,
+            marginal_cost=0.1,
+            p_nom_extendable=False,
+            )
+
+
 def calculate_grid_cfe(n, name, node):
 
     grid_buses = n.buses.index[~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(node)]
@@ -659,6 +701,46 @@ def solve_network(n, policy, penetration, tech_palette):
 
             n.model.add_constraints(rec - snd <= rhs_up, name=f"vl_limit-upper_{name}")
             n.model.add_constraints(rec - snd >= rhs_lo, name=f"vl_limit-lower_{name}")
+
+
+    def DSM_constraints(n):
+
+        delta = float(flexibility)/100 
+        weights = n.snapshot_weightings["generators"] 
+        dsm = n.links[n.links.carrier=='dsm']
+
+        for location, name in datacenters.items():
+        
+            dsm_delayout = dsm.query('bus0==@name').index
+            dsm_delayin = dsm.query('bus1==@name').index
+
+            delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"])
+            delayin = n.model['Link-p'].loc[:, dsm_delayin].sum(dims=["Link"])
+
+            load = n.loads_t.p_set[name + " load"]
+            rhs_up = load*(1+delta) - load
+            rhs_lo = load*(1-delta) - load
+
+            n.model.add_constraints(delayin - delayout <= rhs_up, name=f"DSM-upper_{name}")
+            n.model.add_constraints(delayin - delayout >= rhs_lo, name=f"DSM-lower_{name}")
+
+
+    def DSM_conservation(n):
+
+        dsm = n.links[n.links.carrier=='dsm']
+
+        for location, name in datacenters.items():
+
+            dsm_link_delayout = dsm.query('bus0==@name').index
+            dsm_link_delayin = dsm.query('bus1==@name').index
+
+            delayout = n.model['Link-p'].loc[:, dsm_link_delayout].sum(dims=["Link"])
+            delayin = n.model['Link-p'].loc[:, dsm_link_delayin].sum(dims=["Link"])
+
+            daily_outs =  delayout.groupby("snapshot.dayofyear").sum() 
+            daily_ins = delayin.groupby("snapshot.dayofyear").sum() 
+
+            n.model.add_constraints(daily_outs - daily_ins == 0, name=f"DSM-conservation_{name}")
 
 
     def cfe_constraints(n):
@@ -768,9 +850,11 @@ def solve_network(n, policy, penetration, tech_palette):
             print("no target set")
         elif policy == "cfe":
             print("setting CFE target of",penetration)
-            vl_constraints(n)
             cfe_constraints(n)
             excess_constraints(n)
+            vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
+            DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            DSM_conservation(n) if snakemake.config['ci']['temporal_shifting'] else None
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
@@ -881,7 +965,8 @@ if __name__ == "__main__":
         load_profile(n, profile_shape)
         
         add_ci(n, year)
-        add_vl(n)
+        add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
+        add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
 
         solve_network(n, policy, penetration, tech_palette)
 
@@ -896,9 +981,16 @@ if __name__ == "__main__":
 # # %%
 # n.stores.filter(like='dublin', axis=0).T
 # # %%
-# n.links.filter(like='dublin', axis=0).T
+# n.links.filter(like='dublin', axis=0).T 
 # # %%
 # n.loads_t.p_set
+
+# n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)[:56]
+# n.stores_t.p.filter(like='dublin', axis=0).T
+# n.links_t.p0.filter(like='DSM-delayin').round(2)[:56].plot()
+# n.links_t.p0.filter(like='DSM-delayout').round(2)[:56].plot()
+# data = n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)
+# data.resample('D').sum()[:50]
 
 # # %%
 # n.links_t.p0.filter(like='vcc').round(2)[:100].plot()
