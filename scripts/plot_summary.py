@@ -527,7 +527,7 @@ for flex in flexibilities:
     
     #flex = flexibilities[-1]
     n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
-    df = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
+    grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
                 index_col=0, header=[0,1])
 
 # CARBON INTENSITY HEATMAPS
@@ -537,7 +537,7 @@ for flex in flexibilities:
     for location in locations:
 
         #location = locations[-1]
-        df = df[f'{location}']
+        df = grid_cfe[f'{location}']
         df = df.reset_index().rename(columns={'index': 'snapshot'})
         df["snapshot"] = pd.to_datetime(df["snapshot"])
 
@@ -550,23 +550,40 @@ for flex in flexibilities:
 
     colormap = "coolwarm"
 
-    for node in names:
+    if snakemake.config['ci']['temporal_shifting'] == True:
 
-        #node = names[0]
-        df = retrieve_nb(n, node).loc[:,['temporal shift']]
-        df = df.reset_index().rename(columns={'index': 'snadfpshot'})
-        df["snapshot"] = pd.to_datetime(df["snapshot"])
-        MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-        MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+        for node in names:
 
-        plot_heatmap_utilization(carrier="temporal shift")
+            #node = names[0]
+            df = retrieve_nb(n, node).loc[:,['temporal shift']]
+            df = df.reset_index().rename(columns={'index': 'snapshot'})
+            df["snapshot"] = pd.to_datetime(df["snapshot"])
+            MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+            MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+
+            plot_heatmap_utilization(carrier="temporal shift")
+
+    if snakemake.config['ci']['spatial_shifting'] == True:
+
+        for node in names:
+
+            #node = names[0]
+            df = retrieve_nb(n, node).loc[:,['spatial shift']]
+            df = df.reset_index().rename(columns={'index': 'snapshot'})
+            df["snapshot"] = pd.to_datetime(df["snapshot"])
+            MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+            MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+
+            plot_heatmap_utilization(carrier="spatial shift")
 
 # NODAL BALANCES
 
     for node in names:
 
         plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
+        plot_balances(n, node, '2013-02-01 00:00:00', '2013-02-08 00:00:00')
         plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
+        plot_balances(n, node, '2013-04-01 00:00:00', '2013-04-08 00:00:00')
         plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
     
     print(f'Done for {flex} scen')
