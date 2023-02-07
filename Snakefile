@@ -52,6 +52,7 @@ rule merge_plots:
 
 rule plot_summary:
     input:
+        grid_cfe= RDIR + "/networks/{year}/{zone}/{palette}/{policy}/0.csv",
         networks= RDIR + "/networks/{year}/{zone}/{palette}/{policy}/0.nc",
         summary=RDIR + "/csvs/{year}/{zone}/{palette}/{policy}/summary.csv",
         config=RDIR + '/configs/config.yaml'

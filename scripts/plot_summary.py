@@ -2,10 +2,13 @@ import pypsa
 import pandas as pd
 import numpy as np
 import os
+
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.transforms import Bbox
+import matplotlib.colors as mc 
+from matplotlib.cm import ScalarMappable
 
 from pyrsistent import s
 from xarray import align
@@ -138,44 +141,75 @@ def ci_generation():
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_generation.pdf"), transparent=True)
 
 
-def retrieve_nb(n, node):
-    '''
-    Retrieve nodal energy balance per hour
-    This simple function works only for the Data center nodes: 
-        -> lines and links are bidirectional AND their subsets are exclusive.
-        -> links include fossil gens
-    NB {-1} multiplier is a nodal balance sign
-    '''
+def heatmap(data, month, year, ax):
+    data = df[(df["snapshot"].dt.month == month)]
 
-    components=['Generator', 'Load', 'StorageUnit', 'Store', 'Link', 'Line']
-    nodal_balance = pd.DataFrame(index=n.snapshots)
+    snapshot = data["snapshot"]
+    day = data["snapshot"].dt.day
+    value = data["iteration 1"]
+    value = value.values.reshape(8, len(day.unique()), order="F") # 8 clusters of 3h in each day
     
-    for i in components:
-        if i == 'Generator':
-            node_generators = n.generators.query('bus==@node').index
-            nodal_balance = nodal_balance.join(n.generators_t.p[node_generators])
-        if i == 'Load':
-            node_loads = n.loads.query('bus==@node').index
-            nodal_balance = nodal_balance.join(-1*n.loads_t.p_set[node_loads])
-        if i == 'Link':
-            node_export_links = n.links.query('bus0==@node').index
-            node_import_links = n.links.query('bus1==@node').index
-            nodal_balance = nodal_balance.join(-1*n.links_t.p0[node_export_links])
-            nodal_balance = nodal_balance.join(-1*n.links_t.p1[node_import_links])
-            ##################
-        if i == 'StorageUnit':
-            #node_storage_units = n.storage_units.query('bus==@node').index
-            #nodal_balance = nodal_balance.join(n.storage_units_t.p_dispatch[node_storage_units])
-            #nodal_balance = nodal_balance.join(n.storage_units_t.p_store[node_storage_units]) 
-            continue   
-        if i == 'Line':
-            continue
-        if i == 'Store':
-            continue
+    xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
+    ygrid = np.arange(9) #8 and extra 1
+    
+    ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
+    # Invert the vertical axis
+    ax.set_ylim(8, 0)
+    # Set tick positions for both axes
+    ax.yaxis.set_ticks([i for i in range(8)])
+    ax.xaxis.set_ticks([])
+    # Remove ticks by setting their length to 0
+    ax.yaxis.set_tick_params(length=0)
+    ax.xaxis.set_tick_params(length=0)
+    
+    # Remove all spines
+    ax.set_frame_on(False)
 
-        nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
 
-    return nodal_balance
+def plot_heatmap_cfe():
+    # Here 1 row year/variable and 12 columns for month
+    fig, axes = plt.subplots(1, 12, figsize=(14, 5), sharey=True)
+    plt.tight_layout()
+
+    for i, year in enumerate([2013]):
+        for j, month in enumerate(range(1, 13)):
+            #print(f'j: {j}, month: {month}')
+            heatmap(df, month, year, axes[j])
+
+    # Adjust margin and space between subplots (extra space is on the left for a label)
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.9, hspace=0.08, wspace=0) #wspace=0 stacks individual months together but easy to split
+
+    # some room for the legend in the bottom
+    fig.subplots_adjust(bottom=0.2)
+
+    # Create a new axis to contain the color bar
+    # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
+    cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
+
+    # Create a normalizer that goes from minimum to maximum temperature
+    norm = mc.Normalize(0, 1) #for CFE, otherwise (MIN, MAX)
+
+    # Create the colorbar and set it to horizontal
+    cb = fig.colorbar(
+        ScalarMappable(norm=norm, cmap=colormap), 
+        cax=cbar_ax, # Pass the new axis
+        orientation = "horizontal")
+
+    # Remove tick marks and set label
+    cb.ax.xaxis.set_tick_params(size=0)
+    cb.set_label("Hourly CFE score of electricity supply from grid", size=12)
+
+    # add some figure labels and title
+    fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
+    fig.text(0.02, 0.5, '3-hour clusters of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+    fig.suptitle(f"Carbon Heat Map | {location}", fontsize=20, y=0.98)
+
+    path = snakemake.output.plot.split('capacity.pdf')[0] + f'heatmaps'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig.savefig(path + '/' + f"{flex}_GridCFE_{location}.pdf", 
+        bbox_inches = "tight", transparent=True)
 
 
 def retrieve_nb(n, node):
@@ -285,12 +319,13 @@ def plot_balances(n, node,
                 bbox_inches = Bbox([[0,0],[7.7,4.5]])
     )
 
+
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IEDK', palette='p1', policy="cfe100")   
+        year='2025', zone='IE', palette='p1', policy="cfe100")   
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
@@ -402,23 +437,46 @@ if __name__ == "__main__":
         ])
 
 
+# %matplotlib inline
+
+# SUMMARY PLOTS
+
 df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
-%matplotlib inline
 
 ci_capacity()
 ci_costandrev()
 ci_generation()
 
+
+# TIME-SERIES DATA (per flexibility scenario)
+
 flexibilities = snakemake.config['scenario']['flexibility']
 
-#flex=flexibilities[-1]
 for flex in flexibilities:
 
     n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
+    df = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
+                index_col=0, header=[0,1])
 
-    #node=names[0]
+# CARBON INTENSITIES & FLEX UTILIZATION
+
+    colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
+
+    for location in locations:
+
+        df = df[f'{location}']
+        df = df.reset_index().rename(columns={'index': 'snapshot'})
+        df["snapshot"] = pd.to_datetime(df["snapshot"])
+
+        MIN = df["iteration 1"].min() #case of CFE -> 0
+        MAX = df["iteration 1"].max() #case of CFE -> 1
+
+        plot_heatmap_cfe()
+
+# NODAL BALANCES
+
     for node in names:
-        
+
         plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
         plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
         plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
