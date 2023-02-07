@@ -166,6 +166,31 @@ def heatmap(data, month, year, ax):
     ax.set_frame_on(False)
 
 
+def heatmap_utilization(data, month, year, ax, carrier):
+    data = df[(df["snapshot"].dt.month == month)]
+
+    snapshot = data["snapshot"]
+    day = data["snapshot"].dt.day
+    value = data[f"{carrier}"]
+    value = value.values.reshape(8, len(day.unique()), order="F") # 8 clusters of 3h in each day
+    
+    xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
+    ygrid = np.arange(9) #8 and extra 1
+    
+    ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
+    # Invert the vertical axis
+    ax.set_ylim(8, 0)
+    # Set tick positions for both axes
+    ax.yaxis.set_ticks([i for i in range(8)])
+    ax.xaxis.set_ticks([])
+    # Remove ticks by setting their length to 0
+    ax.yaxis.set_tick_params(length=0)
+    ax.xaxis.set_tick_params(length=0)
+    
+    # Remove all spines
+    ax.set_frame_on(False)
+
+
 def plot_heatmap_cfe():
     # Here 1 row year/variable and 12 columns for month
     fig, axes = plt.subplots(1, 12, figsize=(14, 5), sharey=True)
@@ -209,6 +234,52 @@ def plot_heatmap_cfe():
         os.makedirs(path)
 
     fig.savefig(path + '/' + f"{flex}_GridCFE_{location}.pdf", 
+        bbox_inches = "tight", transparent=True)
+
+
+def plot_heatmap_utilization(carrier):
+    # Here 1 row year/variable and 12 columns for month
+    fig, axes = plt.subplots(1, 12, figsize=(14, 5), sharey=True)
+    plt.tight_layout()
+
+    for i, year in enumerate([2013]):
+        for j, month in enumerate(range(1, 13)):
+            #print(f'j: {j}, month: {month}')
+            heatmap_utilization(df, month, year, axes[j], carrier=carrier)
+
+    # Adjust margin and space between subplots (extra space is on the left for a label)
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.9, hspace=0.08, wspace=0.04) #wspace=0 stacks individual months together but easy to split
+
+    # some room for the legend in the bottom
+    fig.subplots_adjust(bottom=0.2)
+
+    # Create a new axis to contain the color bar
+    # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
+    cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
+
+    # Create a normalizer that goes from minimum to maximum temperature
+    norm = mc.Normalize(MIN, MAX)
+
+    # Create the colorbar and set it to horizontal
+    cb = fig.colorbar(
+        ScalarMappable(norm=norm, cmap=colormap), 
+        cax=cbar_ax, # Pass the new axis
+        orientation = "horizontal")
+
+    # Remove tick marks and set label
+    cb.ax.xaxis.set_tick_params(size=0)
+    cb.set_label(f"Hourly {carrier} [MW]", size=12)
+
+    # add some figure labels and title
+    fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
+    fig.text(0.02, 0.5, '3-hour clusters of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+    fig.suptitle(f"Flexibility utilization | {node}", fontsize=20, y=0.98)
+
+    path = snakemake.output.plot.split('capacity.pdf')[0] + f'heatmaps'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig.savefig(path + '/' + f"{flex}_{carrier.replace(' ', '_')}_{node}.pdf", 
         bbox_inches = "tight", transparent=True)
 
 
@@ -453,17 +524,19 @@ ci_generation()
 flexibilities = snakemake.config['scenario']['flexibility']
 
 for flex in flexibilities:
-
+    
+    #flex = flexibilities[-1]
     n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
     df = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
                 index_col=0, header=[0,1])
 
-# CARBON INTENSITIES & FLEX UTILIZATION
+# CARBON INTENSITY HEATMAPS
 
     colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
 
     for location in locations:
 
+        #location = locations[-1]
         df = df[f'{location}']
         df = df.reset_index().rename(columns={'index': 'snapshot'})
         df["snapshot"] = pd.to_datetime(df["snapshot"])
@@ -472,6 +545,21 @@ for flex in flexibilities:
         MAX = df["iteration 1"].max() #case of CFE -> 1
 
         plot_heatmap_cfe()
+
+# SPATIAL & TEMPORAL FLEXIBILITY UTILIZATION HEATMAPS
+
+    colormap = "coolwarm"
+
+    for node in names:
+
+        #node = names[0]
+        df = retrieve_nb(n, node).loc[:,['temporal shift']]
+        df = df.reset_index().rename(columns={'index': 'snadfpshot'})
+        df["snapshot"] = pd.to_datetime(df["snapshot"])
+        MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+        MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+
+        plot_heatmap_utilization(carrier="temporal shift")
 
 # NODAL BALANCES
 
