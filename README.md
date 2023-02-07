@@ -38,13 +38,13 @@ Parallel to the repository you should also clone the [technology-data](https://g
 
 ### Software
 
-The code is known to work with PyPSA 0.18.1, pandas 1.2.4, numpy 1.19.0, vresutils 0.3.1 and gurobi 9.1.2.
+The code is known to work with PyPSA 0.21.3, pandas 1.5.2, numpy 1.24.1, vresutils 0.3.1 and gurobi 10.0.0.
 
-The complete list of package requirements is in the [envs/environment.yml](envs/environment.yml) file. The environment can be installed and activated using:
+The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yml) file. The environment can be installed and activated using:
 
 ```
-.../247-cfe % conda env create -f envs/environment.yml
-.../247-cfe % conda activate 247-cfe
+.../247-cfe % conda env create -f envs/environment.yaml
+.../247-cfe % conda activate 247-env
 ```
 
 If you have troubles with a slow [conda](https://docs.conda.io/en/latest/) installation, we recommend to install [mamba](https://mamba.readthedocs.io/en/latest/):
@@ -56,7 +56,7 @@ conda install -c conda-forge mamba
 and then install the environment with a fast drop-in replacement via
 
 ```
-mamba env create -f envs/environment.yml
+mamba env create -f envs/environment.yaml
 ```
 
 ## License
