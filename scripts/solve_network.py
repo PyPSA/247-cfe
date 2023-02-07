@@ -579,7 +579,7 @@ def add_dsm(n):
             )        
 
         n.add("Link",
-            f"{name} DSM-delayout",
+            f"{name} DSM-delayin",
             bus0=name,
             bus1=f"{name} DSM",
             carrier="dsm",
@@ -590,7 +590,7 @@ def add_dsm(n):
             )
 
         n.add("Link",
-            f"{name} DSM-delayin",
+            f"{name} DSM-delayout",
             bus0=f"{name} DSM",
             bus1=name,
             carrier="dsm",
@@ -711,18 +711,18 @@ def solve_network(n, policy, penetration, tech_palette):
 
         for location, name in datacenters.items():
         
-            dsm_delayout = dsm.query('bus0==@name').index
-            dsm_delayin = dsm.query('bus1==@name').index
+            dsm_delayin = dsm.query('bus0==@name').index
+            dsm_delayout = dsm.query('bus1==@name').index
 
-            delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"])
             delayin = n.model['Link-p'].loc[:, dsm_delayin].sum(dims=["Link"])
+            delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"])
 
             load = n.loads_t.p_set[name + " load"]
             rhs_up = load*(1+delta) - load
             rhs_lo = load*(1-delta) - load
 
-            n.model.add_constraints(delayin - delayout <= rhs_up, name=f"DSM-upper_{name}")
-            n.model.add_constraints(delayin - delayout >= rhs_lo, name=f"DSM-lower_{name}")
+            n.model.add_constraints(delayout - delayin <= rhs_up, name=f"DSM-upper_{name}")
+            n.model.add_constraints(delayout - delayin >= rhs_lo, name=f"DSM-lower_{name}")
 
 
     def DSM_conservation(n):
