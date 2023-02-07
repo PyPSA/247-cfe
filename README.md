@@ -40,7 +40,7 @@ Parallel to the repository you should also clone the [technology-data](https://g
 
 The code is known to work with PyPSA 0.21.3, pandas 1.5.2, numpy 1.24.1, vresutils 0.3.1 and gurobi 10.0.0.
 
-The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yml) file. The environment can be installed and activated using:
+The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yaml) file. The environment can be installed and activated using:
 
 ```
 .../247-cfe % conda env create -f envs/environment.yaml
