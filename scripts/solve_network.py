@@ -138,6 +138,8 @@ def cost_parametrization(n):
         n.generators.loc[n.generators.index.str.contains(f'EU {carrier}'), 'marginal_cost'] = snakemake.config['costs'][f'price_{carrier}']
     #n.generators[n.generators.index.str.contains('EU')].T
 
+    n.generators.loc[n.generators.carrier=="onwind", "marginal_cost"] = 0.015
+
 
 def load_profile(n, profile_shape):
     '''
@@ -908,7 +910,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IEDK', palette='p1', policy="cfe100", flexibility='0')
+                    year='2025', zone='DK', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -985,7 +987,7 @@ if __name__ == "__main__":
 # # %%
 # n.loads_t.p_set
 
-# n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)[:56]
+# n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)[:240].plot()
 # n.stores_t.p.filter(like='dublin', axis=0).T
 # n.links_t.p0.filter(like='DSM-delayin').round(2)[:56].plot()
 # n.links_t.p0.filter(like='DSM-delayout').round(2)[:56].plot()

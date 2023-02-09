@@ -158,7 +158,7 @@ solving:
 
 tech_colors:
   #CI
-  "load": "#808080"
+  "load": "#DADCE0"
   "local": "#b474b4"
   "PPA": "#b474b4"
   "grid": "#9ccc65"
@@ -200,4 +200,5 @@ tech_colors:
   "transmission lines": '#6c9459'
   "electricity distribution grid": '#97ad8c'
   #virtual links
-  "spatial shifting": '#ff8c00'
+  "spatial shift": '#ff8c00'
+  "temporal shift": '#d26303'
