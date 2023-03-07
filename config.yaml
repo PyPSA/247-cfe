@@ -12,18 +12,18 @@ n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 'test-IEDK'
+run: 'test'
 
 #wildcards
 scenario:
-  flexibility: ['0', '5', '20', '50'] #possible deviation [%] of requested/nominal CI load 
-  policy:  ["cfe100",] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
+  flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 
+  policy:  [ "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
-             "p2", # onwind + solar + battery + LDES
+             #"p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: [ #"IE",
-          "IEDK"
+  zone: [ "IE",
+          #"IEDK"
           #"DK",
           #"DE",
           #"NL"
@@ -33,13 +33,14 @@ scenario:
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:
-  #datacenters: {"IE5 0": "dublin", "GB0 0": "frederica"}   # datacenter (location: name) pairs
-  datacenters: {"IE5 0": "dublin"} #, "DK1 0": "frederica"}   # datacenter (location: name) pairs
+  datacenters: {"IE5 0": "dublin"}    # datacenter (location: name) pairs
+  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}   # datacenter (location: name) pairs
+  #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}    # datacenter (location: name) pairs
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
   spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
 
 
 #regional coverage of the model: "regions" or "EU"
@@ -139,21 +140,26 @@ res_target_2030:
   NL: 0.5
   GB: 0.95 
 
+
 solving:
-  #tmpdir: "path/to/tmp"
+
   options:
-    formulation: kirchhoff
     n_iterations: 2  #iterations with CFE factor
+
   solver:
     name: gurobi
-    threads: 4
-    method: 2 # barrier
-    crossover: 0
-    BarConvTol: 1.e-7
-    Seed: 123
-    AggFill: 0
-    PreDual: 0 
-    GURO_PAR_BARDENSETHRESH: 200
+    options: gurobi-default
+
+  solver_options:
+    gurobi-default:
+      threads: 4
+      method: 2         # barrier
+      crossover: 0
+      BarConvTol: 1.e-7
+      Seed: 123         # Consistent seed for all plattforms
+      AggFill: 0
+      PreDual: 0
+      GURO_PAR_BARDENSETHRESH: 200
 
 
 tech_colors:
