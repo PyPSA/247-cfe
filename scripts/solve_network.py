@@ -867,9 +867,9 @@ def solve_network(n, policy, penetration, tech_palette):
 
     n.consistency_check()
 
-    formulation = snakemake.config['solving']['options']['formulation']
-    solver_options = snakemake.config['solving']['solver']
-    solver_name = solver_options['name']
+    set_of_options = snakemake.config['solving']['solver']['options']
+    solver_options = snakemake.config['solving']["solver_options"][set_of_options] if set_of_options else {}
+    solver_name = snakemake.config['solving']['solver']['name']
 
     # CFE dataframe  
     values = [f"iteration {i}" for i in range(n_iterations+1)]
@@ -896,7 +896,8 @@ def solve_network(n, policy, penetration, tech_palette):
         n.optimize.solve_model(
                solver_name=solver_name,
                log_fn=snakemake.log.solver,
-               **solver_options)
+               **solver_options
+               )
 
         for location, name in zip(locations, names):
             grid_cfe_df.loc[:, (f'{location}',f"iteration {i+1}")] = calculate_grid_cfe(n, name=name, node=location)
@@ -910,7 +911,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='DK', palette='p1', policy="cfe100", flexibility='40')
+                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
