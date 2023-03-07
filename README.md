@@ -18,8 +18,10 @@ In this study, we investigate both the means and costs of pursuing different cle
 - [Complete study](https://zenodo.org/record/7180097)
 - [Twitter thread](https://twitter.com/nworbmot/status/1579810935702982656)
 - [Blog post](https://blog.google/around-the-globe/google-europe/how-carbon-free-energy-around-the-clock-can-work/)
-- [Code @GitHub](https://github.com/PyPSA/247-cfe/tree/v0.1) 
-- [Code @Zenodo](https://zenodo.org/record/7181236) 
+- [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.1)
+- [Code is also at Zenodo](https://zenodo.org/record/7181236) 
+
+NB The Study 1 is now also available with [Linopy](https://github.com/pypsa/linopy) integration under the tag [v0.2](https://github.com/PyPSA/247-cfe/releases/tag/v0.2). Linopy is an open-source python package for linear or mixed-integer optimization. 
 
 ### Study 2: 
 
