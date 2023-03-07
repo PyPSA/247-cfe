@@ -15,6 +15,7 @@ Keep note that in this project each network has four stages:
 import pandas as pd
 import matplotlib.colors as mc
 import matplotlib.pyplot as plt
+from matplotlib.transforms import Bbox
 import yaml
 import pypsa
 
@@ -55,8 +56,9 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
     
     # For now simple drop -> to add 2/3/4 stage difference
-    if 'google' in n.buses.index:
-        n.mremove('Bus', ['google'])
+    for name in ['dublin', 'frederica']:
+        if name in n.buses.index:
+            n.mremove('Bus', [name])
 
     # Empty dataframe indexed with electrical buses 
     index = pd.DataFrame(index=n.buses.index)
@@ -121,10 +123,12 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     map_opts = {#'boundaries': [-11, 30, 34, 71],
                 'boundaries':  [n.buses.x.min()-3, n.buses.x.max()+3, 
                                 n.buses.y.min()-3, n.buses.y.max()+3],
-                'color_geomap': {'ocean': 'lightblue', 'land': 'white'}}
+                'color_geomap': {'ocean': 'lightblue', 'land': 'white',
+                 'border': 'black', 'coastline': 'black'}
+                }
 
     fig, ax = plt.subplots(subplot_kw={"projection": ccrs.EqualEarth(n.buses.x.mean())})
-    fig.set_size_inches(9, 7)
+    fig.set_size_inches(9, 6)
 
     # # Define the xticks for longitude
     # ax.set_xticks(np.arange(-10,30,10), crs=ccrs.PlateCarree())
@@ -138,20 +142,20 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
         link_colors=dc_color,
         line_widths=line_widths / linewidth_factor,
         link_widths=link_widths / linewidth_factor,
-        ax=ax,  **map_opts)
+        ax=ax, **map_opts)
 
     legend_kwargs = {"loc": "upper left", "frameon": False}
 
     # big_circle = int(round(capacity_per_bus.mean()/1000,-1))
     # small_circle = int(big_circle / 2)
-    sizes = [50, 20]
+    sizes = [40, 10]
     labels = [f"{s} GW" for s in sizes]
     sizes = [s/bus_size_factor*1e3 for s in sizes]
 
     legend_kw = dict(
         bbox_to_anchor=(1, 1),
-        labelspacing=0.8,
-        handletextpad=1,
+        labelspacing=2,
+        handletextpad=1.5,
         title='Power generation capacity \n before optimization',
         **legend_kwargs)
 
@@ -199,7 +203,9 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
             legend_kw=legend_kw,)
 
     fig.tight_layout()
-    fig.savefig(snakemake.output.plot, bbox_inches='tight', facecolor='white', dpi=300)
+    fig.savefig(snakemake.output.plot, facecolor='white', 
+        bbox_inches = Bbox([[0,0],[9.5,6]]), 
+        dpi=300)
 
 
 if __name__ == "__main__":
@@ -216,14 +222,12 @@ if __name__ == "__main__":
         snakemake.output = Dict()
 
 
-    folder="../results/test"
-    scenario="10/2025/IE/p1"
+    folder="../results/draft-IE-noDSM"
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
-    snakemake.output.plot = f"{folder}/map.png"
-
+    snakemake.output.plot = f"{folder}/map.pdf"
     original_network = f"../input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
-    stripped_network = f"{folder}/networks/{scenario}/ref.nc"
+    stripped_network = f"{folder}/networks/2025/IE/p1/cfe100/0.nc"
 
     n = pypsa.Network(stripped_network)
 
@@ -248,4 +252,4 @@ rename = {
     'urban central solid biomass CHP': 'solid biomass'
 }
 
-plot_map(n, bus_size_factor=6e4)
+plot_map(n, bus_size_factor=8e4)

@@ -16,28 +16,32 @@ run: 'test'
 
 #wildcards
 scenario:
-  policy:  ["res100", "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
+  flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 
+  policy:  [ "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
              "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
   zone: [ "IE",
-          "DK",
-          "DE",
-          "NL"
+          #"IEDK"
+          #"DK",
+          #"DE",
+          #"NL"
         ]
-  year: ['2030', 
-         '2030'
+  year: ['2025', 
+         #'2030'
          ] # controls both the brownfield fleet and tech costs projection
-  participation: ['10', 
-                  '25'
-                  ] #share [%] of CI load per zone following 247-CFE approach
 
-#data center
 ci:
-  name: "google"
+  datacenters: {"IE5 0": "dublin"}    # datacenter (location: name) pairs
+  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}   # datacenter (location: name) pairs
+  #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}    # datacenter (location: name) pairs
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
+  load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
+  spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
+
 
 #regional coverage of the model: "regions" or "EU"
   #"regions" -> strips the model to country where CI load is located + all neighboring countries 
@@ -128,32 +132,39 @@ res_target_2025:
   DK: 0.9
   DE: 0.45
   NL: 0.35
+  GB: 0.685 
 res_target_2030:
   IE: 0.7
   DK: 1.1
   DE: 0.8
   NL: 0.5
+  GB: 0.95 
 
 
 solving:
-  #tmpdir: "path/to/tmp"
+
   options:
-    formulation: kirchhoff
     n_iterations: 2  #iterations with CFE factor
+
   solver:
     name: gurobi
-    threads: 4
-    method: 2 # barrier
-    crossover: 0
-    BarConvTol: 1.e-6
-    Seed: 123
-    AggFill: 0
-    PreDual: 0 
-    GURO_PAR_BARDENSETHRESH: 200
+    options: gurobi-default
+
+  solver_options:
+    gurobi-default:
+      threads: 4
+      method: 2         # barrier
+      crossover: 0
+      BarConvTol: 1.e-7
+      Seed: 123         # Consistent seed for all plattforms
+      AggFill: 0
+      PreDual: 0
+      GURO_PAR_BARDENSETHRESH: 200
 
 
 tech_colors:
   #CI
+  "load": "#DADCE0"
   "local": "#b474b4"
   "PPA": "#b474b4"
   "grid": "#9ccc65"
@@ -169,6 +180,7 @@ tech_colors:
   "advanced nuclear": "#df3439"
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
+  "clean dispatchable": "#99582a"
   "NG-Allam": "#540b0e"
   'hydroelectricity': '#298c81'
   'nuclear': '#ff8c00'
@@ -193,3 +205,6 @@ tech_colors:
   "lines": '#6c9459'
   "transmission lines": '#6c9459'
   "electricity distribution grid": '#97ad8c'
+  #virtual links
+  "spatial shift": '#ff8c00'
+  "temporal shift": '#d26303'

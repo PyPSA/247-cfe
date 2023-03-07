@@ -11,6 +11,8 @@ gurobi.log
 /logs
 /workflow
 /talks
+/scripts/_playground.py
+/scripts/_playground-ts.ipynb
 
 *.org
 *~
