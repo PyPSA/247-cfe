@@ -19,8 +19,8 @@ scenario:
   flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 
   policy:  [ "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
-             #"p2", # onwind + solar + battery + LDES
-             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+             "p2", # onwind + solar + battery + LDES
+             "p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
   zone: [ "IE",
           #"IEDK"
@@ -46,7 +46,7 @@ ci:
 #regional coverage of the model: "regions" or "EU"
   #"regions" -> strips the model to country where CI load is located + all neighboring countries 
   #"EU" -> keeps the whole European power system (full ENTSO-E area)
-area: "regions"
+area: "EU"
 
 
 ###################
