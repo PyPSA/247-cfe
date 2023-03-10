@@ -141,10 +141,13 @@ def cost_parametrization(n):
     n.generators.loc[n.generators.carrier=="onwind", "marginal_cost"] = 0.015
 
 
-def load_profile(n, profile_shape):
+def load_profile(n, profile_shape, config):
     '''
     create daily load profile for 24/7 CFE buyers based on config setting
     '''
+
+    scaling = int(config['time_sampling'][0]) #3/1 for 3H/1H
+
     shape_base = [1/24]*24
 
     shape_it =  [0.034,0.034,0.034,0.034,0.034,0.034,
@@ -158,11 +161,11 @@ def load_profile(n, profile_shape):
                  0.063,0.035,0.037,0.045,0.045,0.009]
 
     if profile_shape == 'baseload':
-        shape = np.array(shape_base).reshape(-1, 3).mean(axis=1)
+        shape = np.array(shape_base).reshape(-1, scaling).mean(axis=1)
     elif profile_shape == 'datacenter':
-        shape = np.array(shape_it).reshape(-1, 3).mean(axis=1)
+        shape = np.array(shape_it).reshape(-1, scaling).mean(axis=1)
     elif profile_shape == 'industry':
-        shape = np.array(shape_ind).reshape(-1, 3).mean(axis=1)   
+        shape = np.array(shape_ind).reshape(-1, scaling).mean(axis=1)   
     else: 
         print(f"'profile_shape' option must be one of 'baseload', 'datacenter' or 'industry'. Now is {profile_shape}.")
         sys.exit()
@@ -171,7 +174,7 @@ def load_profile(n, profile_shape):
 
     load_day = load*24 #24h 
     load_profile_day = pd.Series(shape*load_day) #3H (or any n-hour) sampling is in
-    load_profile_year = pd.concat([load_profile_day]*int(len(n.snapshots)/8))
+    load_profile_year = pd.concat([load_profile_day]*int(len(n.snapshots)/(24/scaling)))
     
     profile = load_profile_year.set_axis(n.snapshots)
     #baseload = pd.Series(load,index=n.snapshots)
@@ -397,7 +400,7 @@ def add_ci(n, year):
             f'{name}' + " load",
             carrier="electricity",
             bus=name,
-            p_set=load_profile(n, profile_shape))
+            p_set=load_profile(n, profile_shape, config))
 
         #C&I following 24/7 approach is a share of C&I load -> substract it from node's profile
         n.loads_t.p_set[location]  -= n.loads_t.p_set[f'{name}'+' load']
@@ -915,6 +918,8 @@ if __name__ == "__main__":
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
+    config = snakemake.config
+
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
     penetration = float(snakemake.wildcards.policy[3:])/100 if policy != "ref" else 0
@@ -965,7 +970,7 @@ if __name__ == "__main__":
         #limit_resexp(n,year)
         cost_parametrization(n)
         co2_policy(n, year)
-        load_profile(n, profile_shape)
+        load_profile(n, profile_shape,config)
         
         add_ci(n, year)
         add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
