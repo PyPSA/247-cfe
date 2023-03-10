@@ -5,9 +5,10 @@ results_dir: 'results'
 costs_dir: '../technology-data/outputs'
 
 # from ../pypsa-eur-sec/results/<run>/prenetworks-brownfield
-n_2025: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
-n_2030: 'input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
-
+n_2025_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc'
+n_2030_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc'
+n_2025_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
+n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 
 ###################
 # Scenario controls
@@ -46,7 +47,12 @@ ci:
 #regional coverage of the model: "regions" or "EU"
   #"regions" -> strips the model to country where CI load is located + all neighboring countries 
   #"EU" -> keeps the whole European power system (full ENTSO-E area)
-area: "EU"
+
+
+###################
+# Temporal aggregation
+
+time_sampling: '1H' # one of ["1H", "3H"]
 
 
 ###################

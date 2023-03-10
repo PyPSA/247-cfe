@@ -78,8 +78,8 @@ rule make_summary:
 if config['solve_network'] == 'solve':
     rule solve_network:
         input:
-            network2030 = config['n_2030'],
-            network2025 = config['n_2025'],
+            network2030 = config[f'n_2030_{config["time_sampling"]}'],
+            network2025 = config[f'n_2025_{config["time_sampling"]}'],
             costs2030=CDIR + "/costs_2030.csv",
             costs2025=CDIR + "/costs_2025.csv"
         output:
