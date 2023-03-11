@@ -9,15 +9,14 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib.transforms import Bbox
 import matplotlib.colors as mc 
 from matplotlib.cm import ScalarMappable
-
-from pyrsistent import s
-from xarray import align
+import matplotlib.ticker as ticker
 
 #allow plotting without Xwindows
 matplotlib.use('Agg')
 
 from solve_network import palette, geoscope
 from pypsa.plot import add_legend_patches
+
 
 def ci_capacity():
 
@@ -147,16 +146,16 @@ def heatmap(data, month, year, ax):
     snapshot = data["snapshot"]
     day = data["snapshot"].dt.day
     value = data["iteration 1"]
-    value = value.values.reshape(8, len(day.unique()), order="F") # 8 clusters of 3h in each day
+    value = value.values.reshape(int(24/scaling), len(day.unique()), order="F") # 8 clusters of 3h in each day
     
     xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
-    ygrid = np.arange(9) #8 and extra 1
+    ygrid = np.arange(int(24/scaling)+1) # hours (sampled or not) + extra 1
     
     ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
     # Invert the vertical axis
-    ax.set_ylim(8, 0)
+    ax.set_ylim(int(24/scaling), 0)
     # Set tick positions for both axes
-    ax.yaxis.set_ticks([i for i in range(8)])
+    ax.yaxis.set_ticks([]) #[i for i in range(int(24/scaling))]
     ax.xaxis.set_ticks([])
     # Remove ticks by setting their length to 0
     ax.yaxis.set_tick_params(length=0)
@@ -172,16 +171,16 @@ def heatmap_utilization(data, month, year, ax, carrier):
     snapshot = data["snapshot"]
     day = data["snapshot"].dt.day
     value = data[f"{carrier}"]
-    value = value.values.reshape(8, len(day.unique()), order="F") # 8 clusters of 3h in each day
+    value = value.values.reshape(int(24/scaling), len(day.unique()), order="F") # 8 clusters of 3h in each day
     
     xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
-    ygrid = np.arange(9) #8 and extra 1
+    ygrid = np.arange(int(24/scaling)+1) # hours (sampled or not) + extra 1
     
     ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
     # Invert the vertical axis
-    ax.set_ylim(8, 0)
+    ax.set_ylim(int(24/scaling), 0)
     # Set tick positions for both axes
-    ax.yaxis.set_ticks([i for i in range(8)])
+    ax.yaxis.set_ticks([]) #[i for i in range(int(24/scaling))]
     ax.xaxis.set_ticks([])
     # Remove ticks by setting their length to 0
     ax.yaxis.set_tick_params(length=0)
@@ -226,7 +225,7 @@ def plot_heatmap_cfe():
 
     # add some figure labels and title
     fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
-    fig.text(0.02, 0.5, '3-hour clusters of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+    fig.text(0.03, 0.5, 'Hours of a day', ha="center", va="center", rotation="vertical", fontsize=14)
     fig.suptitle(f"Carbon Heat Map | {location}", fontsize=20, y=0.98)
 
     path = snakemake.output.plot.split('capacity.pdf')[0] + f'heatmaps'
@@ -272,7 +271,7 @@ def plot_heatmap_utilization(carrier):
 
     # add some figure labels and title
     fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
-    fig.text(0.02, 0.5, '3-hour clusters of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+    fig.text(0.03, 0.5, 'Hours of a day', ha="center", va="center", rotation="vertical", fontsize=14)
     fig.suptitle(f"Flexibility utilization | {node}", fontsize=20, y=0.98)
 
     path = snakemake.output.plot.split('capacity.pdf')[0] + f'heatmaps'
@@ -329,7 +328,7 @@ def plot_balances(n, node,
             ):
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,4.5))
 
     tech_colors = snakemake.config['tech_colors']
     df = retrieve_nb(n, node)
@@ -351,7 +350,7 @@ def plot_balances(n, node,
     ldf.plot(kind="bar",stacked=True,
             color=tech_colors, 
             ax=ax, width=1, 
-            edgecolor = "black", linewidth=0.05
+            #edgecolor = "black", linewidth=0.01
             )
 
     #visually ensure net energy balance at the node
@@ -364,12 +363,11 @@ def plot_balances(n, node,
     plt.xticks(rotation=90)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    #ax.set_xlabel("Hours")
     ax.set(xlabel=None)
-    ax.xaxis.set_major_locator(plt.MaxNLocator((duration*2+1)))
+    majors = range(0,duration*24+1,12)
+    ax.xaxis.set_major_locator(ticker.FixedLocator(majors))
 
     ax.set_ylabel("Nodal balance [MW*h/h]")
-    #ax.legend(loc="upper left", ncol = 3, prop={"size":8})
 
     add_legend_patches(
         ax,
@@ -386,9 +384,8 @@ def plot_balances(n, node,
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fig.savefig(path + '/' + f"{flex}_balance_{node}.pdf", 
-                bbox_inches = Bbox([[0,0],[7.7,4.5]])
-    )
+    fig.savefig(path + '/' + f"{flex}_balance_{node}.pdf")
+
 
 
 if __name__ == "__main__":
@@ -397,6 +394,9 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
         year='2025', zone='IE', palette='p1', policy="cfe100")   
+
+    config = snakemake.config
+    scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
