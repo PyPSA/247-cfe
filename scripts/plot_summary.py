@@ -37,6 +37,10 @@ def ci_capacity():
     ldf.rename(index=rename_ci_capacity, level=0, inplace=True) 
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
+
+    #Sort final dataframe before plotting
+    ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
+
     (ldf).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
 
@@ -80,8 +84,12 @@ def ci_costandrev():
     new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
     ldf = ldf.loc[new_index]
 
+    #Sort final dataframe before plotting
+    ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
+
     ldf.T.plot(kind="bar",stacked=True,
                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+    
     netc=ldf.sum()
     x = 0
     for i in range(len(netc)):
@@ -123,6 +131,9 @@ def ci_generation():
 
     yl = df.loc['ci_demand_total'][0]/1000
     plt.axhline(y = yl, color = 'gray', linestyle="--", linewidth=0.8)
+
+    #Sort final dataframe before plotting
+    ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
 
     (ldf).T.plot(kind="bar",stacked=True,
                 ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
@@ -393,7 +404,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IE', palette='p1', policy="cfe100")   
+        year='2025', zone='IEDK', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -461,7 +472,7 @@ if __name__ == "__main__":
         "hydrogen fuel cell"])
 
     rename_scen = {'0': '0%\n',
-                   '5': '5%\n',
+                   '5': '05%\n',
                    '10': '10%\n',
                     '20': '20%\n',
                     '40': '40%\n',
