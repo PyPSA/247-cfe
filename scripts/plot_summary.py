@@ -144,12 +144,119 @@ def ci_generation():
     ax.set_axisbelow(True)
     ax.set_ylim([0,max(ldf.sum())*1.3])
     #ax.set_xlabel("CFE target")
-    ax.set_ylabel("C&I generation [GWh]")
+    ax.set_ylabel("DC portfolio generation [GWh]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_generation.pdf"), transparent=True)
 
+
+def zone_emissions():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((6,4.5))
+
+    ldf = df.loc['emissions_zone'] #.to_frame()
+
+    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+
+    #Sort final dataframe before plotting
+    ldf.sort_index(axis='rows', level=[1,0], ascending=[False, True], inplace=True)
+    
+    ldf.plot(kind="bar", ax=ax, 
+        color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
+ 
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    #ax.set_xlabel("CFE target")
+    ax.set_ylabel("Emissions in local zone [MtCO$_2$/a]")
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","zone_emissions.pdf"), transparent=True)
+
+
+def system_capacity_diff():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((6,4.5))
+
+    gens = df.loc[["system_inv_" + t for t in exp_generators]].rename({"system_inv_" + t : t for t in exp_generators})
+    links = df.loc[["system_inv_" + t for t in exp_links]].rename({"system_inv_" + t : t for t in exp_links})
+    dischargers = df.loc[["system_inv_" + t for t in exp_dischargers]].rename({"system_inv_" + t : t for t in exp_dischargers})
+    chargers = df.loc[["system_inv_" + t for t in exp_chargers]].rename({"system_inv_" + t : t for t in exp_chargers})
+    chargers = chargers.drop(['battery_charger-%s' % year]) # display only battery discharger capacity
+
+    ldf = pd.concat([gens, links, dischargers, chargers])
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
+    #select any first location since system-wide values are the same
+    ldf = ldf.xs(locations[0], axis='columns', level=1)
+
+    #subtract 0% flex scenario from each column
+    ldf = ldf.sub(ldf.iloc[:, 0], axis=0)
+
+    ldf.columns = ldf.columns.map(rename_scen)
+    ldf = ldf.groupby(rename_system_simple).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+
+    (ldf).T.plot(kind="bar",stacked=True,
+               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    #ax.set_xlabel("CFE target")
+    ax.set_ylabel(f"System capacity diff. [MW]")
+
+    ldf_pos = ldf[ldf>0]
+    ldf_neg = ldf[ldf<0]
+    up = ldf_pos.sum(axis=0).max()
+    lo = ldf_neg.sum(axis=0).min()
+    ax.set_ylim(bottom=lo*1.1, top=up*2)
+
+    ax.legend(loc='upper left', ncol=3, prop={"size":8}, fancybox=True)
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","system_capacity_diff.pdf"),
+                transparent=True)
+
+
+def ci_abs_costs():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((6,4.5))
+
+    ldf = (df.loc['ci_total_cost'] - df.loc['ci_revenue_grid'])/1e6
+    ldf = ldf.to_frame(name='ci_abs_costs')
+
+    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+    ldf=ldf['ci_abs_costs'].unstack()
+    #Sort final dataframe before plotting
+    ldf.sort_index(axis='rows', ascending=True, inplace=True)
+    
+    ldf.plot(kind="bar", stacked=True, ax=ax, 
+        width=0.65, edgecolor = "black", linewidth=0.05)
+ 
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    
+    value = (ldf.sum(axis=1).max()-  ldf.sum(axis=1).min())
+    ax.set_xlabel(f"Value of flexibility utilization is at {round(value, 1)} M€/a")
+    plt.axhline(y = ldf.sum(axis=1).max(), color = 'gray', linestyle="--", linewidth=1.5)
+    plt.axhline(y = ldf.sum(axis=1).min(), color = 'gray', linestyle="--", linewidth=1.5)
+
+    ax.set_ylabel("24/7 CFE net annual costs [€ per year]")
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_abs_costs.pdf"), transparent=True)
+
+# TODO objective diff
+
+
+### Plotting time-series data
 
 def heatmap(data, month, year, ax):
     data = df[(df["snapshot"].dt.month == month)]
@@ -433,6 +540,19 @@ if __name__ == "__main__":
     clean_dischargers = [g for g in storage_discharge_techs]
     clean_dischargers = [item.replace(' ', '_') for item in clean_dischargers]
 
+    exp_generators = ['offwind-ac-%s' % year, 
+                    'offwind-dc-%s' % year, 
+                    'onwind-%s' % year, 
+                    'solar-%s' % year]
+    exp_links = ['OCGT-%s' % year]
+    exp_chargers = ['battery charger-%s' % year, 'H2 Electrolysis-%s' % year]
+    exp_dischargers = ['battery discharger-%s' % year, 'H2 Fuel Cell-%s' % year]
+
+    exp_generators = [item.replace(' ', '_') for item in exp_generators]
+    exp_chargers = [item.replace(' ', '_') for item in exp_chargers]
+    exp_dischargers = [item.replace(' ', '_') for item in exp_dischargers]
+
+
     #Assign colors
     tech_colors = snakemake.config['tech_colors']
 
@@ -471,11 +591,11 @@ if __name__ == "__main__":
         "hydrogen electrolysis",
         "hydrogen fuel cell"])
 
-    rename_scen = {'0': '0%\n',
-                   '5': '05%\n',
-                   '10': '10%\n',
-                    '20': '20%\n',
-                    '40': '40%\n',
+    rename_scen = {'0': '0.\n',
+                   '5': '0.05\n',
+                   '10': '0.1\n',
+                    '20': '0.2\n',
+                    '40': '0.4\n',
                     }
 
     rename = {}
@@ -518,6 +638,16 @@ if __name__ == "__main__":
         'temporal shift',
         ])
 
+    rename_system_simple = {
+        'offwind-ac-%s' % year: 'offshore wind',
+        'offwind-dc-%s' % year: 'offshore wind',
+        'onwind-%s' % year: 'onshore wind',
+        'solar-%s' % year: 'solar',
+        'OCGT-%s' % year: 'Gas OC',
+        'battery_discharger-%s' % year: 'battery',
+        'H2_Fuel_Cell-%s' % year: 'hydrogen fuel cell',
+        'H2_Electrolysis-%s' % year: 'hydrogen electrolysis'
+    }
 
 # %matplotlib inline
 
@@ -528,6 +658,10 @@ df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
 ci_capacity()
 ci_costandrev()
 ci_generation()
+
+zone_emissions()
+system_capacity_diff()
+ci_abs_costs()
 
 
 # TIME-SERIES DATA (per flexibility scenario)
