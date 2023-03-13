@@ -223,6 +223,70 @@ def system_capacity_diff():
                 transparent=True)
 
 
+def ci_curtailment():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    #Data for ci res curtailment across all locations
+    ci_res = snakemake.config['ci']['res_techs']
+    ldf = df.loc[["ci_curtailment_" + t for t in ci_res]].rename({"ci_curtailment_" + t: t for t in ci_res})
+
+    #Refine data
+    ldf.rename(columns=rename_scen, level=0, inplace=True) 
+    ldf = pd.DataFrame(ldf.sum(axis=0), columns=['RES curtailment']).unstack()
+    ldf = ldf['RES curtailment']/1e3 
+
+    ldf.plot(kind="bar",stacked=True,
+                ax=ax, width=0.65, edgecolor = "black", linewidth=0.05)
+
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("DC portfolio RES curtailment [GWh]")
+    up = ldf.sum(axis=1).max()
+    ax.set_ylim(top=up*1.5)
+
+    ax.legend(loc='upper right', ncol=2, prop={"size":7}, fancybox=True)
+    ax.legend(loc='upper right', ncol=3, prop={"size":8}, fancybox=True)
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_curtailment.pdf"),
+                transparent=True)
+
+
+def system_curtailment():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    #Data for system-wide res curtailment
+    system_res = ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar"]
+    ldf = df.loc[["system_curtailment_" + t for t in system_res]].rename({"system_curtailment_" + t: t for t in system_res})
+    ldf = ldf.xs(locations[0], axis='columns', level=1)
+
+    #Refine data
+    ldf.rename(columns=rename_scen, level=0, inplace=True) 
+    ldf = ldf.groupby(rename_curtailment).sum()
+    new_index = preferred_order.intersection(ldf.index).append(ldf.index.difference(preferred_order))
+    ldf = ldf.loc[new_index]
+    ldf = ldf/1e3 
+
+    ldf.T.plot(kind="bar",stacked=True, color=tech_colors,
+                ax=ax, width=0.65, edgecolor = "black", linewidth=0.05)
+
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("System RES curtailment [GWh]")
+    up = ldf.sum(axis=0).max()
+    ax.set_ylim(top=up*1.5)
+
+    ax.legend(loc='upper right', ncol=2, prop={"size":7}, fancybox=True)
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","system_curtailment.pdf"),
+                transparent=True)
+
+
 def ci_abs_costs():
 
     fig, ax = plt.subplots()
@@ -611,6 +675,15 @@ if __name__ == "__main__":
         "H2_Electrolysis": "hydrogen electrolysis",
         'adv_geothermal': "advanced dispatchable",
         'allam_ccs': "NG-Allam"})
+
+    rename_curtailment= pd.Series({
+        "offwind" : "offshore wind",
+        "offwind-ac" : "offshore wind",
+        "offwind-dc" : "offshore wind",
+        "onwind" : "onshore wind",
+        "solar" : "solar",
+        "ror" : 'hydroelectricity',
+        "hydro": 'hydroelectricity'})
 
     preferred_order = pd.Index([
         "advanced dispatchable",

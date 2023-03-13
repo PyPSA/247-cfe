@@ -322,6 +322,29 @@ def summarise_network(n, policy, tech_palette):
         results[f'{location}']['system_grid_cfe_wavg'] = system_grid_cfe_wavg
         #print(system_grid_cfe_wavg) #print(grid_cfe.mean())
 
+        # 8: Store RES curtailment
+        system_res = n.generators[~n.generators.index.str.contains('EU')].carrier.unique()
+        ci_res = snakemake.config['ci']['res_techs']
+
+        # Combine DC names using a regular expression pattern
+        pattern = '|'.join(names)
+        system_buses = n.buses.index[~n.buses.index.str.contains(pattern)]
+        ci_buses = n.buses.index[n.buses.index.str.contains(pattern)]
+        ci_bus = n.buses.index[n.buses.index.str.contains(name)]
+
+        for tech in system_res:
+
+            gens = n.generators.query('carrier == @tech and bus in @system_buses').index
+            results[f'{location}']['system_curtailment_' + tech] = (n.generators_t.p_max_pu[gens] * n.generators.p_nom_opt[gens] 
+                - n.generators_t.p[gens]).clip(lower=0).multiply(weights, axis=0).sum().sum()
+
+        for tech in ci_res:
+
+            gens = n.generators.query('carrier == @tech and bus in @ci_bus').index
+            results[f'{location}']['ci_curtailment_' + tech] = (n.generators_t.p_max_pu[gens] * n.generators.p_nom_opt[gens] 
+                - n.generators_t.p[gens]).clip(lower=0).multiply(weights, axis=0).sum().sum()
+
+
         if snakemake.config['global']['policy_type'] == "co2 cap":
             results[f'{location}']["co2_price"] = n.global_constraints.at["CO2Limit","mu"]
         elif snakemake.config['global']['policy_type'] == "co2 price":
@@ -342,7 +365,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('summarise_network',
-                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
+                    year='2025', zone='IEDK', palette='p1', policy="cfe100", flexibility='0')
 
     #Wildcards & Settings
     policy = snakemake.wildcards.policy[:3]
