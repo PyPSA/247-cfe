@@ -191,7 +191,7 @@ def system_capacity_diff():
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
     ldf.drop(to_drop, inplace=True)
 
-    #select any first location since system-wide values are the same
+    #select any location since system-wide values are the same
     ldf = ldf.xs(locations[0], axis='columns', level=1)
 
     #subtract 0% flex scenario from each column
@@ -244,16 +244,49 @@ def ci_abs_costs():
     ax.set_axisbelow(True)
     
     value = (ldf.sum(axis=1).max()-  ldf.sum(axis=1).min())
-    ax.set_xlabel(f"Value of flexibility utilization is at {round(value, 1)} M€/a")
+    ax.set_xlabel(f"Value of flexibility utilization is at {round(value, 1)} MEUR/a")
     plt.axhline(y = ldf.sum(axis=1).max(), color = 'gray', linestyle="--", linewidth=1.5)
     plt.axhline(y = ldf.sum(axis=1).min(), color = 'gray', linestyle="--", linewidth=1.5)
 
-    ax.set_ylabel("24/7 CFE net annual costs [€ per year]")
+    ax.set_ylabel("24/7 CFE net annual costs [MEUR per year]")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_abs_costs.pdf"), transparent=True)
 
-# TODO objective diff
+
+
+def objective_abs():
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches((4,3))
+
+    ldf = df.loc['objective']/1e6
+    ldf = ldf.to_frame(name='objective')
+
+    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+    ldf=ldf['objective'].unstack()
+    ldf.sort_index(axis='rows', ascending=True, inplace=True)
+
+    ldf = ldf.sub(ldf.iloc[0, :])
+    #select any location since system-wide values are the same
+    ldf = ldf[locations[0]]
+
+    ldf.plot(kind="bar", ax=ax,
+            color='#33415c', width=0.65, edgecolor = "black", linewidth=0.05)
+
+    plt.xticks(rotation=0)
+    ax.grid(alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("Objective [MEUR]")
+
+    value = abs(ldf.min())
+    plt.axhline(y = ldf.min(), color = 'gray', linestyle="--", linewidth=1.5)
+    ax.set_xlabel(f"Objective decrease in max. flexibility scenario: \n {round(value, 1)} MEUR/a")
+
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","objective.pdf"),
+                transparent=True)
+
 
 
 ### Plotting time-series data
@@ -662,7 +695,7 @@ ci_generation()
 zone_emissions()
 system_capacity_diff()
 ci_abs_costs()
-
+objective_abs()
 
 # TIME-SERIES DATA (per flexibility scenario)
 
