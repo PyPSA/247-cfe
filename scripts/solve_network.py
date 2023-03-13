@@ -59,7 +59,6 @@ def geoscope(zone, area):
     GERMANY = ['DE1 0', 'BE1 0', 'NO2 0', 'DK1 0', 'DK2 0', 'SE2 0', 'GB0 0', 
               'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']         
     NETHERLANDS = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
-
     IEDK = IRELAND + ["DK1 0", "DK2 0"] + ['FR1 0', 'LU1 0', 'DE1 0', 'BE1 0', 'NL1 0', 'NO2 0', 'SE2 0']
 
     EU = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
@@ -77,6 +76,7 @@ def geoscope(zone, area):
     elif zone == 'NL': d['basenodes_to_keep'] = NETHERLANDS   
     elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
     elif zone == 'IEDK': d['basenodes_to_keep'] = IEDK
+    elif zone == 'FR': d['basenodes_to_keep'] = IEDK #intentionally larger network
     else: 
         print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL', 'GB'. Now is {zone}.")
         sys.exit()
@@ -84,12 +84,12 @@ def geoscope(zone, area):
     if area == 'EU': d['basenodes_to_keep'] = EU
 
     #set country nodes for possible locations of DCs
-    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB0 0']
+    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB0 0', 'FR1 0']
     temp = dict() 
 
     for node in locations:
         if node not in possible_locations:
-            print(f"Possible locations for data centers are in 'IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0'") 
+            print(f"Possible locations for data centers are in 'IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0', 'FR1 0'") 
             print(f"You placed it in {node}.")
             sys.exit()
 
@@ -98,6 +98,7 @@ def geoscope(zone, area):
     if 'DE1 0' in locations: temp['DE1 0'] = ['DE1 0']
     if 'NL1 0' in locations: temp['NL1 0'] = ['NL1 0']
     if 'GB0 0' in locations: temp['GB0 0'] = ['GB0 0', 'GB5 0']
+    if 'FR1 0' in locations: temp['FR1 0'] = ['FR1 0']
     d['country_nodes'] = temp
 
     return d
@@ -914,7 +915,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='40')
+                    year='2025', zone='IEDK', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 

@@ -259,8 +259,10 @@ def system_curtailment():
     fig.set_size_inches((6,4.5))
 
     #Data for system-wide res curtailment
-    system_res = ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar"]
-    ldf = df.loc[["system_curtailment_" + t for t in system_res]].rename({"system_curtailment_" + t: t for t in system_res})
+    system_res = ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar", "hydro"]
+    existing_rows = [t for t in system_res if "system_curtailment_" + t in df.index]
+
+    ldf = df.loc[["system_curtailment_" + t for t in existing_rows]].rename({"system_curtailment_" + t: t for t in existing_rows})
     ldf = ldf.xs(locations[0], axis='columns', level=1)
 
     #Refine data
@@ -614,7 +616,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IEDK', palette='p1', policy="cfe100")   
+        year='2025', zone='FR', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
