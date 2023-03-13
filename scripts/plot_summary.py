@@ -226,7 +226,7 @@ def system_capacity_diff():
 def ci_curtailment():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     #Data for ci res curtailment across all locations
     ci_res = snakemake.config['ci']['res_techs']
@@ -247,8 +247,7 @@ def ci_curtailment():
     up = ldf.sum(axis=1).max()
     ax.set_ylim(top=up*1.5)
 
-    ax.legend(loc='upper right', ncol=2, prop={"size":7}, fancybox=True)
-    ax.legend(loc='upper right', ncol=3, prop={"size":8}, fancybox=True)
+    ax.legend(loc='upper right', ncol=2, prop={"size":8}, fancybox=True)
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_curtailment.pdf"),
                 transparent=True)
@@ -257,7 +256,7 @@ def ci_curtailment():
 def system_curtailment():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     #Data for system-wide res curtailment
     system_res = ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar"]
@@ -271,17 +270,24 @@ def system_curtailment():
     ldf = ldf.loc[new_index]
     ldf = ldf/1e3 
 
+    #subtract 0% flex scenario from each column
+    ldf = ldf.sub(ldf.iloc[:, 0], axis=0)
+
     ldf.T.plot(kind="bar",stacked=True, color=tech_colors,
                 ax=ax, width=0.65, edgecolor = "black", linewidth=0.05)
 
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_ylabel("System RES curtailment [GWh]")
-    up = ldf.sum(axis=0).max()
-    ax.set_ylim(top=up*1.5)
+    ax.set_ylabel(f"System RES curtailment | diff to 0. flex [GWh]")
 
-    ax.legend(loc='upper right', ncol=2, prop={"size":7}, fancybox=True)
+    ldf_pos = ldf[ldf>0]
+    ldf_neg = ldf[ldf<0]
+    up = ldf_pos.sum(axis=0).max()
+    lo = ldf_neg.sum(axis=0).min()
+    ax.set_ylim(bottom=lo*1.1, top=up*1.5)
+
+    ax.legend(loc='upper right', ncol=2, prop={"size":8}, fancybox=True)
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","system_curtailment.pdf"),
                 transparent=True)
@@ -307,8 +313,8 @@ def ci_abs_costs():
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     
-    value = (ldf.sum(axis=1).max()-  ldf.sum(axis=1).min())
-    ax.set_xlabel(f"Value of flexibility utilization is at {round(value, 1)} MEUR/a")
+    value = (ldf.sum(axis=1)[0] -  ldf.sum(axis=1)[-1])
+    ax.set_xlabel(f"Cost diff for min/max flex scenarios: {round(value, 1)} MEUR/a")
     plt.axhline(y = ldf.sum(axis=1).max(), color = 'gray', linestyle="--", linewidth=1.5)
     plt.axhline(y = ldf.sum(axis=1).min(), color = 'gray', linestyle="--", linewidth=1.5)
 
@@ -322,7 +328,7 @@ def ci_abs_costs():
 def objective_abs():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((4,3))
+    fig.set_size_inches((6,4.5))
 
     ldf = df.loc['objective']/1e6
     ldf = ldf.to_frame(name='objective')
@@ -343,9 +349,9 @@ def objective_abs():
     ax.set_axisbelow(True)
     ax.set_ylabel("Objective [MEUR]")
 
-    value = abs(ldf.min())
+    value = -(ldf[0] - ldf[-1])
     plt.axhline(y = ldf.min(), color = 'gray', linestyle="--", linewidth=1.5)
-    ax.set_xlabel(f"Objective decrease in max. flexibility scenario: \n {round(value, 1)} MEUR/a")
+    ax.set_xlabel(f"Obj. diff for min/max flex scenarios: \n {round(value, 1)} MEUR/a")
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","objective.pdf"),
@@ -764,10 +770,12 @@ df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
 ci_capacity()
 ci_costandrev()
 ci_generation()
+ci_abs_costs()
+ci_curtailment()
 
 zone_emissions()
+system_curtailment()
 system_capacity_diff()
-ci_abs_costs()
 objective_abs()
 
 # TIME-SERIES DATA (per flexibility scenario)
