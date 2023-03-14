@@ -752,9 +752,12 @@ def solve_network(n, policy, penetration, tech_palette):
     def cfe_constraints(n):
 
         weights = n.snapshot_weightings["generators"] 
+        delta = float(flexibility)/100 
+        vls = n.links[n.links.carrier=='virtual_link']
 
         for location, name in datacenters.items():
 
+            #LHS
             clean_gens = [name + " " + g for g in clean_techs]
             storage_dischargers = [name + " " + g for g in storage_discharge_techs]
             storage_chargers = [name + " " + g for g in storage_charge_techs]
@@ -772,9 +775,19 @@ def solve_network(n, policy, penetration, tech_palette):
                 ).sum() # linear expr
 
             lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
+
+            #RHS
             total_load = (n.loads_t.p_set[name + " load"]*weights).sum()
-            
-            n.model.add_constraints(lhs >= penetration*total_load, name=f"CFE_constraint_{name}")
+            vls_snd = vls.query('bus0==@name').index
+            vls_rec = vls.query('bus1==@name').index
+            total_snd = n.model['Link-p'].loc[:, vls_snd].sum(dims=["Link"]).sum()
+            total_rec = n.model['Link-p'].loc[:, vls_rec].sum(dims=["Link"]).sum()
+     
+            # lhs >= rhs
+            # rhs = penetration*(total_load + total_rec - total_snd)
+    
+            n.model.add_constraints(lhs - penetration*(total_rec - total_snd) >= penetration*(total_load), 
+                                    name=f"CFE_constraint_{name}")
 
 
     def excess_constraints(n):
@@ -915,7 +928,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IEDK', palette='p1', policy="cfe100", flexibility='40')
+                    year='2025', zone='IEDK', palette='p2', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
