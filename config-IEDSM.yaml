@@ -13,7 +13,7 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: fixed-1H-FR-DSM-20scen
+run: fixed-1H-IE-DSM-20scen
 
 #wildcards
 scenario:
@@ -23,8 +23,8 @@ scenario:
              "p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: [ #"IE",
-          "IEDK"
+  zone: [ "IE",
+          #"IEDK"
           #"DK",
           #"DE",
           #"NL"
@@ -35,8 +35,8 @@ scenario:
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:
-  #datacenters: {"IE5 0": "dublin"}    # datacenter (location: name) pairs
-  datacenters: {"FR1 0": "paris"}    
+  datacenters: {"IE5 0": "dublin"}    # datacenter (location: name) pairs
+  ##datacenters: {"FR1 0": "paris"}    
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
   #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"

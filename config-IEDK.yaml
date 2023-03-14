@@ -13,7 +13,7 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: fixed-1H-FR-DSM-20scen
+run: fixed-1H-IEDK-20scen
 
 #wildcards
 scenario:
@@ -36,14 +36,14 @@ scenario:
 
 ci:
   #datacenters: {"IE5 0": "dublin"}    # datacenter (location: name) pairs
-  datacenters: {"FR1 0": "paris"}    
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
+  #datacenters: {"FR1 0": "paris"}    
+  datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
   #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
-  spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
 
 
 #regional coverage of the model: "regions" or "EU"

@@ -6,7 +6,7 @@ wildcard_constraints:
 
 RDIR = os.path.join(config['results_dir'], config['run'])
 CDIR = config['costs_dir']
-
+RUN = config['run']
 
 rule merge_all_plots:
     input: 
@@ -114,7 +114,7 @@ rule copy_config:
 # additional rules for cluster communication -> not included into a workflow 
 rule sync_solution:
     params:
-        cluster="iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/report"
+        cluster=f"iegor.riepin@gateway.hpc.tu-berlin.de:/scratch/iegor.riepin/247-cfe/results/{RUN}"
     shell: 
         """
         rsync -uvarh --no-g {params.cluster} results/

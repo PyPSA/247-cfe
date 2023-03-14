@@ -105,7 +105,7 @@ def ci_costandrev():
     ax.set_axisbelow(True)
     ax.set_ylabel("24/7 CFE cost and revenue [€/MWh]")
     ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    ax.set_ylim(top=max(ldf.sum())*1.5)
+    ax.set_ylim(top=max(ldf.sum())*2)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_costandrev.pdf"), transparent=True)
@@ -616,7 +616,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='FR', palette='p1', policy="cfe100")   
+        year='2025', zone='IEDK', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
