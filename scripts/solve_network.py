@@ -782,23 +782,15 @@ def solve_network(n, policy, penetration, tech_palette):
 
             vls_snd = vls.query('bus0==@name').index
             vls_rec = vls.query('bus1==@name').index
-            total_snd = n.model['Link-p'].loc[:, vls_snd].sum(dims=["Link"]).sum() if len(vls_snd) > 0 else 0
-            total_rec = n.model['Link-p'].loc[:, vls_rec].sum(dims=["Link"]).sum() if len(vls_rec) > 0 else 0
+            total_snd = n.model['Link-p'].loc[:, vls_snd].sum() # NB sum over both axes
+            total_rec = n.model['Link-p'].loc[:, vls_rec].sum()
     
             dsm_delayin = dsm.query('bus0==@name').index
             dsm_delayout = dsm.query('bus1==@name').index
-            total_delayin = n.model['Link-p'].loc[:, dsm_delayin].sum(dims=["Link"]).sum() if len(dsm_delayin) > 0 else 0
-            total_delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"]).sum() if len(dsm_delayout) > 0 else 0
+            total_delayin = n.model['Link-p'].loc[:, dsm_delayin].sum() # NB sum over both axes
+            total_delayout = n.model['Link-p'].loc[:, dsm_delayout].sum()
 
-            #Very ugly, but linopy does not accept 'None' on LFS, talk to FH
-            if len(vls_snd) > 0 and len(dsm_delayin) > 0:
-                flex = penetration*(total_rec - total_snd + total_delayout - total_delayin)  
-            elif len(vls_snd) > 0 and len(dsm_delayin) == 0:
-                flex = penetration*(total_rec - total_snd)  
-            elif len(vls_snd) == 0 and len(dsm_delayin) > 0:
-                flex = penetration*(total_delayout - total_delayin)  
-            elif len(vls_snd) == 0 and len(dsm_delayin) == 0:
-                flex = 0
+            flex = penetration*(total_rec - total_snd + total_delayout - total_delayin)  
 
             n.model.add_constraints(lhs - flex >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
