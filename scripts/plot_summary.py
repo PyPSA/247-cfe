@@ -217,7 +217,7 @@ def system_capacity_diff():
     lo = ldf_neg.sum(axis=0).min()
     ax.set_ylim(bottom=lo*1.1, top=up*2)
 
-    ax.legend(loc='upper left', ncol=3, prop={"size":8}, fancybox=True)
+    ax.legend(loc='lower left', ncol=3, prop={"size":8}, fancybox=True)
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","system_capacity_diff.pdf"),
                 transparent=True)
@@ -616,7 +616,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IEDK', palette='p1', policy="cfe100")   
+        year='2025', zone='IEDK', palette='p2', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -773,12 +773,12 @@ ci_capacity()
 ci_costandrev()
 ci_generation()
 ci_abs_costs()
-ci_curtailment()
-
 zone_emissions()
-system_curtailment()
 system_capacity_diff()
 objective_abs()
+
+ci_curtailment()
+system_curtailment()
 
 # TIME-SERIES DATA (per flexibility scenario)
 
