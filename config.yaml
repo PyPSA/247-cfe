@@ -13,7 +13,7 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: fixed-1H-FR-DSM-20scen
+run: temp
 
 #wildcards
 scenario:
@@ -130,26 +130,40 @@ ci_load:
 #source: https://world-nuclear.org/
 nodes_with_nucsban: ["DE1 0"]
 #countries with coal phase-out policy before 2025 and 2030
-#countries with the plan year 2025 + 'DE' are in the 2030 bracket
 #source: https://beyond-coal.eu/europes-coal-exit/
 policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
-policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK', 'DE']
+policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
 #source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
-#data for NL is dummy
 res_target_2025:
   IE: 0.47
   DK: 0.9
-  DE: 0.45
-  NL: 0.35
-  GB: 0.685
-  FR: 0.32
+  DE: 0.55
+  NL: 0.35    # interpolated from 2020 wind+solar 19%, bioenergy 6% to 2030 target
+  AT: 0.90   # 79% overall renewables in 2020 -> target 100% 2030
+  BE: 0.335  # 20% (2020) wind + solar, 6% Others
+  BG: 0.21   # p. 59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
+  CZ: 0.14   # 4% wind+solar 2020, 12% renewable overall (2020)
+  HR: 0.56   # linear interpolated Table 2-1 p.54 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
+  FR: 0.32   # 10% wind+solar 2020, 23% renewable overall
+  GB: 0.685  # 29% wind + solar 2020, 42% renewable overall
+  PL: 0.245  # 11% wind + solar 2020, 17% renewable overall
+  ES: 0.588  # linear interpolated share 46.6% in 2021 targer 74% in 2030
+  PT: 0.69   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
 res_target_2030:
   IE: 0.7
   DK: 1.1
-  DE: 0.8
-  NL: 0.5
-  GB: 0.95 
+  DE: 0.80
+  NL: 0.50  #https://climate-laws.org/geographies/netherlands/policies/national-climate-agreement
+  AT: 1.0   # https://windeurope.org/newsroom/news/austria-aims-to-have-100-renewable-electricity-by-2030/
+  BE: 0.404 # 32% https://windeurope.org/newsroom/news/belgium-energy-and-climate-plan-proposes-renewable-energy-target-of-18-3-by-2030/
+  BG: 0.27  # p.59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
+  HR: 0.64  # p.54 Table 2-1 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
+  CZ: 0.17
   FR: 0.4
+  GB: 0.95  # https://www.edie.net/energy-security-strategy-uk-targets-95-low-carbon-electricity-mix-by-2030-but-will-increase-oil-and-gas-production/
+  PL: 0.32  # table 1.1 https://iea.blob.core.windows.net/assets/b9ea5a7d-3e41-4318-a69e-f7d456ebb118/Poland2022.pdf
+  ES: 0.74  # p.10 https://energy.ec.europa.eu/system/files/2021-01/staff_working_document_assessment_necp_spain_en_0.pdf
+  PT: 0.8   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
 
 
 solving:

@@ -106,7 +106,6 @@ def geoscope(zone, area):
 
 def timescope(year):
     '''
-    country_res_target -> value of national RES policy constraint for {year} and {zone}
     coal_phaseout -> countries that implement coal phase-out policy until {year}
     network_file -> input file with pypsa-eur-sec brownfield network for {year}
     costs_projection -> input file with technology costs for {year}
@@ -292,32 +291,31 @@ def shutdown_lineexp(n):
     n.links.loc[n.links.carrier=='DC', 'p_nom_extendable'] = False
 
 
-def limit_resexp(n, year):
+def limit_resexp(n, year, snakemake):
     '''
-    limit expansion of renewable technologies per zone and carrier type 
+    limit expansion of renewable technologies per zone and carrier type
     as a ratio of max increase to 2021 capacity fleet
     (additional to zonal place availability constraint)
     '''
-    name = snakemake.config['ci']['name']
     ratio = snakemake.config['global'][f'limit_res_exp_{year}']
-    node = geoscope(zone, area)['node']
 
-    res = n.generators[(~n.generators.index.str.contains('EU')) & (~n.generators.index.str.contains(name)) & (~n.generators.index.str.contains(f'{node}'))]
-    fleet = res[res.p_nom_extendable==False]
+    list_datacenters = list(datacenters.values())
+    mask_datacenters = n.generators.index.str.contains('|'.join(list_datacenters), case=False)
+    system_gens = n.generators[~mask_datacenters]
 
-    #fleet.groupby([fleet.carrier, fleet.bus]).p_nom.sum()
-    off_c = fleet[fleet.index.str.contains('offwind')].carrier + '-' + \
-            fleet[fleet.index.str.contains('offwind')].index.str.extract('(ac)|(dc)').fillna('').sum(axis=1).values
-    
-    fleet["carrier_s"] = off_c.reindex(fleet.index).fillna(fleet.carrier)
+    fleet = system_gens.groupby([system_gens.bus.str[:2],
+                                  system_gens.carrier]).p_nom.sum()
+    fleet = fleet.rename(lambda x: x.split("-")[0], level=1).groupby(level=[0,1]).sum()
+    ct_national_target = list(snakemake.config[f"res_target_{year}"].keys()) + ["EU"]
 
-    for bus in fleet.bus.unique():
-        for carrier in ['solar', 'onwind', 'offwind-ac', 'offwind-dc']:
-            p_nom_fleet = 0
-            p_nom_fleet = fleet.loc[(fleet.bus == bus) & (fleet.carrier_s == carrier), "p_nom"].sum()
-            #print(f'bus: {bus}, carrier: {carrier}' ,p_nom_fleet)
-            n.generators.loc[(n.generators.p_nom_extendable==True) & (n.generators.bus == bus) & \
-                             (n.generators.carrier == carrier), "p_nom_max"] = ratio * p_nom_fleet
+    fleet.drop(ct_national_target, errors="ignore", level=0, inplace=True)
+
+    #option to allow build out of carriers which are not build yet
+    #fleet[fleet==0] = 1
+    for ct, carrier in fleet.index:
+        gen_i = ((n.generators.p_nom_extendable) & (n.generators.bus.str[:2]==ct)
+                 & (n.generators.carrier.str.contains(carrier)))
+        n.generators.loc[gen_i, "p_nom_max"] = ratio * fleet.loc[ct, carrier]
 
 
 def nuclear_policy(n):
@@ -848,6 +846,44 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(lhs == target*total_load, name=f"country_res_constraints_{zone}")
 
 
+    def system_res_constraints(n, snakemake):
+        '''
+        An alternative implementation of system-wide level RES constraint.
+        NB CI load is not counted within country_load ->
+        - to avoid big overshoot of national RES targets due to CI-procured portfolio
+        - also EU RE directive counts corporate PPA within NECPs.
+        '''
+        zones = [key[:2] for key in datacenters.keys()]
+        year = snakemake.wildcards.year
+        country_targets = snakemake.config[f"res_target_{year}"]
+
+        grid_res_techs = snakemake.config['global']['grid_res_techs']
+        weights = n.snapshot_weightings["generators"]
+
+        for ct in country_targets.keys():
+            
+                country_buses = n.buses.index[(n.buses.index.str[:2]==ct)]
+                if country_buses.empty: continue
+
+                country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
+                country_res_gens = n.generators.index[n.generators.bus.isin(country_buses) & n.generators.carrier.isin(grid_res_techs)]
+                country_res_links = n.links.index[n.links.bus1.isin(country_buses) & n.links.carrier.isin(grid_res_techs)]
+                country_res_storage_units = n.storage_units.index[n.storage_units.bus.isin(country_buses) & n.storage_units.carrier.isin(grid_res_techs)]
+
+                gens = n.model['Generator-p'].loc[:,country_res_gens] * weights
+                links = n.model['Link-p'].loc[:,country_res_links] * n.links.loc[country_res_links, "efficiency"] * weights
+                sus = n.model['StorageUnit-p_dispatch'].loc[:,country_res_storage_units] * weights
+                lhs = gens.sum() + sus.sum() + links.sum()
+
+                target = snakemake.config[f'res_target_{year}'][f'{ct}']
+                total_load = (n.loads_t.p_set[country_loads].sum(axis=1)*weights).sum()
+
+                print(f"country RES constraint for {ct} {target} and total load {round(total_load/1e6, 2)} TWh")
+                logger.info(f"country RES constraint for {ct} {target} and total load {round(total_load/1e6, 2)} TWh")
+
+                n.model.add_constraints(lhs == target*total_load, name=f"{ct}_res_constraint")
+
+
     def add_battery_constraints(n):
         """
         Add constraint ensuring that charger = discharger:
@@ -868,7 +904,9 @@ def solve_network(n, policy, penetration, tech_palette):
     def extra_functionality(n, snapshots):
 
         add_battery_constraints(n)
-        country_res_constraints(n)
+        #country_res_constraints(n)
+        system_res_constraints(n, snakemake) #linopy constraint
+        limit_resexp(n, year, snakemake) #parameter operation
 
         if policy == "ref":
             print("no target set")
