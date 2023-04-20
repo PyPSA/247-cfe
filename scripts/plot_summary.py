@@ -819,7 +819,11 @@ for flex in flexibilities:
         for node in names:
 
             #node = names[0]
-            df = retrieve_nb(n, node).loc[:,['temporal shift']]
+            temporal_shift = retrieve_nb(n, node).get('temporal shift')
+            if temporal_shift is not None:
+                df = temporal_shift
+            else:
+                df = pd.Series(0, index=retrieve_nb(n, node).index, name='temporal shift')
             df = df.reset_index().rename(columns={'index': 'snapshot'})
             df["snapshot"] = pd.to_datetime(df["snapshot"])
             MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
@@ -832,7 +836,11 @@ for flex in flexibilities:
         for node in names:
 
             #node = names[0]
-            df = retrieve_nb(n, node).loc[:,['spatial shift']]
+            spatial_shift = retrieve_nb(n, node).get('spatial shift')
+            if spatial_shift is not None:
+                df = spatial_shift
+            else:
+                df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
             df = df.reset_index().rename(columns={'index': 'snapshot'})
             df["snapshot"] = pd.to_datetime(df["snapshot"])
             MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
