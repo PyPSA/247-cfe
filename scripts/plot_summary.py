@@ -542,6 +542,15 @@ def retrieve_nb(n, node):
 
         nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
 
+        # Custom groupby function
+        def custom_groupby(column_name):
+            if column_name.startswith('vcc'):
+                return 'spatial shift'
+            return column_name
+        
+        # Apply custom groupby function
+        nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+
     return nodal_balance
 
 
@@ -616,7 +625,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IEDK', palette='p2', policy="cfe100")   
+        year='2025', zone='IEDK', palette='p1', policy="cfe95")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -732,12 +741,6 @@ if __name__ == "__main__":
         }
         rename = rename | temp
 
-    virtual_links = {
-        'vcc12': 'spatial shift',	
-        'vcc21': 'spatial shift'
-        }
-
-    rename = rename | virtual_links
     
     preferred_order_balances = pd.Index([
         "clean dispatchable",
