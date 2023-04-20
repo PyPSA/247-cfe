@@ -790,7 +790,7 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(lhs - flex >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
 
-    def excess_constraints(n):
+    def excess_constraints(n, snakemake):
         
         weights = n.snapshot_weightings["generators"]
 
@@ -798,7 +798,7 @@ def solve_network(n, policy, penetration, tech_palette):
             ci_export = n.model['Link-p'].loc[:,[name + " export"]]
             excess =  (ci_export * weights).sum()
             total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
-            share = 0.2 # max(0., penetration - 0.8) -> no sliding share
+            share = snakemake.config['ci']['excess_share'] # 'sliding': max(0., penetration - 0.8)
             
             n.model.add_constraints(excess <= share*total_load, name=f"Excess_constraint_{name}")
 
@@ -910,14 +910,14 @@ def solve_network(n, policy, penetration, tech_palette):
         elif policy == "cfe":
             print("setting CFE target of",penetration)
             cfe_constraints(n)
-            excess_constraints(n)
+            excess_constraints(n, snakemake)
             vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
             DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
             DSM_conservation(n) if snakemake.config['ci']['temporal_shifting'] else None
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
-            excess_constraints(n)
+            excess_constraints(n, snakemake)
         else:
             print(f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}.")
             sys.exit()
@@ -1036,42 +1036,3 @@ if __name__ == "__main__":
 
     logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
-# ##############################################################################
-
-# # %%
-# n.generators.filter(like='dublin', axis=0).T
-# # %%
-# n.stores.filter(like='dublin', axis=0).T
-# # %%
-# n.links.filter(like='dublin', axis=0).T 
-# # %%
-# n.loads_t.p_set
-
-# n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)[:240].plot()
-# n.stores_t.p.filter(like='dublin', axis=0).T
-# n.links_t.p0.filter(like='DSM-delayin').round(2)[:56].plot()
-# n.links_t.p0.filter(like='DSM-delayout').round(2)[:56].plot()
-# data = n.links_t.p0[['dublin DSM-delayin', 'dublin DSM-delayout']].round(2)
-# data.resample('D').sum()[:50]
-
-# # %%
-# n.links_t.p0.filter(like='vcc').round(2)[:100].plot()
-# # %%
-# n.links.filter(like='vcc', axis=0).T
-# # %%
-# n.links_t.p0[['dublin import', 'dublin export']].round(2)[:100].plot()
-
-# # %%
-# bus_carriers = n.buses.carrier.unique()
-# # %%
-# supply_energy = pd.DataFrame()
-
-# #%%
-# a = n.generators_t.p[country_res_gens].sum(axis=1)
-# b = -n.links_t.p1.loc[:,country_res_links].sum(axis=1)
-# c = n.storage_units_t.p_dispatch.loc[:,country_res_storage_units].sum(axis=1)
-
-# n.links[n.links.carrier=='virtual_link'].index
-# vcc = n.links[n.links.carrier=='virtual_link'].index
-# n.links_t.p0[vcc][:100].plot()
-# (n.links_t.p0['vcc12']-n.links_t.p0['vcc21'])[:].plot(kind="bar")
