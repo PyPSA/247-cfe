@@ -790,7 +790,7 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(lhs - flex >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
 
-    def excess_constraints(n):
+    def excess_constraints(n, snakemake):
         
         weights = n.snapshot_weightings["generators"]
 
@@ -798,7 +798,7 @@ def solve_network(n, policy, penetration, tech_palette):
             ci_export = n.model['Link-p'].loc[:,[name + " export"]]
             excess =  (ci_export * weights).sum()
             total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
-            share = 0.2 # max(0., penetration - 0.8) -> no sliding share
+            share = snakemake.config['ci']['excess_share'] # 'sliding': max(0., penetration - 0.8)
             
             n.model.add_constraints(excess <= share*total_load, name=f"Excess_constraint_{name}")
 
@@ -910,14 +910,14 @@ def solve_network(n, policy, penetration, tech_palette):
         elif policy == "cfe":
             print("setting CFE target of",penetration)
             cfe_constraints(n)
-            excess_constraints(n)
+            excess_constraints(n, snakemake)
             vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
             DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
             DSM_conservation(n) if snakemake.config['ci']['temporal_shifting'] else None
         elif policy == "res":
             print("setting annual RES target of",penetration)
             res_constraints(n)
-            excess_constraints(n)
+            excess_constraints(n, snakemake)
         else:
             print(f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}.")
             sys.exit()
