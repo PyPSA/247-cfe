@@ -543,24 +543,21 @@ def add_ci(n, year):
                 lifetime=n.links.at[f"{location} H2 Fuel Cell"+"-{}".format(year), "lifetime"]
                 )
 
+
 def add_vl(n):
     'Add virtual links connecting data centers across physical network'
-
-    n.add("Link",
-        'vcc12',
-        bus0=names[0],
-        bus1=names[1],
-        carrier='virtual_link',
-        marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-        p_nom=1e6)
-
-    n.add("Link",
-        'vcc21',
-        bus0=names[1],
-        bus1=names[0],
-        carrier='virtual_link',
-        marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
-        p_nom=1e6)
+    # Complete graph: n * (n - 1) / 2 edges
+    for i in range(len(names)):
+        for j in range(len(names)):
+            if i != j:  # Exclude the case of the same datacenter
+                link_name = f'vcc_{names[i]}_{names[j]}'
+                n.add("Link",
+                      link_name,
+                      bus0=names[i],
+                      bus1=names[j],
+                      carrier='virtual_link',
+                      marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+                      p_nom=1e6)
 
 
 def add_dsm(n):
