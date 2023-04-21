@@ -1000,26 +1000,26 @@ if __name__ == "__main__":
     # n.set_snapshots(n.snapshots[:nhours])
     # n.snapshot_weightings[:] = 8760.0 / nhours
 
-    with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
+    #with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
-        strip_network(n)
+    strip_network(n)
 
-        shutdown_lineexp(n)
-        nuclear_policy(n)
-        coal_policy(n)
-        biomass_potential(n)
-        #limit_resexp(n,year)
-        cost_parametrization(n)
-        co2_policy(n, year)
-        load_profile(n, profile_shape,config)
-        
-        add_ci(n, year)
-        add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
-        add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
+    shutdown_lineexp(n)
+    nuclear_policy(n)
+    coal_policy(n)
+    biomass_potential(n)
+    #limit_resexp(n,year)
+    cost_parametrization(n)
+    co2_policy(n, year)
+    load_profile(n, profile_shape,config)
+    
+    add_ci(n, year)
+    add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
+    add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
 
-        solve_network(n, policy, penetration, tech_palette)
+    solve_network(n, policy, penetration, tech_palette)
 
-        n.export_to_netcdf(snakemake.output.network)
+    n.export_to_netcdf(snakemake.output.network)
 
-    logger.info(f"Maximum memory usage: {mem.mem_usage}")
+    #logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
