@@ -373,7 +373,6 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    area = snakemake.config['area']
 
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
@@ -384,7 +383,6 @@ if __name__ == "__main__":
     print(f"Summary for palette: {tech_palette}")
     print(f"Summary for bidding zone: {zone}")
     print(f"Summary for year: {year}")
-    print(f"Summary for geoscope: {area}")
     print(f"Summary for datacenters: {datacenters}")
     print(f"Summary for flexibility: {flexibility}")
 

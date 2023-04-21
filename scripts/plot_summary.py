@@ -636,7 +636,6 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    area = snakemake.config['area']
 
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
