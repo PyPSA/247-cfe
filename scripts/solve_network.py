@@ -43,10 +43,9 @@ def palette(tech_palette):
     return clean_techs, storage_techs, storage_chargers, storage_dischargers
 
 
-def geoscope(zone, area):
+def geoscope(zone):
     '''
     zone: controls basenodes_to_keep list -> sets geographical scope of the model
-    area: solve small networks ('regions') or the whole EU ('EU')
     country_nodes -> countries subject to national RES policy constraints
     '''
     d = dict() 
@@ -77,22 +76,12 @@ def geoscope(zone, area):
     elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
     elif zone == 'IEDK': d['basenodes_to_keep'] = IEDK
     elif zone == 'FR': d['basenodes_to_keep'] = IEDK #intentionally larger network
+    elif zone == 'EU': d['basenodes_to_keep'] = EU
     else: 
-        print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL', 'GB'. Now is {zone}.")
+        print(f"'zone' wildcard cannot be {zone}.")
         sys.exit()
     
-    if area == 'EU': d['basenodes_to_keep'] = EU
-
-    #set country nodes for possible locations of DCs
-    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB0 0', 'FR1 0']
     temp = dict() 
-
-    for node in locations:
-        if node not in possible_locations:
-            print(f"Possible locations for data centers are in 'IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0', 'FR1 0'") 
-            print(f"You placed it in {node}.")
-            sys.exit()
-
     if 'IE5 0' in locations: temp['IE5 0'] = ['IE5 0']
     if 'DK1 0' in locations: temp['DK1 0'] = ['DK1 0', 'DK2 0']
     if 'DE1 0' in locations: temp['DE1 0'] = ['DE1 0']
@@ -256,7 +245,7 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
 
 def strip_network(n):
-    nodes_to_keep = geoscope(zone, area)['basenodes_to_keep']
+    nodes_to_keep = geoscope(zone)['basenodes_to_keep']
     new_nodes = []
 
     for b in nodes_to_keep:
@@ -825,7 +814,7 @@ def solve_network(n, policy, penetration, tech_palette):
             zone = n.buses.loc[f'{location}',:].country
 
             grid_res_techs = snakemake.config['global']['grid_res_techs']
-            grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'][location])]
+            grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone)['country_nodes'][location])]
             grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
             country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
@@ -968,7 +957,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IEDK', palette='p2', policy="cfe100", flexibility='40')
+                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -980,7 +969,6 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    area = snakemake.config['area']
     profile_shape = snakemake.config['ci']['profile_shape']
 
     datacenters = snakemake.config['ci']['datacenters']
@@ -992,7 +980,6 @@ if __name__ == "__main__":
     print(f"solving network for palette: {tech_palette}")
     print(f"solving network for bidding zone: {zone}")
     print(f"solving network year: {year}")
-    print(f"solving with geoscope: {area}")
     print(f"solving with datacenters: {datacenters}")
     print(f"solving with flexibility: {flexibility}")
 
