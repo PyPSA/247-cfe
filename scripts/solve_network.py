@@ -307,6 +307,85 @@ def limit_resexp(n, year, snakemake):
         n.generators.loc[gen_i, "p_nom_max"] = ratio * fleet.loc[ct, carrier]
 
 
+def groupby_assets(n):
+    '''
+    groupby generators and links of same type/node over year vintage classes
+    is supposed to yield same solution somewhat faster
+    '''
+
+    #Groupby generators
+    #mask
+    list_datacenters = list(datacenters.values())
+    mask_datacenters = n.generators.index.str.contains('|'.join(list_datacenters), case=False)
+    df = n.generators[~mask_datacenters]
+    system_gens = df[~df.index.str.contains('EU')]
+    system_gens = df[~df.index.str.contains('ror')]
+    fleet=system_gens[system_gens['p_nom_extendable']==False]
+
+    #group
+    grouped = fleet.groupby(['bus', 'carrier']).agg({'p_nom': 'sum'}).reset_index()   
+    grouped['bus_carrier'] = grouped['bus'] + ' ' + grouped['carrier']
+    grouped = grouped.set_index('bus_carrier')
+
+    #Merge
+    fleet['bus_carrier'] = fleet['bus'] + ' ' + fleet['carrier']
+    other_columns = fleet.set_index('bus_carrier').drop(columns=['bus', 'carrier', 'p_nom'])
+    #other_columns.drop(['build_year'], axis=1, inplace=True)
+    other_columns = other_columns.groupby('bus_carrier').agg(lambda x: x.dropna().iloc[0] if not x.dropna().empty else None)
+    result = grouped.merge(other_columns, left_index=True, right_index=True, how='left')
+    result.index.name = 'Generator'
+
+    #Update generators
+    rows_to_drop = n.generators.index.intersection(fleet.index)
+    n.generators = n.generators.drop(rows_to_drop)
+    n.generators = n.generators.append(result)
+
+    #Give new generators a time series
+    def find_timeseries(col_name):
+        second_space = col_name.find(" ", col_name.find(" ") + 1)
+        node = col_name[:second_space]
+        carrier = col_name[second_space + 1:]
+
+        # If carrier is 'offwind', use 'offwind-dc' to match column names
+        if carrier == 'offwind':
+            carrier = 'offwind-ac'
+
+        search_pattern = f"{node}  {carrier}"
+        for col in n.generators_t.p_max_pu.columns:
+            if search_pattern in col:
+                return col
+        return None
+
+    for col_name in result.index:
+        col = find_timeseries(col_name)
+        if col is not None:
+            n.generators_t.p_max_pu[col_name] = n.generators_t.p_max_pu[col]
+
+    #Groupby links
+    #mask
+    gen_links = ['OCGT', 'CCGT', 'coal', 'lignite', 'nuclear', 'oil', 'urban central solid biomass CHP']
+    df = n.links[n.links['carrier'].isin(gen_links)]
+    lfleet=df[df['p_nom_extendable']==False]
+
+    #group
+    grouped = lfleet.groupby(['bus1', 'carrier']).agg({'p_nom': 'sum'}).reset_index()   
+    grouped['bus_carrier'] = grouped['bus1'] + ' ' + grouped['carrier']
+    grouped = grouped.set_index('bus_carrier')
+
+    #Merge
+    lfleet['bus_carrier'] = lfleet['bus1'] + ' ' + lfleet['carrier']
+    other_columns = lfleet.set_index('bus_carrier').drop(columns=['bus1', 'carrier', 'p_nom'])
+    #other_columns.drop(['build_year', 'lifetime'], axis=1, inplace=True)
+    other_columns = other_columns.groupby('bus_carrier').agg(lambda x: x.dropna().iloc[0] if not x.dropna().empty else None)
+    result = grouped.merge(other_columns, left_index=True, right_index=True, how='left')
+    result.index.name = 'Link'
+
+    #Update links
+    rows_to_drop = n.links.index.intersection(lfleet.index)
+    n.links = n.links.drop(rows_to_drop)
+    n.links = n.links.append(result)
+
+
 def nuclear_policy(n):
     '''
     remove nuclear PPs fleet for countries with nuclear ban policy
@@ -957,7 +1036,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='40')
+                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -1003,7 +1082,8 @@ if __name__ == "__main__":
     #with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
     strip_network(n)
-
+    #groupby_assets(n)
+    
     shutdown_lineexp(n)
     nuclear_policy(n)
     coal_policy(n)
