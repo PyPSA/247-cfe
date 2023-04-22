@@ -56,7 +56,7 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
     
     # For now simple drop -> to add 2/3/4 stage difference
-    for name in ['dublin', 'frederica']:
+    for name in ['dublin', 'frederica', "berlin", "middenmeer", "hamina", "ghislain"]:
         if name in n.buses.index:
             n.mremove('Bus', [name])
 
@@ -222,12 +222,12 @@ if __name__ == "__main__":
         snakemake.output = Dict()
 
 
-    folder="../results/draft-IE-noDSM"
+    folder="../results/test-EU-3DC-spatial"
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
     snakemake.output.plot = f"{folder}/map.pdf"
     original_network = f"../input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
-    stripped_network = f"{folder}/networks/2025/IE/p1/cfe100/0.nc"
+    stripped_network = f"{folder}/networks/2025/EU/p1/cfe100/0.nc"
 
     n = pypsa.Network(stripped_network)
 

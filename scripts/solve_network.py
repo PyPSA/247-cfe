@@ -970,8 +970,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
         add_battery_constraints(n)
         #country_res_constraints(n)
-        system_res_constraints(n, snakemake) #linopy constraint
-        limit_resexp(n, year, snakemake) #parameter operation
+        system_res_constraints(n, snakemake)
 
         if policy == "ref":
             print("no target set")
@@ -1036,7 +1035,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IE', palette='p1', policy="cfe100", flexibility='0')
+                    year='2025', zone='EU', palette='p1', policy="cfe100", flexibility='0')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -1083,12 +1082,11 @@ if __name__ == "__main__":
 
     strip_network(n)
     #groupby_assets(n)
-    
+    limit_resexp(n, year, snakemake)
     shutdown_lineexp(n)
     nuclear_policy(n)
     coal_policy(n)
     biomass_potential(n)
-    #limit_resexp(n,year)
     cost_parametrization(n)
     co2_policy(n, year)
     load_profile(n, profile_shape,config)

@@ -13,7 +13,7 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: report-EU-1H-GoogleDC-allflex
+run: report-EU-1H-GoogleDC-spatial
 
 #wildcards
 scenario:
@@ -47,7 +47,7 @@ ci:
   res_techs: ["onwind","solar"]
   excess_share: 0.2
   spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
