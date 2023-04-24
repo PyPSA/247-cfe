@@ -804,15 +804,12 @@ if snakemake.config['plot_timeseries'] == True:
 
     flexibilities = snakemake.config['scenario']['flexibility']
 
-    for flex in flexibilities:
-        
-        #flex = flexibilities[-1]
-        n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
+    # CARBON INTENSITY HEATMAPS 
+    
+    for flex in flexibilities[0]:
+
         grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
                     index_col=0, header=[0,1])
-
-    # CARBON INTENSITY HEATMAPS
-
         colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
 
         for location in locations:
@@ -829,12 +826,14 @@ if snakemake.config['plot_timeseries'] == True:
 
     # SPATIAL & TEMPORAL FLEXIBILITY UTILIZATION HEATMAPS
 
+    for flex in flexibilities:
+
+        n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
         colormap = "coolwarm"
 
         if snakemake.config['ci']['temporal_shifting'] == True:
 
             for node in names:
-
                 #node = names[0]
                 temporal_shift = retrieve_nb(n, node).get('temporal shift')
                 if temporal_shift is not None:
@@ -851,7 +850,6 @@ if snakemake.config['plot_timeseries'] == True:
         if snakemake.config['ci']['spatial_shifting'] == True:
 
             for node in names:
-
                 #node = names[0]
                 spatial_shift = retrieve_nb(n, node).get('spatial shift')
                 if spatial_shift is not None:
