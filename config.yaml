@@ -52,9 +52,10 @@ ci:
 
 
 ###################
-# Temporal aggregation
+# Time-series management
 
 time_sampling: '1H' # one of ["1H", "3H"]
+plot_timeseries: True
 
 
 ###################
