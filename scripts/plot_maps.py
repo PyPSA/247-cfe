@@ -31,6 +31,7 @@ import geopandas as gpd
 from shapely.geometry import LineString
 from shapely.ops import transform
 
+from geopandas.tools import geocode
 
 def assign_location(n):
     '''
@@ -62,7 +63,7 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
     
     # For now simple drop -> to add 2/3/4 stage difference
-    for name in ['dublin', 'frederica', "berlin", "middenmeer", "hamina", "ghislain"]:
+    for name in ['dublin', 'frederica', "berlin", "middenmeer", "hamina", "ghislain", "paris", "lisbon"]:
         if name in n.buses.index:
             n.mremove('Bus', [name])
 
@@ -249,7 +250,10 @@ def plot_datacenters(network, datacenters):
     world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 
     # Get the centroids of the specified datacenters
-    centroids = world[world['name'].isin(datacenters)].centroid.to_crs("EPSG:4326")
+    centroids = geocode(datacenters, provider='nominatim', user_agent="myGeocoder")
+
+    # Extract the geometry (Point) objects from the GeoDataFrame
+    centroids = centroids.geometry
 
     # Set up the figure and axes
     map_opts = {'boundaries':  [n.buses.x.min()-3, n.buses.x.max()+3, 
@@ -302,7 +306,7 @@ if __name__ == "__main__":
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
     snakemake.output.plot = f"{folder}/map-empty.pdf"
-    snakemake.output.plot_DC = f"{folder}/map-DC.pdf"
+    snakemake.output.plot_DC = f"{folder}/map-DC-2.pdf"
     original_network = f"../input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
     stripped_network = f"{folder}/networks/2025/EU/p1/cfe100/0.nc"
 
@@ -337,4 +341,10 @@ datacenters = ["Ireland",
                "Belgium", 
                "Netherlands"]
 
-plot_datacenters(n, datacenters=datacenters)
+datacenters_2 = ["Ireland", 
+               "Denmark", 
+               "Finland",  
+               "Portugal", 
+               "France"]
+
+plot_datacenters(n, datacenters=datacenters_2)
