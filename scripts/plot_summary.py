@@ -5,6 +5,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.transforms import Bbox
 import matplotlib.colors as mc 
@@ -20,7 +21,6 @@ from pypsa.plot import add_legend_patches
 
 def format_column_names(col_tuple):
     return f"{col_tuple[0]}{col_tuple[1][:2]}"
-
 
 def ci_capacity():
 
@@ -634,7 +634,52 @@ def plot_balances(n, node,
     fig.savefig(path + '/' + f"{flex}_balance_{node}.pdf")
 
 
+def utilization_dc(names, flexibilities):
 
+    fig, axs = plt.subplots(len(names), 1, figsize=(5, 1.3*len(names)), sharex=True, sharey=True)
+    #fig.suptitle("Mean Spatial Shift for each DC by Flexibility Steps")
+
+    mean_data = []
+
+    for flex in flexibilities:
+        n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
+        colormap = "coolwarm"
+        mean_flex = []
+
+        if snakemake.config['ci']['spatial_shifting'] == True:
+            for node in names:
+                spatial_shift = retrieve_nb(n, node).get('spatial shift')
+
+                if spatial_shift is not None:
+                    df = spatial_shift
+                else:
+                    df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
+                
+                mean_flex.append(-df.mean()) #negative spatial shift implies increasing load
+
+        mean_data.append(mean_flex)
+
+    mean_df = pd.DataFrame(mean_data, columns=names, index=[int(f) for f in flexibilities])
+
+    for idx, ax in enumerate(axs):
+        mean_df.iloc[:, idx].plot(ax=ax, style='o-')  # Changed from 'bar' to 'o-' for dots with connecting lines
+        ax.axhline(y=0.0, color='gray', linestyle='--')  # Dotted line at y=0.0
+        ax.set_ylabel(f'{names[idx]}')
+
+    axs[-1].set_xticks([int(f) for f in flexibilities])  # Set xticks positions using integers
+    axs[-1].set_xticklabels([f"{f}%" for f in flexibilities])  # Set xticks labels with percentage signs
+    axs[-1].set_xlabel('Flexibility Steps')
+
+    plt.tight_layout()  # Adjust the layout to accommodate the suptitle
+    #plt.show()
+    path = snakemake.output.plot.split('capacity.pdf')[0] + f'utilization_dc'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig.savefig(path + '/' + f"utilization_dc.pdf")
+
+
+####################################################################################################
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
@@ -655,6 +700,7 @@ if __name__ == "__main__":
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
     names = list(datacenters.values())
+    flexibilities = snakemake.config['scenario']['flexibility']
 
     #techs for CFE hourly matching
     clean_techs = palette(tech_palette)[0]
@@ -780,9 +826,10 @@ if __name__ == "__main__":
         'H2_Electrolysis-%s' % year: 'hydrogen electrolysis'
     }
 
-# %matplotlib inline
 
 # SUMMARY PLOTS
+
+# %matplotlib inline
 
 df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
 
@@ -796,6 +843,8 @@ objective_abs()
 
 ci_curtailment()
 system_curtailment()
+
+# utilization_dc(names, flexibilities)
 
 
 # TIME-SERIES DATA (per flexibility scenario)
