@@ -59,7 +59,7 @@ def geoscope(zone):
               'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']         
     NETHERLANDS = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
     IEDK = IRELAND + ["DK1 0", "DK2 0"] + ['FR1 0', 'LU1 0', 'DE1 0', 'BE1 0', 'NL1 0', 'NO2 0', 'SE2 0']
-
+    DKDE = ['DE1 0', 'DK1 0', 'DK2 0', 'PL1 0']
     EU = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
             'CH1 0', 'CZ1 0',  'DE1 0',  'DK1 0',  'DK2 0', 
             'EE6 0', 'ES1 0',  'ES4 0',  'FI2 0',  'FR1 0',
@@ -76,6 +76,7 @@ def geoscope(zone):
     elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
     elif zone == 'IEDK': d['basenodes_to_keep'] = IEDK
     elif zone == 'FR': d['basenodes_to_keep'] = IEDK #intentionally larger network
+    elif zone == 'DKDE': d['basenodes_to_keep'] = DKDE
     elif zone == 'EU': d['basenodes_to_keep'] = EU
     else: 
         print(f"'zone' wildcard cannot be {zone}.")
