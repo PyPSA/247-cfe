@@ -628,6 +628,19 @@ def add_vl(n):
                       marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
                       p_nom=1e6)
 
+def add_shifters(n):
+    'Alternative form of virtual links connecting data centers across physical network'
+    for i in range(len(names)):
+        gen_name = f'vl_{names[i]}'
+        n.add("Generator", 
+              gen_name, 
+              bus=names[i],
+              carrier='virtual_link',
+              p_nom=40,
+              marginal_cost=0.001, 
+              p_min_pu=-1, 
+              p_max_pu=1)
+
 
 def add_dsm(n):
     'Add option to shift loads over time, aka temporal DSM'
@@ -772,6 +785,14 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(rec - snd <= rhs_up, name=f"vl_limit-upper_{name}")
             n.model.add_constraints(rec - snd >= rhs_lo, name=f"vl_limit-lower_{name}")
 
+
+    def shifts_conservation(n):
+        
+        vls = n.generators[n.generators.carrier=='virtual_link']
+        shifts = n.model['Generator-p'].loc[:, vls.index].sum(dims=["Generator"])
+        #sum of loads shifts across all DC are equal 0 per time period
+        n.model.add_constraints(shifts == 0, name=f"vl_limit-upper_{name}")
+ 
 
     def DSM_constraints(n):
 
