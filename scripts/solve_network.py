@@ -625,7 +625,7 @@ def add_vl(n):
                       bus0=names[i],
                       bus1=names[j],
                       carrier='virtual_link',
-                      marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+                      marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
                       p_nom=1e6)
 
 def add_shifters(n):
@@ -682,6 +682,12 @@ def add_dsm(n):
             marginal_cost=0.1,
             p_nom_extendable=False,
             )
+
+
+def hack_links(n):
+    'Virtual links shift loads, while <link> object in pypsa architecture shifts energy'
+    n.links.loc[n.links.carrier=='virtual_link', 'sign'] = -1
+    n.links.loc[n.links.carrier!='virtual_link', 'sign'] = 1
 
 
 def calculate_grid_cfe(n, name, node):
@@ -840,7 +846,8 @@ def solve_network(n, policy, penetration, tech_palette):
         delta = float(flexibility)/100 
         vls = n.links[n.links.carrier=='virtual_link']
         dsm = n.links[n.links.carrier=='dsm']
-
+        #vls = n.generators[n.generators.carrier=='virtual_link']
+        
         for location, name in datacenters.items():
 
             #LHS
@@ -860,24 +867,28 @@ def solve_network(n, policy, penetration, tech_palette):
                 (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
                 ).sum() # linear expr
 
-            lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
+            lhs = gen_sum + discharge_sum + charge_sum + grid_sum
 
             #RHS
             total_load = (n.loads_t.p_set[name + " load"]*weights).sum()
 
             vls_snd = vls.query('bus0==@name').index
             vls_rec = vls.query('bus1==@name').index
-            total_snd = n.model['Link-p'].loc[:, vls_snd].sum() # NB sum over both axes
-            total_rec = n.model['Link-p'].loc[:, vls_rec].sum()
+            total_snd = (n.model['Link-p'].loc[:, vls_snd]*weights).sum() # NB sum over both axes
+            total_rec = (n.model['Link-p'].loc[:, vls_rec]*weights).sum()
     
             dsm_delayin = dsm.query('bus0==@name').index
             dsm_delayout = dsm.query('bus1==@name').index
-            total_delayin = n.model['Link-p'].loc[:, dsm_delayin].sum() # NB sum over both axes
-            total_delayout = n.model['Link-p'].loc[:, dsm_delayout].sum()
+            total_delayin = (n.model['Link-p'].loc[:, dsm_delayin]*weights).sum() # NB sum over both axes
+            total_delayout = (n.model['Link-p'].loc[:, dsm_delayout]*weights).sum()
 
             flex = penetration*(total_rec - total_snd + total_delayout - total_delayin)  
 
+            # vls_local = vls.query('bus==@name').index
+            # shift_local = (n.model['Generator-p'].loc[:, vls_local]*weights).sum()
+
             n.model.add_constraints(lhs - flex >= penetration*(total_load), name=f"CFE_constraint_{name}")
+            #n.model.add_constraints(lhs + shift_local >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
 
     def excess_constraints(n, snakemake):
@@ -1057,7 +1068,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='EU', palette='p1', policy="cfe100", flexibility='0')
+                    year='2025', zone='DKDE', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -1116,6 +1127,7 @@ if __name__ == "__main__":
     add_ci(n, year)
     add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
     add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
+    hack_links(n)
 
     solve_network(n, policy, penetration, tech_palette)
 
