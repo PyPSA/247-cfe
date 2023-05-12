@@ -555,16 +555,20 @@ def retrieve_nb(n, node):
         if i == 'Store':
             continue
 
-        nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
+    nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
 
-        # Custom groupby function
-        def custom_groupby(column_name):
-            if column_name.startswith('vcc'):
-                return 'spatial shift'
-            return column_name
-        
-        # Apply custom groupby function
-        nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+    # Custom groupby function
+    def custom_groupby(column_name):
+        if column_name.startswith('vcc'):
+            return 'spatial shift'
+        return column_name
+
+    # Apply custom groupby function
+    nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+
+    # Apply custom groupby function
+    if 'spatial shift' in nodal_balance.columns: 
+        nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
 
     return nodal_balance
 
@@ -661,10 +665,16 @@ def utilization_dc(names, flexibilities):
 
     mean_df = pd.DataFrame(mean_data, columns=names, index=[int(f) for f in flexibilities])
 
+    range_of_data = mean_df.max().max() - mean_df.min().min()
+    offset = range_of_data * 0.40
+    ymin = mean_df.min().min() - offset
+    ymax = mean_df.max().max() + offset
+
     for idx, ax in enumerate(axs):
         mean_df.iloc[:, idx].plot(ax=ax, style='o-')  # Changed from 'bar' to 'o-' for dots with connecting lines
         ax.axhline(y=0.0, color='gray', linestyle='--')  # Dotted line at y=0.0
         ax.set_ylabel(f'{names[idx]}')
+        ax.set_ylim([ymin, ymax])  # Adjust y-axis range
 
     axs[-1].set_xticks([int(f) for f in flexibilities])  # Set xticks positions using integers
     axs[-1].set_xticklabels([f"{f}%" for f in flexibilities])  # Set xticks labels with percentage signs
@@ -685,7 +695,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='EU', palette='p1', policy="cfe90")   
+        year='2025', zone='DKDE', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
