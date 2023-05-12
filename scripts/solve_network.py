@@ -1135,3 +1135,184 @@ if __name__ == "__main__":
 
     #logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
+
+# def retrieve_nb(n, node):
+#     '''
+#     Retrieve nodal energy balance per hour
+#     This simple function works only for the Data center nodes: 
+#         -> lines and links are bidirectional AND their subsets are exclusive.
+#         -> links include fossil gens
+#     NB {-1} multiplier is a nodal balance sign
+#     '''
+
+#     components=['Generator', 'Load', 'StorageUnit', 'Store', 'Link', 'Line']
+#     nodal_balance = pd.DataFrame(index=n.snapshots)
+    
+#     for i in components:
+#         if i == 'Generator':
+#             node_generators = n.generators.query('bus==@node').index
+#             nodal_balance = nodal_balance.join(n.generators_t.p[node_generators])
+#         if i == 'Load':
+#             node_loads = n.loads.query('bus==@node').index
+#             nodal_balance = nodal_balance.join(-1*n.loads_t.p_set[node_loads])
+#         if i == 'Link':
+#             node_export_links = n.links.query('bus0==@node').index
+#             node_import_links = n.links.query('bus1==@node').index
+#             nodal_balance = nodal_balance.join(-1*n.links_t.p0[node_export_links])
+#             nodal_balance = nodal_balance.join(-1*n.links_t.p1[node_import_links])
+#             ##################
+#         if i == 'StorageUnit':
+#             #node_storage_units = n.storage_units.query('bus==@node').index
+#             #nodal_balance = nodal_balance.join(n.storage_units_t.p_dispatch[node_storage_units])
+#             #nodal_balance = nodal_balance.join(n.storage_units_t.p_store[node_storage_units]) 
+#             continue   
+#         if i == 'Line':
+#             continue
+#         if i == 'Store':
+#             continue
+
+#     nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
+
+#     # Custom groupby function
+#     def custom_groupby(column_name):
+#         if column_name.startswith('vcc'):
+#             return 'spatial shift'
+#         return column_name
+
+#     # Apply custom groupby function
+#     nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+
+#     # Apply custom groupby function
+#     if 'spatial shift' in nodal_balance.columns: 
+#         nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
+
+#     return nodal_balance
+
+
+# rename = {}
+# for name in names:
+#     temp = {
+#     f'{name} H2 Electrolysis': 'hydrogen storage',
+#     f'{name} H2 Fuel Cell': 'hydrogen storage',
+#     f'{name} battery charger': 'battery storage',
+#     f'{name} battery discharger': 'battery storage',
+#     f'{name} export': 'grid',
+#     f'{name} import': 'grid',
+#     f'{name} onwind': 'wind',	
+#     f'{name} solar': 'solar',
+#     f'{name} load': 'load',
+#     f'{name} adv_geothermal': "clean dispatchable",
+#     f'{name} allam_ccs': "NG-Allam",
+#     f'{name} DSM-delayout': 'temporal shift',
+#     f'{name} DSM-delayin': 'temporal shift',
+#     }
+#     rename = rename | temp
+
+# %matplotlib inline
+# node = 'frederica'
+# #import/export links = 0
+# #penetration = 0.8 #yields a shift
+
+# retrieve_nb(n, node).get('spatial shift').plot()
+# retrieve_nb(n, node).get('spatial shift').sum()
+# retrieve_nb(n, node).sum().round(2)
+# n.links_t.p0[['vcc_frederica_berlin', 'vcc_berlin_frederica']].sum()
+# n.generators_t.p[['vl_frederica', 'vl_berlin']].sum()
+
+# # # %%
+# # n.generators.filter(like='frederica', axis=0).T
+# # # %%
+# # n.stores.filter(like='frederica', axis=0).T
+# # # %%
+# # n.links.filter(like='frederica', axis=0).T 
+# # # %%
+# # n.loads_t.p_set
+
+# # frederica, 'frederica export']].round(2)[:100].plot()
+# #  n.links_t.p0[['frederica import', 'frederica export']].plot()
+
+# # n.links[n.links.carrier=='virtual_link'].index
+
+
+
+# def heatmap_utilization(data, month, year, ax, carrier):
+#     data = df[(df["snapshot"].dt.month == month)]
+
+#     snapshot = data["snapshot"]
+#     day = data["snapshot"].dt.day
+#     value = data[f"{carrier}"]
+#     value = value.values.reshape(int(24/scaling), len(day.unique()), order="F") # 8 clusters of 3h in each day
+    
+#     xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
+#     ygrid = np.arange(int(24/scaling)+1) # hours (sampled or not) + extra 1
+    
+#     ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
+#     # Invert the vertical axis
+#     ax.set_ylim(int(24/scaling), 0)
+#     # Set tick positions for both axes
+#     ax.yaxis.set_ticks([]) #[i for i in range(int(24/scaling))]
+#     ax.xaxis.set_ticks([])
+#     # Remove ticks by setting their length to 0
+#     ax.yaxis.set_tick_params(length=0)
+#     ax.xaxis.set_tick_params(length=0)
+    
+#     # Remove all spines
+#     ax.set_frame_on(False)
+
+
+# def plot_heatmap_utilization(carrier):
+#     # Here 1 row year/variable and 12 columns for month
+#     fig, axes = plt.subplots(1, 12, figsize=(14, 5), sharey=True)
+#     plt.tight_layout()
+
+#     for i, year in enumerate([2013]):
+#         for j, month in enumerate(range(1, 13)):
+#             #print(f'j: {j}, month: {month}')
+#             heatmap_utilization(df, month, year, axes[j], carrier=carrier)
+
+#     # Adjust margin and space between subplots (extra space is on the left for a label)
+#     fig.subplots_adjust(left=0.05, right=0.98, top=0.9, hspace=0.08, wspace=0.04) #wspace=0 stacks individual months together but easy to split
+
+#     # some room for the legend in the bottom
+#     fig.subplots_adjust(bottom=0.2)
+
+#     # Create a new axis to contain the color bar
+#     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
+#     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
+
+#     # Create a normalizer that goes from minimum to maximum temperature
+#     norm = mc.Normalize(MIN, MAX)
+
+#     # Create the colorbar and set it to horizontal
+#     cb = fig.colorbar(
+#         ScalarMappable(norm=norm, cmap=colormap), 
+#         cax=cbar_ax, # Pass the new axis
+#         orientation = "horizontal")
+
+#     # Remove tick marks and set label
+#     cb.ax.xaxis.set_tick_params(size=0)
+#     cb.set_label(f"Hourly {carrier} [MW]", size=12)
+
+#     # add some figure labels and title
+#     fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
+#     fig.text(0.03, 0.5, 'Hours of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+#     fig.suptitle(f"Flexibility utilization | {node}", fontsize=20, y=0.98)
+
+#     fig.show()
+
+# import matplotlib.pyplot as plt
+# import matplotlib.colors as mc 
+# from matplotlib.cm import ScalarMappable
+# scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
+# colormap = "coolwarm"
+
+# node = 'frederica'
+# spatial_shift = retrieve_nb(n, node).get('spatial shift')
+# df = spatial_shift
+# df = df.reset_index().rename(columns={'index': 'snapshot'})
+# df["snapshot"] = pd.to_datetime(df["snapshot"])
+# MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+
+
+# plot_heatmap_utilization(carrier="spatial shift")
