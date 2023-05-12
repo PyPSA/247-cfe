@@ -13,7 +13,8 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: report-EU-1H-GoogleDC-allflex
+#run: report-EU-1H-GoogleDC-spatial
+run: test-EU-1H-GoogleDC-spatial
 
 #wildcards
 scenario:
@@ -29,6 +30,7 @@ scenario:
           #"DE",
           #"NL",
           #"FR",
+          #"DKDE",
           "EU" #37-node network of ENTSO-E area
         ]
   year: ['2025', 
@@ -39,16 +41,16 @@ ci:
   #datacenters: {"IE5 0": "dublin"}
   #datacenters: {"FR1 0": "paris"}
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "DE1 0": "berlin"}
+  #datacenters: {"DK1 0": "frederica", "DE1 0": "berlin"}
   #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
-  datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "FR1 0": "paris", "FI2 0": "hamina", "PT1 0": "lisbon",}
+  datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
+  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "FR1 0": "paris", "FI2 0": "hamina", "PT1 0": "lisbon",}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
   excess_share: 0.2
   spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
