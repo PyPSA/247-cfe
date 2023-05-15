@@ -695,7 +695,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='DKDE', palette='p1', policy="cfe100")   
+        year='2025', zone='EU', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -854,7 +854,7 @@ objective_abs()
 ci_curtailment()
 system_curtailment()
 
-# utilization_dc(names, flexibilities)
+utilization_dc(names, flexibilities)
 
 
 # TIME-SERIES DATA (per flexibility scenario)
