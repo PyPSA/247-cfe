@@ -15,7 +15,6 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 
 run: final-EU-1H-GoogleDC-allflex
 
-
 #wildcards
 scenario:
   flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 

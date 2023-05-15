@@ -13,12 +13,12 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: report-EU-1H-GoogleDC-temporal
+run: final-EU-1H-GoogleDC-temporal
 
 #wildcards
 scenario:
   flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 
-  policy:  ["cfe80", "cfe90", "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
+  policy:  ["cfe95", "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
@@ -29,6 +29,7 @@ scenario:
           #"DE",
           #"NL",
           #"FR",
+          #"DKDE",
           "EU" #37-node network of ENTSO-E area
         ]
   year: ['2025', 
@@ -39,9 +40,10 @@ ci:
   #datacenters: {"IE5 0": "dublin"}
   #datacenters: {"FR1 0": "paris"}
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "DE1 0": "berlin"}
+  #datacenters: {"DK1 0": "frederica", "DE1 0": "berlin"}
   #datacenters: {"DE1 0": "berlin", "DK1 0": "frederica"}
   datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
+  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "FR1 0": "paris", "FI2 0": "hamina", "PT1 0": "lisbon",}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
