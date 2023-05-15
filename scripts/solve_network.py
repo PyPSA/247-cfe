@@ -685,9 +685,13 @@ def add_dsm(n):
 
 
 def hack_links(n):
-    'Virtual links shift loads, while <link> object in pypsa architecture shifts energy'
-    n.links.loc[n.links.carrier=='virtual_link', 'sign'] = -1
-    n.links.loc[n.links.carrier!='virtual_link', 'sign'] = 1
+    '''
+    Virtual links and DSM mechanism shift loads, while <link> object in pypsa architecture shifts energy
+    Here we add additional attribute "sign" and fix it to -1. This reverts sign in nodal balance constraint. 
+    extra_functionality code is aligned accordingly.
+    '''
+    n.links.loc[(n.links.carrier=='virtual_link') | (n.links.carrier=='dsm'), 'sign'] = -1
+    n.links.loc[(n.links.carrier!='virtual_link') & (n.links.carrier!='dsm'), 'sign'] = 1
 
 
 def calculate_grid_cfe(n, name, node):
@@ -838,6 +842,35 @@ def solve_network(n, policy, penetration, tech_palette):
             daily_ins = delayin.groupby("snapshot.dayofyear").sum() 
 
             n.model.add_constraints(daily_outs - daily_ins == 0, name=f"DSM-conservation_{name}")
+
+
+    def DC_constraints(n):
+        'A general case when both spatial and temporal flexibility mechanisms are enabled'
+        
+        delta = float(flexibility)/100 
+        weights = n.snapshot_weightings["generators"] 
+        vls = n.links[n.links.carrier=='virtual_link']
+        dsm = n.links[n.links.carrier=='dsm']
+
+        for location, name in datacenters.items():
+        
+            vls_snd = vls.query('bus0==@name').index
+            vls_rec = vls.query('bus1==@name').index
+            dsm_delayin = dsm.query('bus0==@name').index
+            dsm_delayout = dsm.query('bus1==@name').index
+
+            snd = n.model['Link-p'].loc[:, vls_snd].sum(dims=["Link"])
+            rec = n.model['Link-p'].loc[:, vls_rec].sum(dims=["Link"])
+            delayin = n.model['Link-p'].loc[:, dsm_delayin].sum(dims=["Link"])
+            delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"])
+
+            load = n.loads_t.p_set[name + " load"]
+            #requested_load = load + rec - snd
+            rhs_up = load*(1+delta) - load
+            rhs_lo = load*(1-delta) - load
+
+            n.model.add_constraints(rec - snd + delayout - delayin <= rhs_up, name=f"DC-upper_{name}")
+            n.model.add_constraints(rec - snd + delayout - delayin >= rhs_lo, name=f"DC-lower_{name}")
 
 
     def cfe_constraints(n):
@@ -1011,8 +1044,9 @@ def solve_network(n, policy, penetration, tech_palette):
             print("setting CFE target of",penetration)
             cfe_constraints(n)
             excess_constraints(n, snakemake)
-            vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
-            DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            #vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
+            #DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            DC_constraints(n)
             DSM_conservation(n) if snakemake.config['ci']['temporal_shifting'] else None
         elif policy == "res":
             print("setting annual RES target of",penetration)
@@ -1182,9 +1216,11 @@ if __name__ == "__main__":
 #     # Apply custom groupby function
 #     nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
 
-#     # Apply custom groupby function
+#     # revert nodal balance sign for display
 #     if 'spatial shift' in nodal_balance.columns: 
 #         nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
+#     if 'temporal shift' in nodal_balance.columns: 
+#         nodal_balance['temporal shift'] = nodal_balance['temporal shift'] * -1
 
 #     return nodal_balance
 
@@ -1313,6 +1349,14 @@ if __name__ == "__main__":
 # df["snapshot"] = pd.to_datetime(df["snapshot"])
 # MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
 # MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-
-
 # plot_heatmap_utilization(carrier="spatial shift")
+
+# node = 'frederica'
+# temporal_shift = retrieve_nb(n, node).get('temporal shift')
+# df = temporal_shift
+# df = df.reset_index().rename(columns={'index': 'snapshot'})
+# df["snapshot"] = pd.to_datetime(df["snapshot"])
+# MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# plot_heatmap_utilization(carrier="temporal shift")
+

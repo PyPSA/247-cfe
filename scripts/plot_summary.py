@@ -566,9 +566,11 @@ def retrieve_nb(n, node):
     # Apply custom groupby function
     nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
 
-    # Apply custom groupby function
+    # revert nodal balance sign for display
     if 'spatial shift' in nodal_balance.columns: 
         nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
+    if 'temporal shift' in nodal_balance.columns: 
+        nodal_balance['temporal shift'] = nodal_balance['temporal shift'] * -1
 
     return nodal_balance
 

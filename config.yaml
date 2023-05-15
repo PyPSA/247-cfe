@@ -13,13 +13,13 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-#run: report-EU-1H-GoogleDC-spatial
-run: test-EU-1H-GoogleDC-spatial
+run: final-EU-1H-GoogleDC-allflex
+
 
 #wildcards
 scenario:
   flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested/nominal CI load 
-  policy:  ["cfe90", "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
+  policy:  ["cfe95", "cfe100"] # "ref", "res100", "cfe80", "cfe85", "cfe90", "cfe95", "cfe98", "cfe99", "cfe100"]
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
@@ -50,7 +50,7 @@ ci:
   res_techs: ["onwind","solar"]
   excess_share: 0.2
   spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
+  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
