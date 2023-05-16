@@ -448,7 +448,7 @@ def plot_heatmap_cfe():
     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
 
-    # Create a normalizer that goes from minimum to maximum temperature
+    # Create a normalizer that goes from minimum to maximum value
     norm = mc.Normalize(0, 1) #for CFE, otherwise (MIN, MAX)
 
     # Create the colorbar and set it to horizontal
@@ -494,7 +494,7 @@ def plot_heatmap_utilization(carrier):
     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
 
-    # Create a normalizer that goes from minimum to maximum temperature
+    # Create a normalizer that goes from minimum to maximum value
     norm = mc.Normalize(MIN, MAX)
 
     # Create the colorbar and set it to horizontal
@@ -673,16 +673,16 @@ def utilization_dc(names, flexibilities):
     ymax = mean_df.max().max() + offset
 
     for idx, ax in enumerate(axs):
-        mean_df.iloc[:, idx].plot(ax=ax, style='o-')  # Changed from 'bar' to 'o-' for dots with connecting lines
-        ax.axhline(y=0.0, color='gray', linestyle='--')  # Dotted line at y=0.0
+        mean_df.iloc[:, idx].plot(ax=ax, style='o-') 
+        ax.axhline(y=0.0, color='gray', linestyle='--') 
         ax.set_ylabel(f'{names[idx]}')
-        ax.set_ylim([ymin, ymax])  # Adjust y-axis range
+        ax.set_ylim([ymin, ymax])
 
     axs[-1].set_xticks([int(f) for f in flexibilities])  # Set xticks positions using integers
     axs[-1].set_xticklabels([f"{f}%" for f in flexibilities])  # Set xticks labels with percentage signs
     axs[-1].set_xlabel('Flexibility Steps')
 
-    plt.tight_layout()  # Adjust the layout to accommodate the suptitle
+    plt.tight_layout()
     #plt.show()
     path = snakemake.output.plot.split('capacity.pdf')[0] + f'utilization_dc'
     if not os.path.exists(path):
@@ -903,8 +903,8 @@ if snakemake.config['plot_timeseries'] == True:
                     df = pd.Series(0, index=retrieve_nb(n, node).index, name='temporal shift')
                 df = df.reset_index().rename(columns={'index': 'snapshot'})
                 df["snapshot"] = pd.to_datetime(df["snapshot"])
-                MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-                MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+                MIN = -int(flex)    #df["temporal shift"].min() #for flex co-opt case, value can exceed flex treshold
+                MAX = +int(flex)    #df["temporal shift"].max() #for flex co-opt case, value can exceed flex treshold
 
                 plot_heatmap_utilization(carrier="temporal shift")
 
@@ -919,8 +919,8 @@ if snakemake.config['plot_timeseries'] == True:
                     df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
                 df = df.reset_index().rename(columns={'index': 'snapshot'})
                 df["snapshot"] = pd.to_datetime(df["snapshot"])
-                MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-                MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+                MIN = -int(flex)    #df["spatial shift"].min() #for flex co-opt case, value can exceed flex treshold
+                MAX = +int(flex)    #df["spatial shift"].max() #for flex co-opt case, value can exceed flex treshold
 
                 plot_heatmap_utilization(carrier="spatial shift")
 
@@ -928,10 +928,8 @@ if snakemake.config['plot_timeseries'] == True:
 
         for node in names:
 
-            plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
-            plot_balances(n, node, '2013-02-01 00:00:00', '2013-02-08 00:00:00')
             plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
-            plot_balances(n, node, '2013-04-01 00:00:00', '2013-04-08 00:00:00')
             plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
-        
-        print(f'Done for {flex} scen')
+            plot_balances(n, node, '2013-12-01 00:00:00', '2013-12-08 00:00:00')
+
+        print(f'Nodal balance completed for {flex} scen')
