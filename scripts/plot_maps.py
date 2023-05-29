@@ -13,6 +13,7 @@ Keep note that in this project each network has four stages:
 """
 
 import pandas as pd
+import numpy as np
 import matplotlib.colors as mc
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
@@ -23,8 +24,14 @@ from pypsa.descriptors import Dict
 from pypsa.plot import add_legend_circles, add_legend_lines, add_legend_patches
 
 from cartopy import crs as ccrs
+import cartopy.feature as cfeature
 import cartopy.mpl.ticker as cticker
+import geopandas as gpd
 
+from shapely.geometry import LineString
+from shapely.ops import transform
+
+from geopandas.tools import geocode
 
 def assign_location(n):
     '''
@@ -56,7 +63,7 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
     
     # For now simple drop -> to add 2/3/4 stage difference
-    for name in ['dublin', 'frederica']:
+    for name in ['dublin', 'frederica', "berlin", "middenmeer", "hamina", "ghislain", "paris", "lisbon"]:
         if name in n.buses.index:
             n.mremove('Bus', [name])
 
@@ -148,7 +155,7 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
 
     # big_circle = int(round(capacity_per_bus.mean()/1000,-1))
     # small_circle = int(big_circle / 2)
-    sizes = [40, 10]
+    sizes = [150, 50]
     labels = [f"{s} GW" for s in sizes]
     sizes = [s/bus_size_factor*1e3 for s in sizes]
 
@@ -208,6 +215,79 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
         dpi=300)
 
 
+def partial_great_circle(start, end, num_points=100, arc_fraction=0.3):
+    """
+    Calculate partial great circle points between start and end coordinates.
+    """
+    start_lat, start_lon = np.radians(start)
+    end_lat, end_lon = np.radians(end)
+    delta_lon = end_lon - start_lon
+
+    # Spherical interpolation parameter
+    t = np.linspace(0, arc_fraction, num_points)
+
+    # Spherical linear interpolation between start and end coordinates
+    angle = np.arccos(np.sin(start_lat) * np.sin(end_lat) +
+                      np.cos(start_lat) * np.cos(end_lat) * np.cos(delta_lon))
+    sin_angle = np.sin(angle)
+    A = np.sin((1 - t) * angle) / sin_angle
+    B = np.sin(t * angle) / sin_angle
+
+    x = A * np.cos(start_lat) * np.cos(start_lon) + B * np.cos(end_lat) * np.cos(end_lon)
+    y = A * np.cos(start_lat) * np.sin(start_lon) + B * np.cos(end_lat) * np.sin(end_lon)
+    z = A * np.sin(start_lat) + B * np.sin(end_lat)
+
+    lat, lon = np.degrees(np.arctan2(z, np.sqrt(x**2 + y**2))), np.degrees(np.arctan2(y, x))
+
+    return lat, lon
+
+
+def plot_datacenters(network, datacenters):
+    n = network.copy()
+    assign_location(n)
+
+    # Load the geometries of datacenters
+    world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+    # Get the centroids of the specified datacenters
+    centroids = geocode(datacenters, provider='nominatim', user_agent="myGeocoder")
+
+    # Extract the geometry (Point) objects from the GeoDataFrame
+    centroids = centroids.geometry
+
+    # Set up the figure and axes
+    map_opts = {'boundaries':  [n.buses.x.min()-3, n.buses.x.max()+3, 
+                                n.buses.y.min()-3, n.buses.y.max()+3],
+                'color_geomap': {'ocean': 'lightblue', 'land': 'white',
+                 'border': 'black', 'coastline': 'black'}
+                }
+    
+    fig, ax = plt.subplots(subplot_kw={"projection": ccrs.EqualEarth(n.buses.x.mean())})
+    fig.set_size_inches(9, 6)
+
+    # Plot the country shapes
+    ax.set_extent(map_opts['boundaries'], crs=ccrs.PlateCarree())
+    ax.add_feature(cfeature.OCEAN.with_scale('50m'), facecolor=map_opts['color_geomap']['ocean'], zorder=0)
+    ax.add_feature(cfeature.LAND.with_scale('50m'), facecolor=map_opts['color_geomap']['land'], zorder=0)
+
+    # Add borders and coastline with adjusted linewidth and alpha
+    ax.add_feature(cfeature.BORDERS.with_scale('50m'), edgecolor=map_opts['color_geomap']['border'], linewidth=0.5, alpha=0.5, zorder=1)
+    ax.add_feature(cfeature.COASTLINE.with_scale('50m'), edgecolor=map_opts['color_geomap']['coastline'], linewidth=0.5, alpha=0.5, zorder=1)
+
+    # Plot the interconnected nodes
+    connections = set()
+    for i, centroid_i in centroids.iteritems():
+        for j, centroid_j in centroids.iteritems():
+            if i != j and (j, i) not in connections:
+                ax.plot([centroid_i.x, centroid_j.x], [centroid_i.y, centroid_j.y], 
+                        color='darkblue', linewidth=1.5, alpha=1, linestyle='dotted', transform=ccrs.Geodetic())
+                connections.add((i, j))
+        ax.scatter(centroid_i.x, centroid_i.y, color='darkblue', marker='o', s=50, transform=ccrs.PlateCarree())
+        
+    fig.tight_layout()
+    fig.savefig(snakemake.output.plot_DC, bbox_inches='tight', facecolor='white', dpi=300)
+
+
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
@@ -222,12 +302,13 @@ if __name__ == "__main__":
         snakemake.output = Dict()
 
 
-    folder="../results/draft-IE-noDSM"
+    folder="../results/report-EU-1H-GoogleDC-spatial"
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
-    snakemake.output.plot = f"{folder}/map.pdf"
+    snakemake.output.plot = f"{folder}/map-empty.pdf"
+    snakemake.output.plot_DC = f"{folder}/map-DC-2.pdf"
     original_network = f"../input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
-    stripped_network = f"{folder}/networks/2025/IE/p1/cfe100/0.nc"
+    stripped_network = f"{folder}/networks/2025/EU/p1/cfe100/0.nc"
 
     n = pypsa.Network(stripped_network)
 
@@ -253,3 +334,17 @@ rename = {
 }
 
 plot_map(n, bus_size_factor=8e4)
+
+datacenters = ["Ireland", 
+               "Denmark", 
+               "Finland",  
+               "Belgium", 
+               "Netherlands"]
+
+datacenters_2 = ["Ireland", 
+               "Denmark", 
+               "Finland",  
+               "Portugal", 
+               "France"]
+
+plot_datacenters(n, datacenters=datacenters_2)

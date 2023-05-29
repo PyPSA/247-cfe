@@ -43,10 +43,9 @@ def palette(tech_palette):
     return clean_techs, storage_techs, storage_chargers, storage_dischargers
 
 
-def geoscope(zone, area):
+def geoscope(zone):
     '''
     zone: controls basenodes_to_keep list -> sets geographical scope of the model
-    area: solve small networks ('regions') or the whole EU ('EU')
     country_nodes -> countries subject to national RES policy constraints
     '''
     d = dict() 
@@ -60,7 +59,7 @@ def geoscope(zone, area):
               'FR1 0', 'LU1 0', 'NL1 0', 'PL1 0', 'AT1 0', 'CH1 0', 'CZ1 0']         
     NETHERLANDS = ['NL1 0', 'GB0 0', 'DK1 0', 'NO2 0', 'BE1 0', 'DE1 0']
     IEDK = IRELAND + ["DK1 0", "DK2 0"] + ['FR1 0', 'LU1 0', 'DE1 0', 'BE1 0', 'NL1 0', 'NO2 0', 'SE2 0']
-
+    DKDE = ['DE1 0', 'DK1 0', 'DK2 0', 'PL1 0']
     EU = ['AL1 0', 'AT1 0',  'BA1 0',  'BE1 0',  'BG1 0',
             'CH1 0', 'CZ1 0',  'DE1 0',  'DK1 0',  'DK2 0', 
             'EE6 0', 'ES1 0',  'ES4 0',  'FI2 0',  'FR1 0',
@@ -77,22 +76,13 @@ def geoscope(zone, area):
     elif zone == 'GB': d['basenodes_to_keep'] = IRELAND
     elif zone == 'IEDK': d['basenodes_to_keep'] = IEDK
     elif zone == 'FR': d['basenodes_to_keep'] = IEDK #intentionally larger network
+    elif zone == 'DKDE': d['basenodes_to_keep'] = DKDE
+    elif zone == 'EU': d['basenodes_to_keep'] = EU
     else: 
-        print(f"'zone' wildcard must be one of 'IE', 'DK', 'DE', 'NL', 'GB'. Now is {zone}.")
+        print(f"'zone' wildcard cannot be {zone}.")
         sys.exit()
     
-    if area == 'EU': d['basenodes_to_keep'] = EU
-
-    #set country nodes for possible locations of DCs
-    possible_locations = ['IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB0 0', 'FR1 0']
     temp = dict() 
-
-    for node in locations:
-        if node not in possible_locations:
-            print(f"Possible locations for data centers are in 'IE5 0', 'DK1 0', 'DE1 0', 'NL1 0', 'GB5 0', 'FR1 0'") 
-            print(f"You placed it in {node}.")
-            sys.exit()
-
     if 'IE5 0' in locations: temp['IE5 0'] = ['IE5 0']
     if 'DK1 0' in locations: temp['DK1 0'] = ['DK1 0', 'DK2 0']
     if 'DE1 0' in locations: temp['DE1 0'] = ['DE1 0']
@@ -256,7 +246,7 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
 
 def strip_network(n):
-    nodes_to_keep = geoscope(zone, area)['basenodes_to_keep']
+    nodes_to_keep = geoscope(zone)['basenodes_to_keep']
     new_nodes = []
 
     for b in nodes_to_keep:
@@ -316,6 +306,85 @@ def limit_resexp(n, year, snakemake):
         gen_i = ((n.generators.p_nom_extendable) & (n.generators.bus.str[:2]==ct)
                  & (n.generators.carrier.str.contains(carrier)))
         n.generators.loc[gen_i, "p_nom_max"] = ratio * fleet.loc[ct, carrier]
+
+
+def groupby_assets(n):
+    '''
+    groupby generators and links of same type/node over year vintage classes
+    is supposed to yield same solution somewhat faster
+    '''
+
+    #Groupby generators
+    #mask
+    list_datacenters = list(datacenters.values())
+    mask_datacenters = n.generators.index.str.contains('|'.join(list_datacenters), case=False)
+    df = n.generators[~mask_datacenters]
+    system_gens = df[~df.index.str.contains('EU')]
+    system_gens = df[~df.index.str.contains('ror')]
+    fleet=system_gens[system_gens['p_nom_extendable']==False]
+
+    #group
+    grouped = fleet.groupby(['bus', 'carrier']).agg({'p_nom': 'sum'}).reset_index()   
+    grouped['bus_carrier'] = grouped['bus'] + ' ' + grouped['carrier']
+    grouped = grouped.set_index('bus_carrier')
+
+    #Merge
+    fleet['bus_carrier'] = fleet['bus'] + ' ' + fleet['carrier']
+    other_columns = fleet.set_index('bus_carrier').drop(columns=['bus', 'carrier', 'p_nom'])
+    #other_columns.drop(['build_year'], axis=1, inplace=True)
+    other_columns = other_columns.groupby('bus_carrier').agg(lambda x: x.dropna().iloc[0] if not x.dropna().empty else None)
+    result = grouped.merge(other_columns, left_index=True, right_index=True, how='left')
+    result.index.name = 'Generator'
+
+    #Update generators
+    rows_to_drop = n.generators.index.intersection(fleet.index)
+    n.generators = n.generators.drop(rows_to_drop)
+    n.generators = n.generators.append(result)
+
+    #Give new generators a time series
+    def find_timeseries(col_name):
+        second_space = col_name.find(" ", col_name.find(" ") + 1)
+        node = col_name[:second_space]
+        carrier = col_name[second_space + 1:]
+
+        # If carrier is 'offwind', use 'offwind-dc' to match column names
+        if carrier == 'offwind':
+            carrier = 'offwind-ac'
+
+        search_pattern = f"{node}  {carrier}"
+        for col in n.generators_t.p_max_pu.columns:
+            if search_pattern in col:
+                return col
+        return None
+
+    for col_name in result.index:
+        col = find_timeseries(col_name)
+        if col is not None:
+            n.generators_t.p_max_pu[col_name] = n.generators_t.p_max_pu[col]
+
+    #Groupby links
+    #mask
+    gen_links = ['OCGT', 'CCGT', 'coal', 'lignite', 'nuclear', 'oil', 'urban central solid biomass CHP']
+    df = n.links[n.links['carrier'].isin(gen_links)]
+    lfleet=df[df['p_nom_extendable']==False]
+
+    #group
+    grouped = lfleet.groupby(['bus1', 'carrier']).agg({'p_nom': 'sum'}).reset_index()   
+    grouped['bus_carrier'] = grouped['bus1'] + ' ' + grouped['carrier']
+    grouped = grouped.set_index('bus_carrier')
+
+    #Merge
+    lfleet['bus_carrier'] = lfleet['bus1'] + ' ' + lfleet['carrier']
+    other_columns = lfleet.set_index('bus_carrier').drop(columns=['bus1', 'carrier', 'p_nom'])
+    #other_columns.drop(['build_year', 'lifetime'], axis=1, inplace=True)
+    other_columns = other_columns.groupby('bus_carrier').agg(lambda x: x.dropna().iloc[0] if not x.dropna().empty else None)
+    result = grouped.merge(other_columns, left_index=True, right_index=True, how='left')
+    result.index.name = 'Link'
+
+    #Update links
+    rows_to_drop = n.links.index.intersection(lfleet.index)
+    n.links = n.links.drop(rows_to_drop)
+    n.links = n.links.append(result)
 
 
 def nuclear_policy(n):
@@ -556,8 +625,21 @@ def add_vl(n):
                       bus0=names[i],
                       bus1=names[j],
                       carrier='virtual_link',
-                      marginal_cost=0.1, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
+                      marginal_cost=0.001, #large enough to avoid optimization artifacts, small enough not to influence PPA portfolio
                       p_nom=1e6)
+
+def add_shifters(n):
+    'Alternative form of virtual links connecting data centers across physical network'
+    for i in range(len(names)):
+        gen_name = f'vl_{names[i]}'
+        n.add("Generator", 
+              gen_name, 
+              bus=names[i],
+              carrier='virtual_link',
+              p_nom=40,
+              marginal_cost=0.001, 
+              p_min_pu=-1, 
+              p_max_pu=1)
 
 
 def add_dsm(n):
@@ -600,6 +682,16 @@ def add_dsm(n):
             marginal_cost=0.1,
             p_nom_extendable=False,
             )
+
+
+def hack_links(n):
+    '''
+    Virtual links and DSM mechanism shift loads, while <link> object in pypsa architecture shifts energy
+    Here we add additional attribute "sign" and fix it to -1. This reverts sign in nodal balance constraint. 
+    extra_functionality code is aligned accordingly.
+    '''
+    n.links.loc[(n.links.carrier=='virtual_link') | (n.links.carrier=='dsm'), 'sign'] = -1
+    n.links.loc[(n.links.carrier!='virtual_link') & (n.links.carrier!='dsm'), 'sign'] = 1
 
 
 def calculate_grid_cfe(n, name, node):
@@ -704,6 +796,14 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(rec - snd >= rhs_lo, name=f"vl_limit-lower_{name}")
 
 
+    def shifts_conservation(n):
+        
+        vls = n.generators[n.generators.carrier=='virtual_link']
+        shifts = n.model['Generator-p'].loc[:, vls.index].sum(dims=["Generator"])
+        #sum of loads shifts across all DC are equal 0 per time period
+        n.model.add_constraints(shifts == 0, name=f"vl_limit-upper_{name}")
+ 
+
     def DSM_constraints(n):
 
         delta = float(flexibility)/100 
@@ -744,13 +844,43 @@ def solve_network(n, policy, penetration, tech_palette):
             n.model.add_constraints(daily_outs - daily_ins == 0, name=f"DSM-conservation_{name}")
 
 
+    def DC_constraints(n):
+        'A general case when both spatial and temporal flexibility mechanisms are enabled'
+        
+        delta = float(flexibility)/100 
+        weights = n.snapshot_weightings["generators"] 
+        vls = n.links[n.links.carrier=='virtual_link']
+        dsm = n.links[n.links.carrier=='dsm']
+
+        for location, name in datacenters.items():
+        
+            vls_snd = vls.query('bus0==@name').index
+            vls_rec = vls.query('bus1==@name').index
+            dsm_delayin = dsm.query('bus0==@name').index
+            dsm_delayout = dsm.query('bus1==@name').index
+
+            snd = n.model['Link-p'].loc[:, vls_snd].sum(dims=["Link"])
+            rec = n.model['Link-p'].loc[:, vls_rec].sum(dims=["Link"])
+            delayin = n.model['Link-p'].loc[:, dsm_delayin].sum(dims=["Link"])
+            delayout = n.model['Link-p'].loc[:, dsm_delayout].sum(dims=["Link"])
+
+            load = n.loads_t.p_set[name + " load"]
+            #requested_load = load + rec - snd
+            rhs_up = load*(1+delta) - load
+            rhs_lo = load*(1-delta) - load
+
+            n.model.add_constraints(rec - snd + delayout - delayin <= rhs_up, name=f"DC-upper_{name}")
+            n.model.add_constraints(rec - snd + delayout - delayin >= rhs_lo, name=f"DC-lower_{name}")
+
+
     def cfe_constraints(n):
 
         weights = n.snapshot_weightings["generators"] 
         delta = float(flexibility)/100 
         vls = n.links[n.links.carrier=='virtual_link']
         dsm = n.links[n.links.carrier=='dsm']
-
+        #vls = n.generators[n.generators.carrier=='virtual_link']
+        
         for location, name in datacenters.items():
 
             #LHS
@@ -770,24 +900,28 @@ def solve_network(n, policy, penetration, tech_palette):
                 (ci_import*n.links.at[name + " import","efficiency"]*grid_supply_cfe*weights)
                 ).sum() # linear expr
 
-            lhs = gen_sum + discharge_sum + charge_sum  + grid_sum
+            lhs = gen_sum + discharge_sum + charge_sum + grid_sum
 
             #RHS
             total_load = (n.loads_t.p_set[name + " load"]*weights).sum()
 
             vls_snd = vls.query('bus0==@name').index
             vls_rec = vls.query('bus1==@name').index
-            total_snd = n.model['Link-p'].loc[:, vls_snd].sum() # NB sum over both axes
-            total_rec = n.model['Link-p'].loc[:, vls_rec].sum()
+            total_snd = (n.model['Link-p'].loc[:, vls_snd]*weights).sum() # NB sum over both axes
+            total_rec = (n.model['Link-p'].loc[:, vls_rec]*weights).sum()
     
             dsm_delayin = dsm.query('bus0==@name').index
             dsm_delayout = dsm.query('bus1==@name').index
-            total_delayin = n.model['Link-p'].loc[:, dsm_delayin].sum() # NB sum over both axes
-            total_delayout = n.model['Link-p'].loc[:, dsm_delayout].sum()
+            total_delayin = (n.model['Link-p'].loc[:, dsm_delayin]*weights).sum() # NB sum over both axes
+            total_delayout = (n.model['Link-p'].loc[:, dsm_delayout]*weights).sum()
 
             flex = penetration*(total_rec - total_snd + total_delayout - total_delayin)  
 
+            # vls_local = vls.query('bus==@name').index
+            # shift_local = (n.model['Generator-p'].loc[:, vls_local]*weights).sum()
+
             n.model.add_constraints(lhs - flex >= penetration*(total_load), name=f"CFE_constraint_{name}")
+            #n.model.add_constraints(lhs + shift_local >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
 
     def excess_constraints(n, snakemake):
@@ -825,7 +959,7 @@ def solve_network(n, policy, penetration, tech_palette):
             zone = n.buses.loc[f'{location}',:].country
 
             grid_res_techs = snakemake.config['global']['grid_res_techs']
-            grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone, area)['country_nodes'][location])]
+            grid_buses = n.buses.index[n.buses.location.isin(geoscope(zone)['country_nodes'][location])]
             grid_loads = n.loads.index[n.loads.bus.isin(grid_buses)]
 
             country_res_gens = n.generators.index[n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(grid_res_techs)]
@@ -902,8 +1036,7 @@ def solve_network(n, policy, penetration, tech_palette):
 
         add_battery_constraints(n)
         #country_res_constraints(n)
-        system_res_constraints(n, snakemake) #linopy constraint
-        limit_resexp(n, year, snakemake) #parameter operation
+        system_res_constraints(n, snakemake)
 
         if policy == "ref":
             print("no target set")
@@ -911,8 +1044,9 @@ def solve_network(n, policy, penetration, tech_palette):
             print("setting CFE target of",penetration)
             cfe_constraints(n)
             excess_constraints(n, snakemake)
-            vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
-            DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            #vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
+            #DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            DC_constraints(n)
             DSM_conservation(n) if snakemake.config['ci']['temporal_shifting'] else None
         elif policy == "res":
             print("setting annual RES target of",penetration)
@@ -968,7 +1102,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake('solve_network', 
-                    year='2025', zone='IEDK', palette='p2', policy="cfe100", flexibility='40')
+                    year='2025', zone='DKDE', palette='p1', policy="cfe100", flexibility='40')
 
     logging.basicConfig(filename=snakemake.log.python, level=snakemake.config['logging_level'])
 
@@ -980,7 +1114,6 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    area = snakemake.config['area']
     profile_shape = snakemake.config['ci']['profile_shape']
 
     datacenters = snakemake.config['ci']['datacenters']
@@ -992,7 +1125,6 @@ if __name__ == "__main__":
     print(f"solving network for palette: {tech_palette}")
     print(f"solving network for bidding zone: {zone}")
     print(f"solving network year: {year}")
-    print(f"solving with geoscope: {area}")
     print(f"solving with datacenters: {datacenters}")
     print(f"solving with flexibility: {flexibility}")
 
@@ -1013,26 +1145,218 @@ if __name__ == "__main__":
     # n.set_snapshots(n.snapshots[:nhours])
     # n.snapshot_weightings[:] = 8760.0 / nhours
 
-    with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
+    #with memory_logger(filename=getattr(snakemake.log, 'memory', None), interval=30.) as mem:
 
-        strip_network(n)
+    strip_network(n)
+    #groupby_assets(n)
+    limit_resexp(n, year, snakemake)
+    shutdown_lineexp(n)
+    nuclear_policy(n)
+    coal_policy(n)
+    biomass_potential(n)
+    cost_parametrization(n)
+    co2_policy(n, year)
+    load_profile(n, profile_shape,config)
+    
+    add_ci(n, year)
+    add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
+    add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
+    hack_links(n)
 
-        shutdown_lineexp(n)
-        nuclear_policy(n)
-        coal_policy(n)
-        biomass_potential(n)
-        #limit_resexp(n,year)
-        cost_parametrization(n)
-        co2_policy(n, year)
-        load_profile(n, profile_shape,config)
-        
-        add_ci(n, year)
-        add_vl(n) if snakemake.config['ci']['spatial_shifting'] else None
-        add_dsm(n) if snakemake.config['ci']['temporal_shifting'] else None
+    solve_network(n, policy, penetration, tech_palette)
 
-        solve_network(n, policy, penetration, tech_palette)
+    n.export_to_netcdf(snakemake.output.network)
 
-        n.export_to_netcdf(snakemake.output.network)
+    #logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
-    logger.info(f"Maximum memory usage: {mem.mem_usage}")
+
+# def retrieve_nb(n, node):
+#     '''
+#     Retrieve nodal energy balance per hour
+#     This simple function works only for the Data center nodes: 
+#         -> lines and links are bidirectional AND their subsets are exclusive.
+#         -> links include fossil gens
+#     NB {-1} multiplier is a nodal balance sign
+#     '''
+
+#     components=['Generator', 'Load', 'StorageUnit', 'Store', 'Link', 'Line']
+#     nodal_balance = pd.DataFrame(index=n.snapshots)
+    
+#     for i in components:
+#         if i == 'Generator':
+#             node_generators = n.generators.query('bus==@node').index
+#             nodal_balance = nodal_balance.join(n.generators_t.p[node_generators])
+#         if i == 'Load':
+#             node_loads = n.loads.query('bus==@node').index
+#             nodal_balance = nodal_balance.join(-1*n.loads_t.p_set[node_loads])
+#         if i == 'Link':
+#             node_export_links = n.links.query('bus0==@node').index
+#             node_import_links = n.links.query('bus1==@node').index
+#             nodal_balance = nodal_balance.join(-1*n.links_t.p0[node_export_links])
+#             nodal_balance = nodal_balance.join(-1*n.links_t.p1[node_import_links])
+#             ##################
+#         if i == 'StorageUnit':
+#             #node_storage_units = n.storage_units.query('bus==@node').index
+#             #nodal_balance = nodal_balance.join(n.storage_units_t.p_dispatch[node_storage_units])
+#             #nodal_balance = nodal_balance.join(n.storage_units_t.p_store[node_storage_units]) 
+#             continue   
+#         if i == 'Line':
+#             continue
+#         if i == 'Store':
+#             continue
+
+#     nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
+
+#     # Custom groupby function
+#     def custom_groupby(column_name):
+#         if column_name.startswith('vcc'):
+#             return 'spatial shift'
+#         return column_name
+
+#     # Apply custom groupby function
+#     nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+
+#     # revert nodal balance sign for display
+#     if 'spatial shift' in nodal_balance.columns: 
+#         nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
+#     if 'temporal shift' in nodal_balance.columns: 
+#         nodal_balance['temporal shift'] = nodal_balance['temporal shift'] * -1
+
+#     return nodal_balance
+
+
+# rename = {}
+# for name in names:
+#     temp = {
+#     f'{name} H2 Electrolysis': 'hydrogen storage',
+#     f'{name} H2 Fuel Cell': 'hydrogen storage',
+#     f'{name} battery charger': 'battery storage',
+#     f'{name} battery discharger': 'battery storage',
+#     f'{name} export': 'grid',
+#     f'{name} import': 'grid',
+#     f'{name} onwind': 'wind',	
+#     f'{name} solar': 'solar',
+#     f'{name} load': 'load',
+#     f'{name} adv_geothermal': "clean dispatchable",
+#     f'{name} allam_ccs': "NG-Allam",
+#     f'{name} DSM-delayout': 'temporal shift',
+#     f'{name} DSM-delayin': 'temporal shift',
+#     }
+#     rename = rename | temp
+
+# %matplotlib inline
+# node = 'frederica'
+# #import/export links = 0
+# #penetration = 0.8 #yields a shift
+
+# retrieve_nb(n, node).get('spatial shift').plot()
+# retrieve_nb(n, node).get('spatial shift').sum()
+# retrieve_nb(n, node).sum().round(2)
+# n.links_t.p0[['vcc_frederica_berlin', 'vcc_berlin_frederica']].sum()
+# n.generators_t.p[['vl_frederica', 'vl_berlin']].sum()
+
+# # # %%
+# # n.generators.filter(like='frederica', axis=0).T
+# # # %%
+# # n.stores.filter(like='frederica', axis=0).T
+# # # %%
+# # n.links.filter(like='frederica', axis=0).T 
+# # # %%
+# # n.loads_t.p_set
+
+# # frederica, 'frederica export']].round(2)[:100].plot()
+# #  n.links_t.p0[['frederica import', 'frederica export']].plot()
+
+# # n.links[n.links.carrier=='virtual_link'].index
+
+
+
+# def heatmap_utilization(data, month, year, ax, carrier):
+#     data = df[(df["snapshot"].dt.month == month)]
+
+#     snapshot = data["snapshot"]
+#     day = data["snapshot"].dt.day
+#     value = data[f"{carrier}"]
+#     value = value.values.reshape(int(24/scaling), len(day.unique()), order="F") # 8 clusters of 3h in each day
+    
+#     xgrid = np.arange(day.max() + 1) + 1  # The inner + 1 increases the length, the outer + 1 ensures days start at 1, and not at 0
+#     ygrid = np.arange(int(24/scaling)+1) # hours (sampled or not) + extra 1
+    
+#     ax.pcolormesh(xgrid, ygrid, value, cmap=colormap, vmin=MIN, vmax=MAX)
+#     # Invert the vertical axis
+#     ax.set_ylim(int(24/scaling), 0)
+#     # Set tick positions for both axes
+#     ax.yaxis.set_ticks([]) #[i for i in range(int(24/scaling))]
+#     ax.xaxis.set_ticks([])
+#     # Remove ticks by setting their length to 0
+#     ax.yaxis.set_tick_params(length=0)
+#     ax.xaxis.set_tick_params(length=0)
+    
+#     # Remove all spines
+#     ax.set_frame_on(False)
+
+
+# def plot_heatmap_utilization(carrier):
+#     # Here 1 row year/variable and 12 columns for month
+#     fig, axes = plt.subplots(1, 12, figsize=(14, 5), sharey=True)
+#     plt.tight_layout()
+
+#     for i, year in enumerate([2013]):
+#         for j, month in enumerate(range(1, 13)):
+#             #print(f'j: {j}, month: {month}')
+#             heatmap_utilization(df, month, year, axes[j], carrier=carrier)
+
+#     # Adjust margin and space between subplots (extra space is on the left for a label)
+#     fig.subplots_adjust(left=0.05, right=0.98, top=0.9, hspace=0.08, wspace=0.04) #wspace=0 stacks individual months together but easy to split
+
+#     # some room for the legend in the bottom
+#     fig.subplots_adjust(bottom=0.2)
+
+#     # Create a new axis to contain the color bar
+#     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
+#     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
+
+#     # Create a normalizer that goes from minimum to maximum temperature
+#     norm = mc.Normalize(MIN, MAX)
+
+#     # Create the colorbar and set it to horizontal
+#     cb = fig.colorbar(
+#         ScalarMappable(norm=norm, cmap=colormap), 
+#         cax=cbar_ax, # Pass the new axis
+#         orientation = "horizontal")
+
+#     # Remove tick marks and set label
+#     cb.ax.xaxis.set_tick_params(size=0)
+#     cb.set_label(f"Hourly {carrier} [MW]", size=12)
+
+#     # add some figure labels and title
+#     fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
+#     fig.text(0.03, 0.5, 'Hours of a day', ha="center", va="center", rotation="vertical", fontsize=14)
+#     fig.suptitle(f"Flexibility utilization | {node}", fontsize=20, y=0.98)
+
+#     fig.show()
+
+# import matplotlib.pyplot as plt
+# import matplotlib.colors as mc 
+# from matplotlib.cm import ScalarMappable
+# scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
+# colormap = "coolwarm"
+
+# node = 'frederica'
+# spatial_shift = retrieve_nb(n, node).get('spatial shift')
+# df = spatial_shift
+# df = df.reset_index().rename(columns={'index': 'snapshot'})
+# df["snapshot"] = pd.to_datetime(df["snapshot"])
+# MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# plot_heatmap_utilization(carrier="spatial shift")
+
+# node = 'frederica'
+# temporal_shift = retrieve_nb(n, node).get('temporal shift')
+# df = temporal_shift
+# df = df.reset_index().rename(columns={'index': 'snapshot'})
+# df["snapshot"] = pd.to_datetime(df["snapshot"])
+# MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+# plot_heatmap_utilization(carrier="temporal shift")
 

@@ -13,7 +13,7 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: final-EU-1H-GoogleDC-allflex
+run: final-EU-1H-GoogleDC-temporal
 
 #wildcards
 scenario:
@@ -48,15 +48,14 @@ ci:
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
   excess_share: 0.2
-  spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
+  spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
   temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
-# Time-series management
+# Temporal aggregation
 
 time_sampling: '1H' # one of ["1H", "3H"]
-plot_timeseries: True
 
 
 ###################

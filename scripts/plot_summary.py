@@ -5,6 +5,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.transforms import Bbox
 import matplotlib.colors as mc 
@@ -18,10 +19,13 @@ from solve_network import palette, geoscope
 from pypsa.plot import add_legend_patches
 
 
+def format_column_names(col_tuple):
+    return f"{col_tuple[0]}{col_tuple[1][:2]}"
+
 def ci_capacity():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,4.5))
 
     gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
@@ -54,6 +58,9 @@ def ci_capacity():
     ax.set_ylabel("DC portfolio capacity [MW]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ax.set_xticklabels(formatted_columns)
+
     fig.tight_layout()
     fig.savefig(snakemake.output.plot, transparent=True)
 
@@ -61,7 +68,7 @@ def ci_capacity():
 def ci_costandrev():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,4.5))
 
     techs = clean_techs + ["grid",
                            "battery_storage",
@@ -107,6 +114,9 @@ def ci_costandrev():
     ax.legend(loc="upper left", ncol = 3, prop={"size":8})
     ax.set_ylim(top=max(ldf.sum())*2)
 
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ax.set_xticklabels(formatted_columns)
+
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_costandrev.pdf"), transparent=True)
 
@@ -114,7 +124,7 @@ def ci_costandrev():
 def ci_generation():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,4.5))
 
     generation = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
     discharge = df.loc[["ci_generation_" + t for t in clean_dischargers]].rename({"ci_generation_" + t : t for t in clean_dischargers})/1000.
@@ -147,6 +157,9 @@ def ci_generation():
     ax.set_ylabel("DC portfolio generation [GWh]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
 
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ax.set_xticklabels(formatted_columns)
+
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_generation.pdf"), transparent=True)
 
@@ -154,7 +167,7 @@ def ci_generation():
 def zone_emissions():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,4.5))
 
     ldf = df.loc['emissions_zone'] #.to_frame()
 
@@ -171,6 +184,9 @@ def zone_emissions():
     ax.set_axisbelow(True)
     #ax.set_xlabel("CFE target")
     ax.set_ylabel("Emissions in local zone [MtCO$_2$/a]")
+
+    formatted_columns = [format_column_names(col) for col in ldf.index.tolist()]
+    ax.set_xticklabels(formatted_columns)
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","zone_emissions.pdf"), transparent=True)
@@ -326,7 +342,6 @@ def ci_abs_costs():
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_abs_costs.pdf"), transparent=True)
 
 
-
 def objective_abs():
 
     fig, ax = plt.subplots()
@@ -433,7 +448,7 @@ def plot_heatmap_cfe():
     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
 
-    # Create a normalizer that goes from minimum to maximum temperature
+    # Create a normalizer that goes from minimum to maximum value
     norm = mc.Normalize(0, 1) #for CFE, otherwise (MIN, MAX)
 
     # Create the colorbar and set it to horizontal
@@ -479,7 +494,7 @@ def plot_heatmap_utilization(carrier):
     # Values are: (x coordinate of left border, y coordinate for bottom border, width, height)
     cbar_ax = fig.add_axes([0.3, 0.03, 0.4, 0.04])
 
-    # Create a normalizer that goes from minimum to maximum temperature
+    # Create a normalizer that goes from minimum to maximum value
     norm = mc.Normalize(MIN, MAX)
 
     # Create the colorbar and set it to horizontal
@@ -540,16 +555,22 @@ def retrieve_nb(n, node):
         if i == 'Store':
             continue
 
-        nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
+    nodal_balance = nodal_balance.rename(columns=rename).groupby(level=0, axis=1).sum()
 
-        # Custom groupby function
-        def custom_groupby(column_name):
-            if column_name.startswith('vcc'):
-                return 'spatial shift'
-            return column_name
-        
-        # Apply custom groupby function
-        nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+    # Custom groupby function
+    def custom_groupby(column_name):
+        if column_name.startswith('vcc'):
+            return 'spatial shift'
+        return column_name
+
+    # Apply custom groupby function
+    nodal_balance = nodal_balance.groupby(custom_groupby, axis=1).sum()
+
+    # revert nodal balance sign for display
+    if 'spatial shift' in nodal_balance.columns: 
+        nodal_balance['spatial shift'] = nodal_balance['spatial shift'] * -1
+    if 'temporal shift' in nodal_balance.columns: 
+        nodal_balance['temporal shift'] = nodal_balance['temporal shift'] * -1
 
     return nodal_balance
 
@@ -619,13 +640,64 @@ def plot_balances(n, node,
     fig.savefig(path + '/' + f"{flex}_balance_{node}.pdf")
 
 
+def utilization_dc(names, flexibilities):
 
+    fig, axs = plt.subplots(len(names), 1, figsize=(5, 1.3*len(names)), sharex=True, sharey=True)
+    #fig.suptitle("Mean Spatial Shift for each DC by Flexibility Steps")
+
+    mean_data = []
+
+    for flex in flexibilities:
+        n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
+        colormap = "coolwarm"
+        mean_flex = []
+
+        if snakemake.config['ci']['spatial_shifting'] == True:
+            for node in names:
+                spatial_shift = retrieve_nb(n, node).get('spatial shift')
+
+                if spatial_shift is not None:
+                    df = spatial_shift
+                else:
+                    df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
+                
+                mean_flex.append(-df.mean()) #negative spatial shift implies increasing load
+
+        mean_data.append(mean_flex)
+
+    mean_df = pd.DataFrame(mean_data, columns=names, index=[int(f) for f in flexibilities])
+
+    range_of_data = mean_df.max().max() - mean_df.min().min()
+    offset = range_of_data * 0.40
+    ymin = mean_df.min().min() - offset
+    ymax = mean_df.max().max() + offset
+
+    for idx, ax in enumerate(axs):
+        mean_df.iloc[:, idx].plot(ax=ax, style='o-') 
+        ax.axhline(y=0.0, color='gray', linestyle='--') 
+        ax.set_ylabel(f'{names[idx]}')
+        ax.set_ylim([ymin, ymax])
+
+    axs[-1].set_xticks([int(f) for f in flexibilities])  # Set xticks positions using integers
+    axs[-1].set_xticklabels([f"{f}%" for f in flexibilities])  # Set xticks labels with percentage signs
+    axs[-1].set_xlabel('Flexibility Steps')
+
+    plt.tight_layout()
+    #plt.show()
+    path = snakemake.output.plot.split('capacity.pdf')[0] + f'utilization_dc'
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig.savefig(path + '/' + f"utilization_dc.pdf")
+
+
+####################################################################################################
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='IEDK', palette='p1', policy="cfe95")   
+        year='2025', zone='EU', palette='p1', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -636,11 +708,11 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    area = snakemake.config['area']
 
     datacenters = snakemake.config['ci']['datacenters']
     locations = list(datacenters.keys())
     names = list(datacenters.values())
+    flexibilities = snakemake.config['scenario']['flexibility']
 
     #techs for CFE hourly matching
     clean_techs = palette(tech_palette)[0]
@@ -766,9 +838,10 @@ if __name__ == "__main__":
         'H2_Electrolysis-%s' % year: 'hydrogen electrolysis'
     }
 
-# %matplotlib inline
 
 # SUMMARY PLOTS
+
+# %matplotlib inline
 
 df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0,1])
 
@@ -783,79 +856,80 @@ objective_abs()
 ci_curtailment()
 system_curtailment()
 
+utilization_dc(names, flexibilities)
+
+
 # TIME-SERIES DATA (per flexibility scenario)
 
-flexibilities = snakemake.config['scenario']['flexibility']
+if snakemake.config['plot_timeseries'] == True:
 
-for flex in flexibilities:
+    flexibilities = snakemake.config['scenario']['flexibility']
+
+    # CARBON INTENSITY HEATMAPS 
     
-    #flex = flexibilities[-1]
-    n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
-    grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
-                index_col=0, header=[0,1])
+    for flex in flexibilities[0]:
 
-# CARBON INTENSITY HEATMAPS
+        grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
+                    index_col=0, header=[0,1])
+        colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
 
-    colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
+        for location in locations:
 
-    for location in locations:
+            #location = locations[-1]
+            df = grid_cfe[f'{location}']
+            df = df.reset_index().rename(columns={'index': 'snapshot'})
+            df["snapshot"] = pd.to_datetime(df["snapshot"])
 
-        #location = locations[-1]
-        df = grid_cfe[f'{location}']
-        df = df.reset_index().rename(columns={'index': 'snapshot'})
-        df["snapshot"] = pd.to_datetime(df["snapshot"])
+            MIN = df["iteration 1"].min() #case of CFE -> 0
+            MAX = df["iteration 1"].max() #case of CFE -> 1
 
-        MIN = df["iteration 1"].min() #case of CFE -> 0
-        MAX = df["iteration 1"].max() #case of CFE -> 1
+            plot_heatmap_cfe()
 
-        plot_heatmap_cfe()
+    # SPATIAL & TEMPORAL FLEXIBILITY UTILIZATION HEATMAPS
 
-# SPATIAL & TEMPORAL FLEXIBILITY UTILIZATION HEATMAPS
+    for flex in flexibilities:
 
-    colormap = "coolwarm"
+        n = pypsa.Network(snakemake.input.networks.split('0.nc')[0]+f'/{flex}.nc')
+        colormap = "coolwarm"
 
-    if snakemake.config['ci']['temporal_shifting'] == True:
+        if snakemake.config['ci']['temporal_shifting'] == True:
+
+            for node in names:
+                #node = names[0]
+                temporal_shift = retrieve_nb(n, node).get('temporal shift')
+                if temporal_shift is not None:
+                    df = temporal_shift
+                else:
+                    df = pd.Series(0, index=retrieve_nb(n, node).index, name='temporal shift')
+                df = df.reset_index().rename(columns={'index': 'snapshot'})
+                df["snapshot"] = pd.to_datetime(df["snapshot"])
+                MIN = -int(flex)    #df["temporal shift"].min() #for flex co-opt case, value can exceed flex treshold
+                MAX = +int(flex)    #df["temporal shift"].max() #for flex co-opt case, value can exceed flex treshold
+
+                plot_heatmap_utilization(carrier="temporal shift")
+
+        if snakemake.config['ci']['spatial_shifting'] == True:
+
+            for node in names:
+                #node = names[0]
+                spatial_shift = retrieve_nb(n, node).get('spatial shift')
+                if spatial_shift is not None:
+                    df = spatial_shift
+                else:
+                    df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
+                df = df.reset_index().rename(columns={'index': 'snapshot'})
+                df["snapshot"] = pd.to_datetime(df["snapshot"])
+                MIN = -int(flex)    #df["spatial shift"].min() #for flex co-opt case, value can exceed flex treshold
+                MAX = +int(flex)    #df["spatial shift"].max() #for flex co-opt case, value can exceed flex treshold
+
+                plot_heatmap_utilization(carrier="spatial shift")
+
+    # NODAL BALANCES
 
         for node in names:
 
-            #node = names[0]
-            temporal_shift = retrieve_nb(n, node).get('temporal shift')
-            if temporal_shift is not None:
-                df = temporal_shift
-            else:
-                df = pd.Series(0, index=retrieve_nb(n, node).index, name='temporal shift')
-            df = df.reset_index().rename(columns={'index': 'snapshot'})
-            df["snapshot"] = pd.to_datetime(df["snapshot"])
-            MIN = df["temporal shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-            MAX = df["temporal shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
+            plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
+            plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
+            plot_balances(n, node, '2013-12-01 00:00:00', '2013-12-08 00:00:00')
 
-            plot_heatmap_utilization(carrier="temporal shift")
-
-    if snakemake.config['ci']['spatial_shifting'] == True:
-
-        for node in names:
-
-            #node = names[0]
-            spatial_shift = retrieve_nb(n, node).get('spatial shift')
-            if spatial_shift is not None:
-                df = spatial_shift
-            else:
-                df = pd.Series(0, index=retrieve_nb(n, node).index, name='spatial shift')
-            df = df.reset_index().rename(columns={'index': 'snapshot'})
-            df["snapshot"] = pd.to_datetime(df["snapshot"])
-            MIN = df["spatial shift"].min() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-            MAX = df["spatial shift"].max() #case of TEMP or SPATIAL SHIFTS -> flex scenario
-
-            plot_heatmap_utilization(carrier="spatial shift")
-
-# NODAL BALANCES
-
-    for node in names:
-
-        plot_balances(n, node, '2013-01-01 00:00:00', '2013-01-08 00:00:00')
-        plot_balances(n, node, '2013-02-01 00:00:00', '2013-02-08 00:00:00')
-        plot_balances(n, node, '2013-03-01 00:00:00', '2013-03-08 00:00:00')
-        plot_balances(n, node, '2013-04-01 00:00:00', '2013-04-08 00:00:00')
-        plot_balances(n, node, '2013-05-01 00:00:00', '2013-05-08 00:00:00')
-    
-    print(f'Done for {flex} scen')
+        print(f'Nodal balance completed for {flex} scen')
