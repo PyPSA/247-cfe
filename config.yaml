@@ -43,7 +43,7 @@ ci:
   #datacenters: {"DK1 0": "frederica", "DE1 0": "berlin"}
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "FR1 0": "paris", "FI2 0": "hamina", "PT1 0": "lisbon",}
-  datacenters: {'DE1 0': "Germany", 'GB0 0': "United_Kingdom", 'NL1 0': "Netherlands", "FR1 0": "France", 'PL1 0': "Poland",}
+  datacenters: {"IE5 0": "Ireland", "DE1 0": "Germany", "DK1 0": "Denmark(West)", "FR1 0": "France", "ES1 0": "Spain"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
