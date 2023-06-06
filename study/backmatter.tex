@@ -1,0 +1,57 @@
+\documentclass[10pt,aspectratio=169,dvipsnames]{beamer} % sets document type, default font size, slide aspect ratio, and loads color names
+\usetheme[color/block=transparent]{metropolis} % sets the theme of the document
+
+\usepackage[absolute,overlay]{textpos} % allows absolute positioning of text
+\usepackage{booktabs} % enhances quality of tables
+\usepackage[utf8]{inputenc} % allows input encoding in UTF-8
+\usepackage{tikz} % used for creating vector graphics
+\usetikzlibrary{arrows.meta} % loads additional arrow types
+\usepackage[europeanresistors,americaninductors]{circuitikz} % for drawing electrical circuits
+\usepackage[scale=2]{ccicons} % loads Creative Commons icons
+\usepackage[official]{eurosym} % loads the official symbol for the Euro
+\usepackage{hyperref} % allows creating hyperlinks in the document
+
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}} % creates command to adjust spacing between rows
+\newcommand{\hrefc}[2]{\href{#1}{\bf\color{blue}{\underline{#2}}}} % defines command for underlined, blue hyperlink
+\newcommand{\urlc}[1]{\hrefc{#1}{#1}} % defines command for URL hyperlink
+
+\newcommand{\R}{\mathbb{R}} % creates a shortcut for typing real numbers symbol
+\newcommand{\ubar}[1]{\text{\b{$#1$}}} % defines a command for underlined text
+
+\xdefinecolor{TUred}{RGB}{197,14,31} % defines a new color TUred
+\setbeamerfont{alerted text}{series=\bfseries} % sets the font of alerted text to bold
+\setbeamercolor{alerted text}{fg=TUred} % sets the color of alerted text to TUred
+\setbeamercolor{background canvas}{bg=white} % sets the background color to white
+\setbeamercolor{frametitle}{bg=lightgray!40, fg=TUred} % sets the background color of the frame title to light gray and text color to TUred
+\setbeamercolor{title}{fg=TUred} % sets the color of the title to TUred
+
+\addtobeamertemplate{frametitle}{}{% adds image to every frame title
+  \begin{textblock*}{100mm}(1.01\textwidth,2pt)
+    \includegraphics[width=1.5cm]{images/TUB.png}
+    \end{textblock*}}
+
+\def\l{\lambda} % defines a shortcut for lambda symbol
+\def\m{\mu} % defines a shortcut for mu symbol
+\def\d{\partial} % defines a shortcut for partial symbol
+\def\cL{\mathcal{L}} % defines a shortcut for caligraphic L symbol
+\def\co{CO${}_2$} % defines a shortcut for CO2 symbol
+\def\el{${}_{el}$} % defines a subscript for el
+\def\th{${}_{th}$} % defines a subscript for th
+\def\gas{${}_{gas}$} % defines a subscript for gas
+
+\setbeamercolor{framesource}{fg=gray} % sets color of framesource to gray
+\setbeamerfont{framesource}{size=\tiny} % sets font size of framesource to tiny
+\newcommand{\source}[1]{% creates command for inserting a source footnote
+\begin{textblock*}{5cm}(10.5cm,8.35cm)
+    \begin{beamercolorbox}[ht=0.5cm,right]{framesource}
+        \usebeamerfont{framesource}\usebeamercolor[fg]{framesource} {#1}
+    \end{beamercolorbox}
+\end{textblock*}}
+
+\graphicspath{{../results/}} % sets the path where graphics can be found
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png,.jpg} % defines the types of graphic files that can be used
+
+\def\goat#1{{\scriptsize\color{green}{[#1]}}} % defines a command for green, scriptsize text
+
+\let\olditem\item % saves the old item command
+\renewcommand{\item}{\olditem\vspace{5pt}} % redefines the item command to add space after each item
