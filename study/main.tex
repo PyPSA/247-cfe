@@ -2,29 +2,29 @@
 
 \input{backmatter.tex}
 
-\title{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+\title{On space-time load-shifting flexibility for data centers \\ 
+      \& 24/7 carbon-free electricity procurement}
 
 %\subtitle{---}
 \author{
   Iegor Riepin, Tom Brown\\
-  \hrefc{https://tub-ensys.github.io/}{Department of Digital Transformation in Energy Systems}, TU Berlin
-}
+  \hrefc{https://www.tu.berlin/en/ensys}{Department of Digital Transformation in Energy Systems}, TU Berlin
+  }
 
-\date{11 October 2022}
+\date{23 June 2023}
 
 \titlegraphic{%
   \vspace{0cm}
   \hspace{10.7cm}
     \includegraphics[trim=0 0cm 0 0cm,height=1.2cm,clip=true]{images/TUB.png}
-
-\vspace{5.1cm}
-   
-}
+  \vspace{5.1cm}
+  \\ \faGithub \href{https://github.com/PyPSA/247-cfe}{ Open code}
+  \\ \faShareAlt \href{https://pypsa.org/}{ PyPSA community}
+  }
 
 \begin{document}
 
 \maketitle
-
 
 \begin{frame}
   \frametitle{Acknowledgements}
@@ -32,11 +32,12 @@
   \begin{itemize}
     \item {\bf Funding:} This study was supported by a grant from Google, Inc. 
     \item {\bf Acknowledgements:} The authors thank members of the Google energy markets and policy team 
-    for their feedback and inputs on earlier drafts of this report. 
+    for their feedback and inputs on earlier drafts of this study. 
     We also thank the \hrefc{https://pypsa.org/}{PyPSA team} and many contributors to the open-source 
-    PyPSA energy system modelling tool used in this study (see: \hrefc{https://github.com/PyPSA/PyPSA}{github.com/PyPSA})
+    energy system modelling ecosystem used for this study (see: \hrefc{https://github.com/PyPSA/PyPSA}{github.com/PyPSA}).
+    Warm thanks to Fabian~Hofmann for making complex optimization simpler with \hrefc{https://linopy.readthedocs.io/}{linopy}. 
     \item 
-    {\bf Copyright} Unless otherwise stated, graphics and text are Copyright \copyright Tom Brown and Iegor Riepin, 2022.
+    {\bf Copyright} Unless otherwise stated, graphics and text are Copyright \copyright Tom Brown and Iegor Riepin, 2023.
     Graphics and text for which no other attribution are given are licensed under a 
     \href{https://creativecommons.org/licenses/by/4.0/}{CC BY 4.0}.  {\footnotesize \ccby} 
     \item The content of this study, including any errors or omissions, are the responsibility
@@ -46,8 +47,45 @@
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}{Summary of key findings}
 
+  \centering
+  {\small
+
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+    \begin{enumerate}
+
+    % \item 24/7~carbon-free energy (CFE) procurement leads to lower emissions for both the buyer and the system,
+    %   as well as reducing the needs for flexibility in the rest of the system.  
+
+    % \item Reaching CFE for 90-95\% of the time can be done with only a small cost premium compared to annually matching 
+    % 100\% renewable energy. 90-95\% CFE can be met by supplementing wind and solar with battery storage.
+
+    % \item Reaching 100\% CFE target is possible but costly with existing renewable 
+    % and storage technologies, with costs increasing rapidly above 95\%.
+    
+    % \item 100\% CFE target could have a much smaller cost premium if long duration storage or 
+    % clean dispatchable technologies like advanced geothermal are available.
+    
+    % \item 24/7~CFE procurement would create an early market for the advanced technologies,
+    % stimulating innovation and learning from which the whole electricity system would benefit.
+    
+    \item Space-time load-shifting flexibility facilitates economically efficient redistribution of data center loads.
+    \item This effect comes with a ... and reduction of renewable energy curtailment.
+    \item Flexible operation helps achieving a 24/7 hourly matching of electricity demand with clean energy with smaller resources. This can facilitate more data center operators and other flexible electricity buyers to join the 24/7~CFE efforts. 
+    \item Space-time load management can enable achieving 24/7~CFE procurement goals simpler for other companies who do not have such flexibility options. 
+    \item on LDES? on emission reduction with lower cost?
+
+  \end{enumerate}
+  }}
+  }
+  
+\end{frame}
+
+
+
+\begin{frame}
   \frametitle{Table of Contents}
   \setbeamertemplate{section in toc}[sections numbered]
   \tableofcontents[hideallsubsections]
@@ -185,8 +223,6 @@
   
 \end{frame}
 
-
-
 \begin{frame}{24/7 carbon-free energy}
   
   \begin{columns}[T]
@@ -221,68 +257,45 @@
 
 
 
+\begin{frame}{Fresh research items}
+
+  Reference to Princeton studies, TU Berlin study 1, IEA report, etc.
+
+\end{frame}
+
+
+\begin{frame}{Narrow down focus and outline motivation for our new study}
+
+A growing interest from C\&I sector companies to pursue 24/7 CFE \\
+A subset of C\&I, like data center operators, have the potential to use spatial and temporal flexibility to achieve high 24/7 CFE easier and help others \\
+The first study on space and time load-shifting load management for flexible C\&I that pursue 24/7 carbon-free electricity procurement goals \\
+
+\end{frame}
+
 \begin{frame}{Focus of the study}
 
-  In this study, we investigate both the \alert{means and costs of 24/7 procurement} 
-  for companies in a selection of European countries 
-  and the \alert{system impacts} for the rest of the European electricity system. 
-  
+  In this study, we focus our analysis on \alert{space-time load-shifting} provided by flexible electricity consumers, such as data centers.
+  Thus, in the context of this study, buyers committed to 24/7 CFE procurement can \\
+  - shift loads across \alert{time} (via job scheduling); \\
+  - shift loads across \alert{space} (via service migration); \\
+  - both of the above, i.e., co-optimization of space-time flexibility.
+
   \vspace{0.3cm}
-  In particular, we focus our analysis on the following quesitons:
-    \begin{itemize}
-    \item How can companies following 24/7~CFE procurement achieve hourly matching?
-    \item What is the cost premium of 24/7~CFE versus 100\% annual matching?
-    \item To what extent can technologies, such as long-duration storage or advanced dispatchable
-          clean generators, help to achieve the 24/7~CFE goal?
-    \item To which extent can 24/7~CFE contribute to reductions in CO$_2$
-          emissions intensity of buyers' consumption? 
-    \item If many companies follow the 24/7~CFE approach, how does this affect 
-    emissions and flexibility needs in the rest of the electricity system?
-    \end{itemize}
+  We aim to answer the following quesitons:
+  \begin{itemize}
+    \item To which extent can load-shifting flexibility reduce the \alert{means and costs} of hourly clean energy matching?\\ 
+    \item Investigate \alert{individual effects} of space/time flexibility, as well as their \alert{interplay}.\\
+    \item How the flexibility value varies across data center \alert{locations} and \alert{years}.\\
+    \item ...
+  \end{itemize}
 
-\end{frame}
-
-
-
-\begin{frame}{Summary of key findings}
-
-  \centering
-  {\small
-
-  \noindent\fbox{%
-  \parbox{\textwidth}{%
-    \begin{enumerate}
-
-    \item 24/7~carbon-free energy (CFE) procurement leads to lower emissions for both the buyer and the system,
-      as well as reducing the needs for flexibility in the rest of the system.  
-
-    \item Reaching CFE for 90-95\% of the time can be done with only a small cost premium compared to annually matching 
-    100\% renewable energy. 90-95\% CFE can be met by supplementing wind and solar with battery storage.
-
-    \item Reaching 100\% CFE target is possible but costly with existing renewable 
-    and storage technologies, with costs increasing rapidly above 95\%.
-    
-    \item 100\% CFE target could have a much smaller cost premium if long duration storage or 
-    clean dispatchable technologies like advanced geothermal are available.
-    
-    \item 24/7~CFE procurement would create an early market for the advanced technologies,
-    stimulating innovation and learning from which the whole electricity system would benefit.
-    
-  \end{enumerate}
-  }}
-  
-  These European study results align with \hrefc{https://acee.princeton.edu/24-7/}{a similar study} 
-  done by Princeton University in 2021 \\ for regions in the United States.
-  }
-  
 \end{frame}
 
 
 %----------------------------------------
 %----------------------------------------
 
-\section{Methodology and study design}
-
+\section{Methodology}
 
 
 \begin{frame}
@@ -292,25 +305,25 @@
 {\small
   \begin{itemize}
     
-    \item The mathematical model for this study is build upon 
-    \hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur(-Sec)} --
-    a widely-used open-source optimization model for the European energy system.
+    \item The optimization model is based on \hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur} -- a widely-used open-source model of the European energy system.
 
-    \item We encode a set of new equations and routines into the PyPSA-Eur(-Sec),
-    which allow for modelling a situation when some corporate \& industrial (C\&I) electricity consumers 
-    commit to a voluntary clean energy procurement.
+    \item In this study, we build upon the mathematical model of 24/7 clean energy procurement
+    developed in the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} (October 2022)
+    
+    \item We encode a set of new equations and routines, which allow for incorporating spatial (service migration) and temporal (job scheduling) load management systems for data centers.
 
-    \item We compare 100\% annual matching with renewable energy versus 
-    different targets for hourly CFE matching.
+    \item ... 
+    % \item We compare 100\% annual matching with renewable energy versus 
+    % different targets for hourly CFE matching.
 
-    \item We place C\&I consumers committed to a clean energy procurement in a 
-    selection of European countries: Germany, Denmark, Ireland and the Netherlands.
-    These countries differ in patterns of electricity demand, renewable potentials,
-    national energy and climate policies, legacy fleets of generation capacities, degree 
-    of interconnectons, etc. Apart form that, we consider different C\&I participation rates, a wide palette 
-    of CFE generation technologies available for 24/7 consumers, 
-    and two years (2025 and 2030). These differences help to understand and generalize 
-    the impacts of 24/7 CFE procurement.
+    % \item We place C\&I consumers committed to a clean energy procurement in a 
+    % selection of European countries: Germany, Denmark, Ireland and the Netherlands.
+    % These countries differ in patterns of electricity demand, renewable potentials,
+    % national energy and climate policies, legacy fleets of generation capacities, degree 
+    % of interconnectons, etc. Apart form that, we consider different C\&I participation rates, a wide palette 
+    % of CFE generation technologies available for 24/7 consumers, 
+    % and two years (2025 and 2030). These differences help to understand and generalize 
+    % the impacts of 24/7 CFE procurement.
     
   \end{itemize}
 }
@@ -319,31 +332,24 @@
 
 
 \begin{frame}
-  \frametitle{PyPSA: an energy systems modelling toolbox}
+  \frametitle{PyPSA project}
 
 \begin{columns}[T]
 \begin{column}{7cm}
 
 {\small
   \begin{itemize}
-  \item PyPSA (Python for Power System Analysis) is an open source toolbox 
-  for for state-of-the-art energy system modelling.
-  \item Fills gap between power flow software (e.g. PowerFactory,
-  MATPOWER) and energy system planning software (e.g. TIMES, OSeMOSYS).
-  \item PyPSA development and maintenance is coordinated by the TU Berlin,
-  \hrefc{https://www.ensys.tu-berlin.de/}{Department of Energy Systems}.  
-  \item PyPSA is used worldwide by dozens of research institutes and companies.\\
-  See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}.
+  \item \hrefc{https://pypsa.org/}{pypsa.org} project provides a free, user-friendly and performant model environment to support a smooth energy transition around the world. 
+  \item The project includes individual packages that enable to go all the way from data processing (e.g., calculating renewable energy potentials or collecting energy assets data) to creating complex energy optimization problems. All packages are build in a modular sense so that they may be used independently from each other but interact easily.
+  \item PyPSA development and maintenance is coordinated by the Department of Energy Systems @ TU~Berlin \hrefc{https://www.tu.berlin/en/ensys/about-us}{(ENSYS)}.  
   \end{itemize}
 }
-
 \end{column}
-
 \begin{column}{9cm}
 
 \centering
 \includegraphics[width=8.5cm]{images/pypsa-web.png}
-\source{\href{https://pypsa.org/}{PyPSA}}
+\source{\href{https://pypsa.org/}{pypsa.org}}
 
 \end{column}
 \end{columns}
@@ -351,9 +357,12 @@
 \end{frame}
 
 
+% \item PyPSA is used worldwide by dozens of research institutes and companies.\\
+% See \hrefc{https://pypsa.readthedocs.io/en/latest/users.html}{list of users}.
+
 
 \begin{frame}
-  \frametitle{PyPSA-Eur(-Sec): open models of the European energy system}
+  \frametitle{PyPSA-Eur: open models of the European energy system}
 
   \begin{columns}[T]
   \begin{column}{7cm}
@@ -679,9 +688,140 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 \end{frame}
 
 
+
+
+\begin{frame}{Spatial load shifting problem}
+
+  \centering
+  \includegraphics[height=8.3cm]{images/space-flex.pdf}
+  
+\end{frame}
+
+\begin{frame}{Temporal load shifting problem}
+
+  \centering
+  \includegraphics[height=8.1cm]{images/time-flex.pdf}
+  
+\end{frame}
+
+
+\begin{frame}{Data center parametrization}
+
+  \begin{columns}[T]
+  \begin{column}{5cm}
+
+  \centering
+  \vspace{0.3cm}
+  \includegraphics[width=5cm]{images/load_flex.png}
+
+  \vspace{0.1cm}
+  {\scriptsize
+   
+  }
+  \end{column}
+
+  \begin{column}{10cm}
+  {\small
+  \begin{itemize}
+
+  \item \alert{Multiple data centers} (consumers following 24/7 approach) can be located 
+        in any bidding zone of the ENTSO-E area
+
+  \item Data centers a have a nominal load of \alert{100~MW} (baseload profile)
+
+  \item Requested load $\widetilde{d}_t$ at any data center can deviate from the nominal load $d_t$. 
+        Requested load is constrained by the \alert{data center capacity} 
+        (an upper limit) and the \alert{inflexible loads} (a lower limit)
+  
+  \item Data centers can \alert{shift loads across space} (service migration)
+  
+  \item Data centers can \alert{shift loads across time} (via job scheduling)
+
+  \item Adjusted scenario palette and new metrics to focus on flexibility \& 24/7 CFE procurement
+  
+  \end{itemize}
+  }
+
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
 %----------------------------------------
 %----------------------------------------
-\section{Scenario setup}
+\section{Study design}
+
+\begin{frame}{EU-wide network simulation}
+
+  \begin{columns}[T]
+  \begin{column}{10cm}
+
+  \centering
+  \includegraphics[width=10cm]{../results/report-EU-1H-GoogleDC-allflex/map.pdf}
+
+  {\scriptsize
+  NB power generation capacity fleet before optimization stage\\
+  }
+
+  \end{column}
+
+  \begin{column}{6cm}
+  {\small
+  \begin{itemize}
+  \vspace{-.1cm}
+  \item European power system (ENTSO-E area) clustered to \alert{37 zones}.
+  \item Each zone represents an individual country. Some countries
+  that straddle different synchronous areas are split to individual
+  bidding zones, such as DK1 (West) and DK2 (East).
+  \item \alert{Co-optimization} of investment and power dispatch
+  decisions to meet electricity demand of datacenters (24/7 CFE consumers), as well as the demand of other
+  consumers in the European electricity system. 
+  \item \alert{Hourly resolution} (no time sampling).
+  
+  \end{itemize}
+  }
+
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
+
+\begin{frame}{Datacenters: Google DC locations}
+
+  \begin{columns}[T]
+  \begin{column}{10cm}
+
+  \centering
+  \includegraphics[width=9cm]{../results/report-EU-1H-GoogleDC-allflex/map-DC.pdf}
+
+
+  \end{column}
+
+  \begin{column}{6cm}
+  {\small
+  \begin{itemize}
+
+  \item Data centers are located in \\ \alert{IE, DK1, FI, BE, NL}
+  \item Nominal load is 100~MW (baseload)
+  \item Flexibility scenarios: \\
+        1. Shifting loads via virtual links \\ 
+        2. Shifting loads in time \\ 
+        3. Both mechanisms
+  \item Flexibility range: $f \in \{0,0.05,0.1,0.2,0.4\}$ 
+  \item Scenario year: 2025
+  \item 24/7 CFE targets: 100\% and 90\%
+  \item Technology palettes with/wo LDES
+  
+\end{itemize}
+  }
+
+  \end{column}
+  \end{columns}
+
+\end{frame}
+
 
 
 \begin{frame}{Scenario setup 1/3}
@@ -802,10 +942,44 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 \end{frame}
 
 
+\begin{frame}{Technology palettes span different commercial maturities}
+
+  {\small
+
+  We consider carbon-free technologies available today and that could scale up soon.
+  We formulate \alert{three palettes} grouping generators by a degree of technological
+  maturity:
+
+  \centering
+  \begin{table}[h]
+  \begin{tabular}{ccc}
+    \hline
+    \alert{Palette 1} & \alert{Palette 2} &  \alert{Palette 3} \\
+    \hline
+      onshore wind & onshore wind  & onshore wind \\
+    \hline
+      utility scale solar & utility scale solar  & utility scale solar \\
+    \hline
+      battery storage & battery storage  & battery storage \\
+    \hline
+      - & LDES\footnote{{\scriptsize Long-duration energy storage (LDES).}} & LDES \\
+    \hline
+      - & - & Allam cycle with CCS\footnote{{\scriptsize Allam cycle is a natural gas power plant
+      with up to 100\% of carbon capture and sequestration.}}  \\
+    \hline
+      - & - & Advanced dispatchable generator\footnote{{\scriptsize A stand-in for clean dispatchable technologies,
+      such as advanced geothermal (closed-loop) or nuclear systems.}} \\
+  \end{tabular}
+  \end{table}
+  }
+  \vspace{0.5cm}
+
+\end{frame}
+
 
 %----------------------------------------
 %----------------------------------------
-\section{Data sources and key assumptions}
+\section{Data sources}
 
 
 \begin{frame}{Summary of data sources: electricity grid}
@@ -1367,155 +1541,6 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 \end{frame}
 
 
-
-%----------------------------------------
-%----------------------------------------
-
-\section{Results for EU-wide network simulation (updated results)}
-
-
-\begin{frame}{EU-wide network simulation}
-
-  \begin{columns}[T]
-  \begin{column}{10cm}
-
-  \centering
-  \includegraphics[width=10cm]{../results/report-EU-1H-GoogleDC-allflex/map.pdf}
-
-  {\scriptsize
-  NB power generation capacity fleet before optimization stage\\
-  }
-
-  \end{column}
-
-  \begin{column}{6cm}
-  {\small
-  \begin{itemize}
-  \vspace{-.1cm}
-  \item European power system (ENTSO-E area) clustered to \alert{37 zones}.
-  \item Each zone represents an individual country. Some countries
-  that straddle different synchronous areas are split to individual
-  bidding zones, such as DK1 (West) and DK2 (East).
-  \item \alert{Co-optimization} of investment and power dispatch
-  decisions to meet electricity demand of datacenters (24/7 CFE consumers), as well as the demand of other
-  consumers in the European electricity system. 
-  \item \alert{Hourly resolution} (no time sampling).
-  
-  \end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
-\end{frame}
-
-
-\begin{frame}{Datacenters 1/2: Google DC locations}
-
-  \begin{columns}[T]
-  \begin{column}{10cm}
-
-  \centering
-  \includegraphics[width=9cm]{../results/report-EU-1H-GoogleDC-allflex/map-DC.pdf}
-
-
-  \end{column}
-
-  \begin{column}{6cm}
-  {\small
-  \begin{itemize}
-
-  \item Data centers are located in \\ \alert{IE, DK1, FI, BE, NL}
-  \item Nominal load is 100~MW (baseload)
-  \item Flexibility scenarios: \\
-        1. Shifting loads via virtual links \\ 
-        2. Shifting loads in time \\ 
-        3. Both mechanisms
-  \item Flexibility range: $f \in \{0,0.05,0.1,0.2,0.4\}$ 
-  \item Scenario year: 2025
-  \item 24/7 CFE targets: 100\% and 90\%
-  \item Technology palettes with/wo LDES
-  
-\end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
-\end{frame}
-
-
-\begin{frame}{Datacenters 2/2: an alternative setup}
-
-  \begin{columns}[T]
-  \begin{column}{10cm}
-
-  \centering
-  \includegraphics[width=9cm]{../results/report-EU-1H-GoogleDC-allflex/map-DC-2.pdf}
-
-
-  \end{column}
-
-  \begin{column}{6cm}
-  {\small
-  \begin{itemize}
-
-  \item Data centers are located in \\ \alert{IE, DK1, FI, FR, PT}
-  \item Nominal load is 100~MW (baseload)
-  \item Flexibility scenarios: \\
-        1. Shifting loads via virtual links \\ 
-        2. Shifting loads in time \\ 
-        3. Both mechanisms
-  \item Flexibility range: $f \in \{0,0.05,0.1,0.2,0.4\}$ 
-  \item Scenario year: 2025
-  \item 24/7 CFE targets: 100\% and 90\%
-  \item Technology palettes with/wo LDES
-  
-\end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
-\end{frame}
-
-
-
-\begin{frame}{Technology palettes span different commercial maturities}
-
-  {\small
-
-  We consider carbon-free technologies available today and that could scale up soon.
-  We formulate \alert{three palettes} grouping generators by a degree of technological
-  maturity:
-
-  \centering
-  \begin{table}[h]
-  \begin{tabular}{ccc}
-    \hline
-    \alert{Palette 1} & \alert{Palette 2} &  \alert{Palette 3} \\
-    \hline
-      onshore wind & onshore wind  & onshore wind \\
-    \hline
-      utility scale solar & utility scale solar  & utility scale solar \\
-    \hline
-      battery storage & battery storage  & battery storage \\
-    \hline
-      - & LDES\footnote{{\scriptsize Long-duration energy storage (LDES).}} & LDES \\
-    \hline
-      - & - & Allam cycle with CCS\footnote{{\scriptsize Allam cycle is a natural gas power plant
-      with up to 100\% of carbon capture and sequestration.}}  \\
-    \hline
-      - & - & Advanced dispatchable generator\footnote{{\scriptsize A stand-in for clean dispatchable technologies,
-      such as advanced geothermal (closed-loop) or nuclear systems.}} \\
-  \end{tabular}
-  \end{table}
-  }
-  \vspace{0.5cm}
-
-\end{frame}
-
-
 %---------------------------------------- Portfolio and Costs
 %----------------------------------------
 
@@ -1704,55 +1729,7 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 
 %----------------------------------------
 %----------------------------------------
-\section{Economically efficient redistribution of data center loads}
-
-
-
-\begin{frame}{Re-disribution of datacenter loads}
-
-  \begin{columns}[T]
-  \begin{column}{6cm}
-
-  \centering
-  \includegraphics[width=6cm]{../results/report-EU-1H-GoogleDC-spatial/plots/2025/EU/p1/cfe100/utilization_dc/utilization_dc.pdf}
-
-  \end{column}
-
-  \begin{column}{7cm}
-  {\small
-  \begin{itemize}
-
-  \item Figure shows mean spatial shift for each data center location as a function of flexibility range $f \in \{0,0.05,0.1,0.2,0.4\}$ 
-  \item Scenario: Google DC locations -- CFE 100\% targets at all DCs -- Tech-P1
-  \item \alert{TODO} Mean spatial shift (i.e. re-distribution of loads) does not follow intuition
-  \item \alert{SOLVED}
-
-  \end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
-\end{frame}
-
-
-\begin{frame}{Toy case of DK--DE data center pair: selected metrics}
-
-  \centering
-  \includegraphics[height=4.5cm]{../results/test-spatialshift-DKDE-fixed/plots/2025/DKDE/p1/cfe100/heatmaps/40_spatial_shift_frederica.pdf}
-
-  \begin{columns}[T]
-    \begin{column}{6cm}
-      \centering
-      \includegraphics[width=5.5cm]{../results/test-spatialshift-DKDE-fixed/plots/2025/DKDE/p1/cfe100/capacity.pdf}
-  \end{column}
-  \begin{column}{6cm}
-    \centering
-    \includegraphics[width=6cm]{../results/test-spatialshift-DKDE-fixed/plots/2025/DKDE/p1/cfe100/utilization_dc/utilization_dc.pdf}
-  \end{column}
-  \end{columns}
-
-\end{frame}
+\section*{Economically efficient redistribution of data center loads}
 
 
 \begin{frame}{Re-disribution of loads for co-optimised space-time flexibility utilisation \\
@@ -1901,7 +1878,7 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 
 %----------------------------------------
 %----------------------------------------
-\section{Summary of key observations}
+\section{Technical summary}
 
 
 \begin{frame}{Interplay of space-time load-shifting flexibility for data centers \& \\ 
@@ -1976,87 +1953,6 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 \end{frame}
 
 
-
-%----------------------------------------
-%----------------------------------------
-\section{Backup}
-\subsection{Problem formulation}
-
-
-\begin{frame}{Spatial load shifting problem}
-
-  \centering
-  \includegraphics[height=8.3cm]{images/space-flex.pdf}
-  
-\end{frame}
-
-\begin{frame}{Temporal load shifting problem}
-
-  \centering
-  \includegraphics[height=8.1cm]{images/time-flex.pdf}
-  
-\end{frame}
-
-
-\begin{frame}{Data center parametrization}
-
-  \begin{columns}[T]
-  \begin{column}{5cm}
-
-  \centering
-  \vspace{0.3cm}
-  \includegraphics[width=5cm]{images/load_flex.png}
-
-  \vspace{0.1cm}
-  {\scriptsize
-   
-  }
-  \end{column}
-
-  \begin{column}{10cm}
-  {\small
-  \begin{itemize}
-
-  \item \alert{Multiple data centers} (consumers following 24/7 approach) can be located 
-        in any bidding zone of the ENTSO-E area
-
-  \item Data centers a have a nominal load of \alert{100~MW} (baseload profile)
-
-  \item Requested load $\widetilde{d}_t$ at any data center can deviate from the nominal load $d_t$. 
-        Requested load is constrained by the \alert{data center capacity} 
-        (an upper limit) and the \alert{inflexible loads} (a lower limit)
-  
-  \item Data centers can \alert{shift loads across space} (service migration)
-  
-  \item Data centers can \alert{shift loads across time} (via job scheduling)
-
-  \item Adjusted scenario palette and new metrics to focus on flexibility \& 24/7 CFE procurement
-  
-  \end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
-\end{frame}
-
-%----------------------------------------
-%----------------------------------------
-\subsection{Data and key assumptions}
-
-
-\begin{frame}{An example of 100-node electricity network}
-
-  \centering
-
-  \includegraphics[width=10cm]{images/elec_s_100.png}
-  
-   \vspace{0.1cm}
-   \source{PyPSA-Eur(-Sec) models documentation \hrefc{https://github.com/PyPSA}{GitHub}}
-  
-\end{frame}
-
-
 %----------------------------------------
 %----------------------------------------
 \section{Conclusions and project outlook}
@@ -2101,23 +1997,18 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 
 
 \begin{frame}{Project outlook}
-
-  This project will continue analysing the impact of 24/7 procurement in Europe until March 2024. \\
-  We will deepen the analysis by examining the following:
+  
+  This project will continue analysing the impact of 24/7~CFE procurement in Europe until March 2024. \\
+  In the following study, we consider deepen the analysis by examining the following:
 
     \begin{itemize}
-      \item The impacts of \alert{temporal demand-side management} at datacenters;
-      \item The impact of \alert{spatial demand-shifting between datacenters} at different locations, 
-      so that compute jobs can move where the clean energy is available;
-      %We will explore the potential benefits for both the buyers and the system 
-      %in terms of reduced 24/7 procurement costs and system emissions.
       \item The impacts of \alert{parametric uncertainties} and corresponding assumptions when constructing the model of 
       the European energy system. These include: \\
-      \quad (i) Scenarios for carbon price developments in the EU ETS; \\
-      \quad (ii) Scenarios for inter-connector capacities based on the TYNDP or free optimization; \\
-      \quad (iii) Scenarios for expansion of electric vehicles, heat pumps, industry electrification; \\
-      \quad (iv) Prices for primary energy carriers; \\ 
-      \quad (v) Weather year realizations. 
+      \quad (i) Weather year realizations; \\
+      \quad (ii) Scenarios for carbon price developments in the EU ETS; \\
+      \quad (iii) Scenarios for inter-connector capacities based on the TYNDP or free optimization; \\
+      \quad (iv) Scenarios for expansion of electric vehicles, heat pumps, industry electrification; \\
+      \quad (v) Prices for primary energy carriers. 
       \item In addition, the modelling will use a \alert{higher-resolution grid} model,
        so that transmission network impacts can be estimated.
     \end{itemize}
@@ -2131,24 +2022,24 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 \begin{frame}\frametitle{\quad}
 
   {\Large
-  \alert{System-level impacts of 24/7 carbon-free electricity procurement in Europe}
+  \alert{On space-time load-shifting flexibility for data centers \\ 
+  \& 24/7 carbon-free electricity procurement}
   }
 
   \vspace{.3cm}
-  The research on this project is done in open-source: \\
-  \hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe} \\
+  This research project is open-sourced: \\
+  \faGithub~\hrefc{https://github.com/PyPSA/247-cfe}{https://github.com/PyPSA/247-cfe} \\
   A fixed link to the input data and code for this study: \\
-  \hrefc{https://zenodo.org/record/7181236}{https://zenodo.org/record/7181236} \\
-  A fixed link to the complete pack of modelling results for this study: \\
-  \hrefc{https://doi.org/10.5281/zenodo.7180098}{ttps://doi.org/10.5281/zenodo.7180098} \\
+  \faLink~\hrefc{tba}{tba} \\
+  A fixed link to the complete pack of results for this study: \\
+  \faLink~\hrefc{tba}{tba} \\
 
   \vspace{.3cm}
-  For questions and inquiries related to this study, please contact \\
+  For questions and collaboration inquiries, please contact \\
   Dr. Iegor Riepin, iegor.riepin@tu-berlin.de \\
   Prof. Tom Brown, t.brown@tu-berlin.de
 
 \end{frame}
-
 
 %\section*{Annex}
 
