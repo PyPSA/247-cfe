@@ -856,7 +856,9 @@ objective_abs()
 ci_curtailment()
 system_curtailment()
 
-utilization_dc(names, flexibilities)
+
+if (snakemake.config['ci']['spatial_shifting'] == True and snakemake.config['plot_timeseries'] == True):  
+    utilization_dc(names, flexibilities)
 
 
 # TIME-SERIES DATA (per flexibility scenario)
