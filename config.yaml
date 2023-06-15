@@ -13,11 +13,11 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: patch
+run: 1H-IEDKDEFIPT-allflex
 
 #wildcards
 scenario:
-  flexibility: ['0', '5', '10', '20', '40',] #possible deviation [%] of requested load from nominal level
+  flexibility: ['0', '10', '20', '40',] #possible deviation [%] of requested load from nominal level
   policy:  ["cfe90", "cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
@@ -42,7 +42,7 @@ ci:
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
   #datacenters: {"DK1 0": "frederica", "DE1 0": "berlin"}
   #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
-  datacenters: {"IE5 0": "ireland", "DK1 0": "denmark", "NL1 0": "netherlands", "FI2 0": "finland", "ES1 0": "spain"}
+  datacenters: {"IE5 0": "ireland", "DK1 0": "denmark", "DE1 0": "germany", "FI2 0": "finland", "PT1 0": "portugal"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]

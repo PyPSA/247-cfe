@@ -362,13 +362,13 @@ The first study on space and time load-shifting load management for flexible C\&
 
 
 \begin{frame}
-  \frametitle{PyPSA-Eur: open models of the European energy system}
+  \frametitle{PyPSA-Eur: open model of the European energy system}
 
   \begin{columns}[T]
   \begin{column}{7cm}
   {\small
   \begin{itemize}
-  \item PyPSA-Eur is an open model of the European power system at the transmission network 
+  \item PyPSA-Eur is an open model of the European energy system at the transmission network 
   level that covers the full ENTSO-E area.
   \item Only freely available and open data.
   \item Automated and configurable software pipeline from raw data to optimised electricity system.
@@ -982,15 +982,14 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 \section{Data sources}
 
 
-\begin{frame}{Summary of data sources: electricity grid}
+\begin{frame}{Data sources: electricity grid}
  
   \begin{columns}[T]
-  \begin{column}{7cm}
+  \begin{column}{6cm}
 
-  \vspace{0.3cm}
   \centering
 
-  \includegraphics[width=7cm]{images/pypsa-eur-grid.png}
+  \includegraphics[width=6.5cm]{images/pypsa-eur-grid.png}
 
   {\footnotesize 
   \vspace{.1cm}
@@ -999,134 +998,150 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   }
   \end{column}
 
-  \begin{column}{7.5cm}
+  \begin{column}{9cm}
   {\small 
-  \vspace{.3cm}
   \begin{itemize}
     \item Grid data contains AC lines at and above 220~kV voltage level, 
     all high voltage DC lines, and substations for the full 
     \hrefc{https://www.entsoe.eu/data/map/}{ENTSO-E area}.
-    \item Grid data is collected by \hrefc{https://github.com/PyPSA/GridKit}{GridKit extraction} 
-    of ENTSO-E interactive map
-    \item Spatial resolution is
-    \hrefc{https://pypsa-eur.readthedocs.io/en/latest/simplification/cluster_network.html}{adjustable}, 
-    what allows spatial and topological analysis at different levels 
-    (e.g. by transforming the transmission grid to a 380~kV only equivalent network).
-
+    \item Grid data is collected by a modified \faGithub~\hrefc{https://github.com/PyPSA/GridKit}{GridKit} extraction of the \hrefc{https://www.entsoe.eu/data/map/}{ENTSO-E Transmission System Map}. GridKit uses spatial and topological analysis to transform map objects from the ENTSO-E interactive map into a network model of the electric power system. The full grid model contains near 6760 lines and 3640 substations. 
+    \item The number of nodes fed into optimization model is adjustable, what allows for spatial and topological analysis at 
+    \hrefc{https://pypsa-eur.readthedocs.io/en/latest/spatial_resolution.html}{different levels}. The number of nodes can vary between 37 (the number of independent countries / synchronous areas) and several hundred (for computational tractability).\\
   \end{itemize}
   }
   
   \end{column}
   \end{columns}
 
+  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{pypsa-eur}}
 \end{frame}
 
 
 
-\begin{frame}{Summary of data sources: power plants and technology costs}
+\begin{frame}{Data sources: power plants}
  
   \begin{columns}[T]\
 
-  \begin{column}{7.5cm}
+  \begin{column}{8cm}
     {\small 
     \begin{itemize}
-      \item Existing generation fleet data is collected by cleaning, 
-      standardizing and merging multiple power plant databases.
+      \item Existing power generation fleet data is collected with a \href{https://github.com/PyPSA/powerplantmatching}{\alert{powerplantmatching}} toolset.
       
-      \item The process is transparent and open-sourced via the 
-      \hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching} package.
-      The package provides all the important information about power plants in a ready-to-use format
-      for the European power system. 
+      \item Powerplantmatching cleans, standardizes and merges the data from multiple open \hrefc{https://powerplantmatching.readthedocs.io/en/latest/basics.html}{power plant datasets} to create a combined dataset, which includes all the important information about power plants in Europe in a ready-to-use format for energy system modelling. 
+      
+      \item The toolset allows to update the combined data as soon as new input datasets are released.
   
-      \item Assumptions on energy system technologies (such as capital and operational costs, efficiencies, lifetimes, etc.) 
-      are gathered from variety of open sources. The process is also open-sourced via the 
-      \hrefc{https://github.com/PyPSA/technology-data}{technology-data} project. 
-  
-      \item Both tools are maintained by TU Berlin team.
-  
+      \item Powerplantmatching is an open-source project maintained by TU Berlin team. \\
+      \faGithub~\hrefc{https://github.com/PyPSA/powerplantmatching}{GitHub} \\
+      \faBook~\hrefc{https://powerplantmatching.readthedocs.io/en/latest/index.html}{Documentation}
+    
     \end{itemize}
     }  
   \end{column}
 
   \begin{column}{7cm}
-
-  \vspace{0.3cm}
+  \vspace{0.5cm}
   \centering
-
-  \includegraphics[width=7cm]{images/powerplantmatching.png}
-
-  {\footnotesize 
-  \vspace{0.1cm}
-  A showcase example 
-  of \hrefc{https://github.com/PyPSA/powerplantmatching}{powerplantmatching}
-  }
+  \includegraphics[width=7.2cm]{images/powerplantmatching.png}
   \end{column}
+
   \end{columns}
+  \source{Image: \href{https://github.com/PyPSA/powerplantmatching}{powerplantmatching}}
 
 \end{frame}
 
 
 
-\begin{frame}{Summary of data sources: renewable potentials and time series}
+\begin{frame}{Data sources: technology cost assumptions}
  
-  \begin{columns}[T]
-  \begin{column}{9cm}
+  \begin{columns}[T]\
 
-  \vspace{0.3cm}
-  \centering
+  \begin{column}{8cm}
+    {\small 
+    \begin{itemize}
+      \item The database of assumptions for energy system technologies (such as capital and operational costs, efficiencies, lifetimes, etc.) is retrieved from the repository \alert{\href{https://github.com/pypsa/technology-data}{PyPSA/technology-data}}. 
+      
+      \item The technology-data project compiles information about energy technologies from a variety of sources. The complied dataset has standardized technology names and energy units. All values are linked to original sources.
 
-  \includegraphics[width=9cm]{images/atlite.jpg}
+      \item  technology-data is an open-source project maintained by TU Berlin team. \\
+      \faGithub~\hrefc{https://github.com/PyPSA/powerplantmatching}{GitHub} \\
+      \faBook~\hrefc{https://powerplantmatching.readthedocs.io/en/latest/index.html}{Documentation}
 
-  {\footnotesize 
-  Converting weather data to energy system data with \hrefc{https://github.com/PyPSA/atlite}{atlite}
-  }
+    \end{itemize}}  
   \end{column}
 
   \begin{column}{7cm}
-  {\small 
-  \begin{itemize}
-    \item Renewable power potentials and generation profiles are processed by 
-    the open-source \hrefc{https://github.com/PyPSA/atlite}{atlite} package, 
-    which converts terabytes of weather data (like wind speeds, solar influx) 
-    into the data for energy systems modelling.
-    \item Geographic potentials for renewable energy are based on the
-    \hrefc{https://github.com/FZJ-IEK3-VSA/glaes}{GLAES} framework. We gather and process
-    datasets for land cover (CORINE2018), natural protection areas (NATURA2000),
-    bathymetry (GEBCO2018) and \hrefc{https://pypsa-eur.readthedocs.io/en/latest/}{other} 
-    to conduct own geospatial land availability analysis.
-    \item The \alert{atlite} project is also maintained by TU Berlin team.
-
-  \end{itemize}
+  \centering
+  \includegraphics[width=7.2cm]{images/technology-data.png}
+  \vspace{0.5cm}
+  {\small
+  \begin{flushright}
+    Cost assumptions used in this study originate from the \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{technology data catalogue} published by The~Danish~Energy~Agency.
+  \end{flushright}
   }
-  
   \end{column}
+  
   \end{columns}
-
 \end{frame}
 
 
-\begin{frame}{Other assumptions}
+
+\begin{frame}{Data sources: renewable potentials and time series}
+ 
+  \begin{columns}[T]
+  \begin{column}{8cm}
+
+  \vspace{0.5cm}
+  \centering
+
+  \includegraphics[width=8cm]{images/atlite.jpg}
+
+  {\footnotesize 
+  Converting weather data to energy system data
+  }
+  \end{column}
+
+  \begin{column}{8cm}
+  \vspace{-0.2cm}
+  {\small 
+  \begin{itemize}
+    \item Renewable power potentials and generation profiles are processed by 
+    the \href{https://github.com/PyPSA/atlite}{\alert{atlite}} package, 
+    which converts terabytes of weather data (like wind speeds, solar influx) 
+    into the data for energy systems modelling.
+    \item With atlite, we process datasets for land cover (CORINE2018), natural protection areas (NATURA2000), and bathymetry (GEBCO2018) to conduct own geospatial land availability analysis.\\The standard data source for renewable time time-series estimation is ECMWF's ERA5 dataset (reanalysis weather data in ca. 30km x 30km and hourly resolution). 
+    \item  atlite is also an open-source project maintained by TU~Berlin team. \\
+    \faGithub~\hrefc{https://github.com/PyPSA/atlite}{GitHub} \\
+    \faBook~\hrefc{https://atlite.readthedocs.io/en/latest/}{Documentation}
+
+  \end{itemize}
+  }
+  \end{column}
+  \end{columns}
+
+\source{Image: \href{https://github.com/PyPSA/atlite}{atlite}}
+\end{frame}
+
+
+
+\begin{frame}{Other background system assumptions}
 
 \begin{itemize}
   {\small 
-\item Model is set to perform a \alert{perfect-foresight optimization} of investment 
-and power dispatch decisions to meet electricity demand of the 24/7 consumers, 
-as well as the demand of other consumers in the European electricity system for 2025 or 2030.
 \item Electrical demand time-series is based on the 
 \hrefc{https://open-power-system-data.org/}{OPSD project}. 
-We assume the same demand profile per bidding zone for 2025 and 2030, as in the representative year 2013.
-\item Similarly, we assume 2013 as the representative climate year for renewable in-feed.
-\item Renewable expansion in the regional grid where 24/7 consumers are located is based on the 
-\hrefc{https://energy.ec.europa.eu/topics/energy-strategy/national-energy-and-climate-plans-necps_en}{national energy and climate plans}.\footnote{{\scriptsize For Germany, we assume the 
-\hrefc{https://www.bmwk.de/Redaktion/EN/Pressemitteilungen/2022/04/20220406-federal-minister-robert-habeck-says-easter-package-is-accelerator-for-renewable-energy.html}{Easter package}
-to come into force as planned, i.e. RES cover 80\% of gross electricity consumption by 2030.}}
+We assume the same demand profile per bidding zone for 2025 and 2030, as in the representative year 2013. 
+\item We assume 2013 as the representative climate year for renewable in-feed.
+\item Renewable expansion in the background electricity system is endogenous; we implement renewable generation targets by country that follow the \hrefc{https://energy.ec.europa.eu/topics/energy-strategy/national-energy-and-climate-plans-necps_en}{national energy and climate plans}. For countries w/o a 2025 target, a linear increase from renewable generation in 2020 to 2030 target is assumed. The modelled \co~emission intensity of electricity generation in European energy system matches the \hrefc{https://www.eea.europa.eu/ims/greenhouse-gas-emission-intensity-of-1}{estimated values} for 2025/2030.
 \item  National policies and decommissioning plans for coal and nuclear 
 power plants are based on the 
 \hrefc{https://beyond-coal.eu/}{Europe Beyond Coal}, 
 and \hrefc{https://world-nuclear.org/}{world-nuclear.org} projects.
 \item We assume price for EU ETS allowances to be 80~\euro/tCO$_2$ 
-and 130~\euro/tCO$_2$ for 2025 and 2030, accordingly. The price for 
-natural gas is assumed to be 35~\euro/MWh.\footnote{{\scriptsize Based on the price assumptions in the \hrefc{https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf}{REPowerEU Plan}
+and 130~\euro/tCO$_2$ for 2025 and 2030, accordingly.\footnote{{\scriptsize 
+Based on estimates of \hrefc{https://doi.org/10.1016/j.apenergy.2021.116914}{Pietzcker et al. 2021}
+}}
+The price for natural gas is assumed to be 35~\euro/MWh.\footnote{{\scriptsize Based on the price assumptions in the \hrefc{https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf}{REPowerEU Plan}
 issued by the European Commission in May 2022}}
 }
 \vspace{0.2cm}
@@ -1135,78 +1150,56 @@ issued by the European Commission in May 2022}}
 \end{frame}
 
 
-\begin{frame}{Technologies available for 24/7 consumers - 2025}
+
+\begin{frame}{Assumptions about technologies available for 24/7~CFE consumers}
   
-  {\scriptsize 
+  \centering
+  {\footnotesize 
 
     \begin{tabular}{cccccccc}
       \hline
-      Palette & Technology & CAPEX & FOM & VOM & Eff. & lifetime & Original reference \\
-       &  & (overnight cost)  &  (\%/year) &  (€/MWh) & (per unit) & (years) & (\hrefc{https://github.com/PyPSA/technology-data}{technology data}) \\
       \hline
-      1,2,3 & solar & 612 €/kW & 1.7 & 0.01 & - & 37.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
+      Year & Technology & CAPEX & FOM & VOM & Efficiency & lifetime \\
+       &  & (overnight cost)  &  (\%/year) &  (€/MWh) & (per unit) & (years) \\
       \hline
-      1,2,3 & onshore wind & 1077 €/kW & 1.2 & 1.42 & - & 28.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
       \hline
-      1,2,3 & battery storage & 187 €/kWh & - & - & - & 22.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      2025 & utility solar PV & 612 €/kW & 1.7 & 0.01 & - & 37.5 \\
       \hline
-      1,2,3  & battery inverter & 215 €/kW & 0.3 & - & 0.96  & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      2025 & onshore wind & 1077 €/kW & 1.2 & 0.015 & - & 28.5 \\
       \hline
-      2,3 & hydrogen storage\footnote{{\scriptsize Underground hydrogen storage in salt cavern}} 
-                  & 2.5 €/kWh & 0 & 0 & - & 100.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      2025 & battery storage & 187 €/kWh & 0 & - & - & 22.5 \\
       \hline
-      2,3 & electrolysis & 550 €/kW & 2.0 & - & 0.67 & 27.5 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      2025  & battery inverter & 215 €/kW & 0.3 & - & 0.96  & 10.0 \\
       \hline
-      2,3 & fuel cell & 1200 €/kW & 5.0 & - & 0.50 & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
+      2025 & hydrogen storage\footnote{{\scriptsize Underground hydrogen storage in salt cavern}} 
+                  & 2.5 €/kWh & 0 & - & - & 100.0 \\
       \hline
-      3 & NG Allam cycle\footnote{{\scriptsize Costs also include estimate of 40~€/ton for CO$_2$ transport \& sequestration.}} & 2760 €/kW & 14.8  & 3.2 & 0.54 & 30.0 &
-      \hrefc{https://file.go.gov.sg/carbon-capture-utilisation-and-storage-decarbonisation-pathway-for-singapore-energy-and-chemical-sectors-pdf.pdf}{Navigant}, 
-      \hrefc{https://netzeroamerica.princeton.edu/}{NZA}\\
+      2025 & electrolysis & 550 €/kW & 2.0 & - & 0.67 & 27.5  \\
       \hline
-      3 & Advanced dispatchable
-      & 10000 €/kW & 0 & 0 & 1.00 & 30.0 & own assumption \\
+      2025 & fuel cell & 1200 €/kW & 5.0 & - & 0.50 & 10.0 \\
+      \hline
+      \hline
+      2030 & utility solar PV & 492 €/kW & 2.0 & 0.01 & - & 40.0 \\
+      \hline
+      2030 & onshore wind & 1035 €/kW & 1.2 & 0.015 & - & 30 \\
+      \hline
+      2030 & battery storage & 142 €/kWh & 0 & - & - & 25 \\
+      \hline
+      2030  & battery inverter & 160 €/kW & 0.3 & - & 0.96  & 10.0 \\
+      \hline
+      2030 & hydrogen storage  & 2.0 €/kWh & 0 & - & - & 100.0 \\
+      \hline
+      2030 & electrolysis & 450 €/kW & 2.0 & - & 0.68 & 30  \\
+      \hline
+      2030 & fuel cell & 1100 €/kW & 5.0 & - & 0.50 & 10.0 \\
+      \hline
+      \hline
       \end{tabular}
-  }
-
-\end{frame}
-
-
-
-\begin{frame}{Technologies available for 24/7 consumers - 2030}
   
-  {\scriptsize 
-
-    \begin{tabular}{cccccccc}
-      \hline
-      Palette & Technology & CAPEX & FOM & VOM & Eff. & lifetime & Original reference \\
-       &  & (overnight cost)  &  (\%/year) &  (€/MWh) & (per unit) & (years) & (\hrefc{https://github.com/PyPSA/technology-data}{technology data}) \\
-      \hline
-      1,2,3 & solar & 492 €/kW & 2.0 & 0.01 & - & 40 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
-      \hline
-      1,2,3 & onshore wind & 1035 €/kW & 1.2 & 1.35 & - & 30 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA}\\
-      \hline
-      1,2,3 & battery storage & 142 €/kWh & - & - & - & 25.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
-      \hline
-      1,2,3  & battery inverter & 160 €/kW & 0.3 & - & 0.96  & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
-      \hline
-      2,3 & hydrogen storage\footnote{{\scriptsize Underground hydrogen storage in salt cavern}} 
-                  & 2.0 €/kWh & 0 & 0 & - & 100 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
-      \hline
-      2,3 & electrolysis & 450 €/kW & 2.0 & - & 0.68 & 30.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
-      \hline
-      2,3 & fuel cell & 1100 €/kW & 5.0 & - & 0.5 & 10.0 & \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA} \\
-      \hline
-      3 & NG Allam cycle\footnote{{\scriptsize Costs also include estimate of 40~€/ton for CO$_2$ transport \& sequestration.}}  & 2600 €/kW & 14.8  & 3.2 & 0.54 & 30 &
-      \hrefc{https://file.go.gov.sg/carbon-capture-utilisation-and-storage-decarbonisation-pathway-for-singapore-energy-and-chemical-sectors-pdf.pdf}{Navigant}, 
-      \hrefc{https://netzeroamerica.princeton.edu/}{NZA}\\
-      \hline
-      3& Advanced dispatchable
-      & 10000 €/kW & 0 & 0 & 1 & 30 & own assumption \\
-      \end{tabular}
+    Data is originally retrieved from the \hrefc{https://ens.dk/en/our-services/projections-and-models/technology-data}{DEA's catalogue for energy technologies}
+      \vspace{0.2cm}
   }
-
 \end{frame}
-
 
 %---------------------------------------------
 %---------------------------------------------
