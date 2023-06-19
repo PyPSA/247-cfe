@@ -269,6 +269,7 @@
 A growing interest from C\&I sector companies to pursue 24/7 CFE \\
 A subset of C\&I, like data center operators, have the potential to use spatial and temporal flexibility to achieve high 24/7 CFE easier and help others \\
 The first study on space and time load-shifting load management for flexible C\&I that pursue 24/7 carbon-free electricity procurement goals \\
+However, in the previous study, we implicitly assumed \alert{inflexible demand} for C\&I consumers.
 
 \end{frame}
 
@@ -301,8 +302,7 @@ The first study on space and time load-shifting load management for flexible C\&
 \begin{frame}
   \frametitle{A quick overview}
 
-
-{\small
+{\footnotesize
   \begin{itemize}
     
     \item The optimization model is based on \hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur} -- a widely-used open-source model of the European energy system.
@@ -312,7 +312,8 @@ The first study on space and time load-shifting load management for flexible C\&
     
     \item We encode a set of new equations and routines, which allow for incorporating spatial (service migration) and temporal (job scheduling) load management systems for data centers.
 
-    \item ... 
+    \item The model optimises investment and operational decisions to meet projected
+    electricity demand for the 24/7~CFE consumers, as well as the demand of other consumers in the European electricity system, while meeting all relevant engineering, reliability, and policy constraints. ...
     % \item We compare 100\% annual matching with renewable energy versus 
     % different targets for hourly CFE matching.
 
@@ -332,15 +333,16 @@ The first study on space and time load-shifting load management for flexible C\&
 
 
 \begin{frame}
-  \frametitle{PyPSA project}
+  \frametitle{PyPSA: an energy modelling ecosystem}
 
 \begin{columns}[T]
 \begin{column}{7cm}
 
-{\small
+{\footnotesize
   \begin{itemize}
   \item \hrefc{https://pypsa.org/}{pypsa.org} project provides a free, user-friendly and performant model environment to support a smooth energy transition around the world. 
-  \item The project includes individual packages that enable to go all the way from data processing (e.g., calculating renewable energy potentials or collecting energy assets data) to creating complex energy optimization problems. All packages are build in a modular sense so that they may be used independently from each other but interact easily.
+  \item The project includes individual packages that enable to go all the way from data processing (e.g., calculating renewable energy potentials or collecting energy assets data) to creating complex energy optimization problems. 
+  \item All packages are build in a modular sense so that they may be used independently from each other but interact easily.
   \item PyPSA development and maintenance is coordinated by the Department of Energy Systems @ TU~Berlin \hrefc{https://www.tu.berlin/en/ensys/about-us}{(ENSYS)}.  
   \end{itemize}
 }
@@ -362,81 +364,61 @@ The first study on space and time load-shifting load management for flexible C\&
 
 
 \begin{frame}
-  \frametitle{PyPSA-Eur: open model of the European energy system}
+  \frametitle{Energy system model}
 
   \begin{columns}[T]
   \begin{column}{7cm}
-  {\small
+  {\footnotesize
   \begin{itemize}
-  \item PyPSA-Eur is an open model of the European energy system at the transmission network 
-  level that covers the full ENTSO-E area.
-  \item Only freely available and open data.
-  \item Automated and configurable software pipeline from raw data to optimised electricity system.
-  \item Adjustable temporal and spatial resolution.
-  \item See \hrefc{https://pypsa-eur.readthedocs.io/en/latest/}{documentation}
-  and \hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{feature summary} 
-  for more details.
-  \item PyPSA-Eur{\bf-Sec} version of the model adds building heating, transport and industry sectors, as well as gas networks.
+  \item This study is done with a modified version of \alert{PyPSA-Eur} -- an open optimisation model of the European energy system.
+  \item Automated and configurable software pipeline enables scientific workflow from freely available and open raw input data to optimised electricity system. 
+  \item The PyPSA-Eur model is suitable both for operational studies, as well as generation and transmission expansion planning studies. 
+  \item  PyPSA-Eur is an open-source project: \\
+  \faGithub~\hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur on GitHub} \\
+  \faBook~\hrefc{https://pypsa-eur.readthedocs.io/en/latest/}{Documentation} \\
+  \faLink~\hrefc{https://docs.google.com/presentation/d/1mzj4X9uuO58gUvkhVMRCFWOJUWbs6NR9SNZe-RIkkNo/edit?usp=sharing}{Feature summary} 
   \end{itemize}
   }
   \end{column}
 
   \begin{column}{9cm}
     \centering
-  {\footnotesize
+    \vspace{0.1cm}
     \includegraphics[width=8cm]{images/elec_s_100.png}
-  
-   \vspace{0.1cm}
-   PyPSA-Eur(-Sec) suite of models are available on \hrefc{https://github.com/PyPSA}{GitHub}
-  }
   \end{column}
-  
   \end{columns}
 
+  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{pypsa-eur}}
 \end{frame}
 
 
 
-\begin{frame}{Modeling 24/7 CFE procurement}
-  \begin{columns}[T]
-  \begin{column}{7cm}
-  {\small
+\begin{frame}{Mathematical model of 24/7 CFE procurement}
 
+  {\footnotesize
   \begin{itemize}
-  \item We implement a set of additional constraints to the PyPSA-Eur 
-  to model a situation when a fraction of corporate and industry (C\&I) demand 
-  commits to the 24/7~CFE procurement.
-  \item The model optimises investment and operational decisions to meet projected
-  electricity demand for the 24/7~CFE consumers, as well as
-  the demand of other consumers in the European electricity system, while meeting all
-  relevant engineering, reliability, and policy constraints.
+  \item The mathematical model of 24/7~CFE procurement is based on the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} published in October 2022.
+
+  \item The study included mathematics additional to the PyPSA-Eur model to encode a situation when a fraction of C\&I consumers in a selected European countries commit to the 24/7~CFE goals. The resulting problem optimized investment and operational decisions to meet projected electricity demand for the 24/7~CFE consumers, as well as the demand of other consumers in the European electricity system, while meeting all relevant engineering, reliability, and policy constraints.
+  
+  \item In this study, we enhance the mathematical model of 24/7~CFE procurement 
+  by considering demand flexibility that can take form of \alert{temporal} (workloads scheduling) and \alert{spatial} (service migration) load management. 
+  
+  \item Thus, flexible participants such as data centers can meet their CFE targets by either procuring energy generation \& storage assets directly, and/or buying electricity from a local grid in hours when electricity mix is sufficiently clean  (like in the previous study), and utilizing spatial \& temporal flexibility \alert{to make [...]}.
+
   \end{itemize}
   }
-  \end{column}
-
-  \begin{column}{9cm}
-  \centering
-  \includegraphics[width=8.5cm]{images/247-concept.png}
-  {\footnotesize
-  The methods are based on the Google's CFE procurement framework, presented in paper
-  \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{"24/7 Carbon-Free Energy: Methodologies and Metrics"}
-  }
-  \source{\href{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{source: Google 2021, 24/7 CFE: Methodologies and Metrics}}
-  \end{column}
-
-  \end{columns}
 
 \end{frame}
 
 
 
-\begin{frame}{Implementation of C\&I demand and supply}
+\begin{frame}{Implementation of data center demand and supply \\
+  todo}
 
-  {\small
-
+  {\footnotesize
   The model optimizes a portfolio of carbon-free generation and storage technologies 
-  procured by the participating C\&I consumers. The portfolio assets have to be located 
-  in the same market zone.
+  procured by the participating C\&I consumers. The portfolio assets have to be located in the same market zone.
 
   The hourly demand of C\&I consumers $d_t$ for hour $t$ can be met 
   by a combination of the following: \\
@@ -446,22 +428,21 @@ The first study on space and time load-shifting load management for flexible C\&
             (requires charge $\ubar{g}_{s,t}$)
       \item imports from the grid $im_t$.
     \end{itemize}
-    }
 
-\begin{columns}
-
+  \begin{columns}
   \begin{column}{7cm}
-  \begin{equation*}
+  \begin{equation}
   \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_t + im_t  =  d_t \hspace{.7cm} \forall t
-  \end{equation*}
+  \label{eqn:inflexnb}
+  \end{equation}
 
   \vspace{0.3cm}
-  {\small NB: the excess from the local supply $ex_t$ can either be sold to the grid 
-  at market prices or curtailed.}
+  NB: the excess from the local supply $ex_t$ can either be sold to the grid at market prices or curtailed.
   \end{column}
 
 \begin{column}{5cm}
 \centering
+{\small
 \begin{circuitikz}
   \draw (0,13.5) to [short,i^=$im_t$]  (1.5,13.5) to (1.5,13);
   \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
@@ -471,222 +452,231 @@ The first study on space and time load-shifting load management for flexible C\&
   (V2.left) -- +(0,0.6);
   \draw (3.5,13) -- (3.5,12.4);
   \draw (3.5,12.4) to [esource] (3.5,11.7);
-  \draw (0.5,11) node{$d_t$};
-  \draw (2,11) node{$g_{CFE,t}$};
-  \draw (3.5,11) node{$g_{STO,t}$};
+  \draw (0.5,11.3) node{$d_t$};
+  \draw (2,11.3) node{$g_{CFE,t}$};
+  \draw (3.5,11.3) node{$g_{STO,t}$};
 \end{circuitikz}
+}
 \end{column}
-
 \end{columns}
 
+}
 \end{frame}
 
 
 
-\begin{frame}{Implementation of 100\% annual matching}
+\begin{frame}{24/7 CFE matching: a case of inflexible consumer}
 
-  {\small
-  
-The \alert{100\% annual matching} is modelled with a constraint (\ref{eqn:RES100}), which requires C\&I consumers 
-to purchase enough renewable electricity from the local bidding zone to match all of their electricity consumption
-on an annual basis.
-
-\vspace{0.3cm}
-More formally, the sum of all dispatch $g_{r,t}$ for RES generators $r\in RES$ over the year $t\in T$ 
-is equal to the annual demand $d_t$ of C\&I consumers:
-  \begin{equation}
-    \sum_{r\in RES, t\in T} g_{r,t} = \sum_{t\in T} d_t
-  \label{eqn:RES100}
-  \end{equation}
-  }
-\end{frame}
-
-
-\begin{frame}{Implementation of 24/7 CFE matching}
-
-  {\small
+  {\footnotesize
 
   The \alert{24/7 CFE matching} is modelled with a constraint (\ref{eqn:CFE}), 
-  which matches demand of C\&I consumers with carbon-free resources on an hourly basis. 
-
-  More formally, the constraint states that sum over generators from procured CFE resources $r\in CFE$,
-  discharge and charge from storage technologies $s\in STO$,
+  which matches demand of participating consumers with carbon-free resources on an hourly basis.  The constraint ensures that sum over generators from procured CFE resources $r\in CFE$, discharge and charge from storage technologies $s\in STO$,
   as well as import from the grid $im_t$ multiplied by the grid's CFE factor $CFE_t$
-  must be higher or equal than a certain CFE target $x$ multiplied with the total load:
+  must be higher or equal than a certain \alert{CFE score} $x$ multiplied with the total \alert{inflexible load} $d_t$:
   \vspace{0.1cm}
   \begin{equation}
   \sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq x \cdot \sum_{t\in T} d_t
   \label{eqn:CFE}
   \end{equation}
-  \vspace{0.1cm}
-  \noindent\fbox{%
-    \parbox{\textwidth}{%
-  The \alert{CFE Score} $x$~[\%] measures the degree to which hourly electricity consumption 
-  is matched with carbon-free electricity generation within the regional grid.
-  }}
 
-  \noindent\fbox{%
-    \parbox{\textwidth}{%
-  Note that the grid CFE factor $CFE_t$ is affected by capacity procured by C\&I consumers. This
-  introduces a nonconvex term to the optimization problem. The nonconvexity can be avoided by treating 
-  the grid CFE factor as a parameter that is iteratively updated (starting with $CFE_t =0 \,~\forall t$). 
-  Similarly to the \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)} study, 
-  we find that one forward pass (i.e. 2 iterations) yields very good convergence.
-  }}
-  }
+  \vspace{0.3cm}
 
+  \begin{columns}[T]
+    \begin{column}{7.5cm}
+    \centering  
+    \includegraphics[width=8cm]{images/247-concept.png}
+    \end{column}
+    \begin{column}{6cm}
+    \vspace{0.3cm}
+      \noindent\fbox{%
+      \parbox{\textwidth}{%
+    The \alert{CFE score} $x$~[\%] measures the degree to which hourly electricity consumption is matched with carbon-free electricity generation within the regional grid.
+    The matric is calculated using both CFE contracted by 24/7 participant, as well as CFE coming from the regional grid mix. \\
+    \\
+    The 24/7 CFE matching concept is aligned with \hrefc{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{24/7 CFE: Methodologies and Metrics} paper by Google.
+    }} 
+
+    \end{column}
+    \end{columns}
+    }
+\source{Image: \href{https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf}{24/7 CFE: Methodologies and Metrics}, Google 2021}    
 \end{frame}
 
 
+\begin{frame}{24/7 CFE matching: grid CFE factor}
 
-\begin{frame}{Implementation of 24/7 CFE matching}
+  {\footnotesize
 
-  {\small
-
-  The excess generation $ex_t$ from the procured resources represents clean electricity sold to the rest of the grid. 
-  The \alert{excess is not counted toward the CFE score} -- 
-  and thus it is subtracted on the left-hand side of the eq. (\ref{eqn:CFE}).
-
-  CFE generation above the demand can be stored and shifted to another hour where procured resources 
-  generate less than the C\&I demand, sold to the regional grid as excess $ex_t$
-  at {\bf market prices}, or curtailed. 
-  The total amount of excess generation is constrained to a certain level on an annual basis. 
-  In this study, the limit is set to 20\% of annual 24/7 participating customer's demand:
-  \vspace{0.1cm}
-  \begin{equation}
-  \sum_{t\in T} ex_t \leq ExLimit \cdot \sum_{t\in T} d_t
-  \label{eqn:excess}
-  \end{equation}
-
-  \noindent\fbox{%
-  \parbox{\textwidth}{%
-  The constraint (\ref{eqn:excess}) gives the C\&I consumers the flexibility to sell 
-  electricity to the regional grid, while avoiding the situation that sales to the grid 
-  become significantly larger than supply to the C\&I's own demand.
-  }}
-
-  \noindent\fbox{%
-  \parbox{\textwidth}{%
-  The {\bf market prices} are derived from the dual variable of each zone's
-  energy balance constraint. An infinitely small relaxation of the 
-  constraint, i.e., one unit of load less to be met, returns the 
-  marginal costs of providing that unit, which can be used as the
-  electricity price indicator in a competitive market.
-  }}
-  }
-
-\end{frame}
-
-
-
-\begin{frame}{CFE factor of the regional grid}
-
-  {\small
-
-  The \alert{grid CFE factor} $CFE_t$ in eq. (\ref{eqn:CFE}) defines the share of 
-  carbon-free electricity  in grid imports by C\&I consumers following 24/7 approach. 
-  The factor depends on the generation mix in the region where C\&I consumers are located, 
-  as well as on the generation mix in other regions from which electricity is imported
-  to the local region ($import_t$). 
+  The \alert{grid CFE factor} $CFE_t$ in eq. (\ref{eqn:CFE}) defines the percentage of clean electricity in each MWh of imported electricity from the grid to supply participating 24/7 loads in a given hour. The factor depends on the generation mix in the region where 24/7 participant is located, as well as on the generation mix in other regions from which electricity is imported to the local region ($import_t$).
 
   \begin{columns}
     \begin{column}{8cm}
-
-  Using the notation on the right, the average cleanness 
-  of the rest of the electricity system is:
+    Using notation on the right, the average cleanness of the rest of the electricity system is:   
   \begin{equation*}
   ImportCFE_t = \frac{A_t}{A_t + D_t}
   \end{equation*}
 
-  The CFE factor of grid supply\footnote{Note 
-  that generators contracted by 24/7 consumers (C) are excluded from the grid supply.} 
-  for a given hour $t$ is:
-  
+  The CFE factor of grid supply\footnote{\scriptsize{Generators contracted by 24/7 consumers (C) are excluded from the grid supply.}} for a given hour $t$ is:
+
   \begin{equation*}
   CFE_t = \frac{B_t + ImportCFE_t * import_t}{B_t + E_t + import_t}
   \end{equation*}    
 
   \end{column}
-
   \begin{column}{5cm}
   \centering
-  \includegraphics[width=5cm]{images/cfe.png}
-  {\scriptsize
-  This approach is based on \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)}
-  }
+  \includegraphics[width=4.5cm]{images/cfe.png} \\
+  \scriptsize{Here we follow \hrefc{https://acee.princeton.edu/24-7/}{Xu et al. (2021)}}
   \end{column}
     
   \end{columns}
-
   \noindent\fbox{%
   \parbox{\textwidth}{%
-  $CFE_t$ can be seen as the percentage of clean electricity in each MWh of imported 
-  electricity from the grid to supply participating 24/7 loads in a given hour.
+  \scriptsize{
+  Note that the grid CFE factor is affected by capacity procured by 24/7 consumers. This
+  introduces a nonconvex term to the optimization problem. The nonconvexity can be avoided by treating the grid CFE factor as a parameter that is iteratively updated (starting with $CFE_t =0 \,~\forall t$). In the previous study, we concluded that one forward pass (i.e. 2 iterations) yields very good convergence. This observation holds true also for the optimization problem behind this study with multiple 24/7 consumers.}
+  }}
+  }
+  
+\end{frame}
+
+
+
+\begin{frame}{24/7 CFE matching: excess CFE}
+
+  {\footnotesize
+
+  The \alert{excess CFE} represents generation from the procured resources above consumption of the 24/7 participant in a particular hour.  The excess CFE \alert{is not counted toward the CFE score} -- and thus it is subtracted on the left-hand side of the eq. (\ref{eqn:CFE}). While it does not contribute to the CFE Score, excess CFE could potentially be stored (using batteries) and shifted to another hour, sold to the regional grid at {\bf market prices}, or curtailed. 
+
+  \vspace{0.2cm}
+
+  The total amount of CFE exported to the regional grid is constrained to a certain level on an annual basis. The export limit ($ExLimit$) is set to 20\% of annual 24/7 participating consumer's demand. 
+  Thus, constraint (\ref{eqn:excess}) gives the 24/7 participant flexibility to sell electricity to the regional grid, while avoiding the situation that sales to the grid become significantly larger than CFE supply to own demand.
+  
+  \begin{equation}
+  \sum_{t\in T} export_t \leq ExLimit \cdot \sum_{t\in T} d_t
+  \label{eqn:excess}
+  \end{equation}
+
+  \vspace{0.2cm}
+  \noindent\fbox{%
+  \parbox{\textwidth}{%
+  The {\bf market prices} are derived from the dual variable of each zone's
+  \hrefc{https://pypsa.readthedocs.io/en/latest/components.html}{energy balance constraint}. An infinitely small relaxation of the constraint, i.e., one unit of load less to be met, returns the marginal costs of providing that unit, which can be used as the electricity price indicator in a competitive market.
   }}
   }
 
 \end{frame}
 
 
-\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 1/2}
 
-  {\small
+\begin{frame}{Implementation of data center load flexibility}
 
-  \alert{CO$_2$ emissions} associated with the dispatch of emitting power plants 
-  in the European electricity system are part of the model solution.
-  We can use this information to calculate (i) the \emph{emissionality} of generation 
-  that serves participating 24/7 demand, and (ii) the \emph{avoided emissions}, i.e.,
-  the difference in regional CO$_2$ emissions with and without 24/7 procurement. 
-  Similarly to the logic of computing the grid CFE factor, 
-  we need to consider imported emissions also in this calculation.
+{\footnotesize
+  \begin{columns}[T]
+
+  \begin{column}{6cm}
+  \centering
+  \vspace{0.2cm}
+  \includegraphics[width=6cm]{images/drawio_flexrange_d.pdf}
+  \end{column}
+
+  \begin{column}{9cm}
+  \begin{itemize}
+
+  \item The premise of data center flexibility is that a known amount of computing jobs, and assosiated power usage is "flexible", i.e., electricity loads can potentially be shifted in space (across datacenter locations), or to other times (by delaying jobs' execution.\footnote{{\scriptsize A change in cluster-level CPU usage can be accurately mapped into a change in its power usage, see \href{https://arxiv.org/abs/2106.11750}{Radovanovic et al. (2021)}}}
+
+  \item Thus, the \alert{requested load $\widetilde{d}_t$} of a data center can deviate from the nominal load $d_t$. The requested load $\widetilde{d}_t$ is constrained by the data center capacity (an upper limit) and the inflexible loads (a lower limit).
   
-  First, let $X(D)_t$ be hourly emissions $[tCO_2]$ in the rest of the electricity system. 
-  The average emissions rate of the rest of the system is calculated as:
-
+  \item The range of possible deviations of the requested and nominal loads is assumed to lie within $f$~[\%] of the nominal load, such as:\\
   \begin{equation*}
-  SystemEmisRate = \frac{X(D)_t}{A_t + D_t}
+  [1-f] \cdot d_t \le  d_t + (\overline{\delta} - \underline{\delta}) \le [1+f] \cdot d_t \quad \forall t \in T
+  \label{eqn:range}
   \end{equation*}
+  
+  \vspace{0.1cm}
+  \noindent where $\overline{\delta}, \underline{\delta} \in \mathbb{R}_{+}$ stand for positive/negative deviation of $\widetilde{d}_t$ and $d_t$ in hour $t$.
+  \end{itemize}
 
-  Second, let $Y(E)_t$ be hourly emissions in the regional grid where 24/7 consumers are located.
-  The emissions rate of grid supply is then:
+  \end{column}
+  \end{columns}
+}
+\end{frame}
 
-  \begin{equation*}
-  GridSupplyEmisRate = \frac{Y(E)_t + SystemEmisRate * import_t}{B_t + E_t + import_t}
-  \end{equation*}
 
+\begin{frame}{Spatial load shifting problem 1/2}
+
+  {\footnotesize
+
+  We introduce a concept of \alert{virtual links} as non-physical pathways for load shifts between data center nodes. \\
+
+  \vspace{0.2cm}
+  Let $\Theta$ be the set of all virtual links; let $\delta_\vartheta \in \mathbb{R}_{+}$ be load shifts (flows via virtual pathways); and let $N_{DC}$ be the set of data centers (flexible consumers). We can define $\Theta_n^{snd} := \{\vartheta \in \Theta | snd(\vartheta) = n\} \subseteq \Theta$, $\Theta_n^{rec} := \{\vartheta \in \Theta | rec(\vartheta) = n\} \subseteq \Theta$ to be the set of sending and receiving virtual links at node $n \in N_{DC}$.\\ 
+
+  \vspace{0.2cm}
+  The nodal energy balance defined for inflexible consumers (eq. \ref{eqn:inflexnb}) is now extended by spatial load shifts, since the requested load at a given node can include shifts to/from other nodes: 
+  \begin{equation}
+  \sum_{r\in CFE} g_{r,t,n} + \sum_{s\in STO} \left(\bar{g}_{s,t,n} - \ubar{g}_{s,t,n}\right) - ex_{t,n} + im_{t,n}  = \textcolor{TUred}{d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
+  \label{eqn:spatialnb}
+  \end{equation}
+
+  \begin{columns}
+    \begin{column}{7cm}
+      \centering
+      \includegraphics[width=7.5cm]{images/Zavala_2021.png}
+    \end{column}
+  \begin{column}{5cm}
+  \centering
+  {\small
+  \begin{circuitikz}
+    \draw (0,13.5) to [short,i^=$im_{t,n}$]  (1.5,13.5) to (1.5,13);
+    \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
+    \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_{t,n}$] +(1.5,0.5);
+    \draw (0.5,13) -- +(0,-0.5) node[sground]{};
+    \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
+    (V2.left) -- +(0,0.6);
+    \draw (3.5,13) -- (3.5,12.4);
+    \draw (3.5,12.4) to [esource] (3.5,11.7);
+    \draw (0.5,11.3) node{\textcolor{TUred}{$\widetilde{d_{n,t}}$}};
+    \draw (2,11.3) node{$g_{CFE,t,n}$};
+    \draw (3.5,11.3) node{$g_{STO,t,n}$};
+  \end{circuitikz}
+  }
+  \end{column}
+  \end{columns}
   }
 \end{frame}
 
 
 
-\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 2/2}
+\begin{frame}{Spatial load shifting problem 2/2}
 
-  {\small
-  Third, we calculate {CO$_2$ emissions} associated with the electricity consumption of 
-  24/7 participating consumers on an hourly basis:
-  
-  \begin{equation*}
-  Emissions_t = GridSupply_t * GridSupplyEmisRate_t
-  \end{equation*}
 
-  Now, we have the necessary components to calculate two metrics of interest for our analysis. 
-  A first metric is the \alert{average emissions rate of 24/7 consumers}:
+  {\footnotesize
 
-  \begin{equation*}
-    (C\&I)EmisRate = \frac{\sum_{t\in T} Emissions_t}{\sum_{t\in T} Load_t}
-  \end{equation*}
+  Flexibility constraints
+      \begin{subequations}
+        \begin{align}
+            \widetilde{d_{n,t}} &=  d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} \quad \forall n \in N_{DC}, t \in T \label{eqn:spatiala} \\
+            \widetilde{d_{n,t}} &\le [1+f] \cdot d_{t,n}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialb} \\
+            \widetilde{d_{n,t}} &\ge [1-f] \cdot d_{t,n}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialc}
+        \end{align}
+        \label{eqn:spatialflex}
+        \end{subequations}
 
-  A second metric is the \alert{avoided emissions} by 24/7 procurement. The calculation is based on the 
-  difference between the total {CO$_2$ emissions} in the regional grid where 24/7 consumers are located
-  with and without 24/7 procurement (\emph{'247-cfe'} and \emph{'reference'} labels, accordingly):
 
-  \begin{equation*}
-    AvoidedEmissions = \sum_{t\in T} Y(E)_t^{reference} - \sum_{t\in T} Y(E)_t^{247-cfe}
-  \end{equation*}
+  Adjusted CFE equation
+  \vspace{0.1cm}
+  \begin{equation}
+    \begin{split}
+  &\sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq \\ 
+  &x_n \cdot \textcolor{TUred}{\sum_{t\in T} \left( d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}\right)} \quad \forall n \in N_{DC} \label{eqn:spatialCFE}
+    \end{split}
+  \end{equation}
   }
 
+  
 \end{frame}
-
 
 
 
@@ -697,6 +687,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   
 \end{frame}
 
+
 \begin{frame}{Temporal load shifting problem}
 
   \centering
@@ -705,47 +696,13 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 \end{frame}
 
 
-\begin{frame}{Data center parametrization}
-
-  \begin{columns}[T]
-  \begin{column}{5cm}
+\begin{frame}{Spatially-temporal load shifting problem}
 
   \centering
-  \vspace{0.3cm}
-  \includegraphics[width=5cm]{images/load_flex.png}
-
-  \vspace{0.1cm}
-  {\scriptsize
-   
-  }
-  \end{column}
-
-  \begin{column}{10cm}
-  {\small
-  \begin{itemize}
-
-  \item \alert{Multiple data centers} (consumers following 24/7 approach) can be located 
-        in any bidding zone of the ENTSO-E area
-
-  \item Data centers a have a nominal load of \alert{100~MW} (baseload profile)
-
-  \item Requested load $\widetilde{d}_t$ at any data center can deviate from the nominal load $d_t$. 
-        Requested load is constrained by the \alert{data center capacity} 
-        (an upper limit) and the \alert{inflexible loads} (a lower limit)
+  .
   
-  \item Data centers can \alert{shift loads across space} (service migration)
-  
-  \item Data centers can \alert{shift loads across time} (via job scheduling)
-
-  \item Adjusted scenario palette and new metrics to focus on flexibility \& 24/7 CFE procurement
-  
-  \end{itemize}
-  }
-
-  \end{column}
-  \end{columns}
-
 \end{frame}
+
 
 
 %----------------------------------------
@@ -758,7 +715,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \begin{column}{10cm}
 
   \centering
-  \includegraphics[width=10cm]{../results/report-EU-1H-GoogleDC-allflex/map.pdf}
+  \includegraphics[width=10cm]{../results/1H-IEDKDEFIPT-allflex/map-fleet.pdf}
 
   {\scriptsize
   NB power generation capacity fleet before optimization stage\\
@@ -794,14 +751,18 @@ is equal to the annual demand $d_t$ of C\&I consumers:
   \begin{column}{10cm}
 
   \centering
-  \includegraphics[width=9cm]{../results/report-EU-1H-GoogleDC-allflex/map-DC.pdf}
-
-
+  \includegraphics[width=9cm]{../results/1H-IEDKDEFIPT-allflex/map-DCs.pdf}
+  
   \end{column}
 
   \begin{column}{6cm}
   {\small
   \begin{itemize}
+
+  \item \alert{Multiple data centers} (consumers following 24/7 approach) can be located 
+  in any bidding zone of the ENTSO-E area
+
+  \item Data centers a have a nominal load of \alert{100~MW} (baseload profile)
 
   \item Data centers are located in \\ \alert{IE, DK1, FI, BE, NL}
   \item Nominal load is 100~MW (baseload)
@@ -979,7 +940,7 @@ is equal to the annual demand $d_t$ of C\&I consumers:
 
 %----------------------------------------
 %----------------------------------------
-\section{Data sources}
+\section{Data sources and assumptions}
 
 
 \begin{frame}{Data sources: electricity grid}
@@ -2034,9 +1995,71 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
 
 \end{frame}
 
-%\section*{Annex}
+%----------------------------------------
+%----------------------------------------
+
+\section*{Annex}
+
+\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 1/2}
+
+  {\small
+
+  \alert{CO$_2$ emissions} associated with the dispatch of emitting power plants 
+  in the European electricity system are part of the model solution.
+  We can use this information to calculate (i) the \emph{emissionality} of generation 
+  that serves participating 24/7 demand, and (ii) the \emph{avoided emissions}, i.e.,
+  the difference in regional CO$_2$ emissions with and without 24/7 procurement. 
+  Similarly to the logic of computing the grid CFE factor, 
+  we need to consider imported emissions also in this calculation.
+  
+  First, let $X(D)_t$ be hourly emissions $[tCO_2]$ in the rest of the electricity system. 
+  The average emissions rate of the rest of the system is calculated as:
+
+  \begin{equation*}
+  SystemEmisRate = \frac{X(D)_t}{A_t + D_t}
+  \end{equation*}
+
+  Second, let $Y(E)_t$ be hourly emissions in the regional grid where 24/7 consumers are located.
+  The emissions rate of grid supply is then:
+
+  \begin{equation*}
+  GridSupplyEmisRate = \frac{Y(E)_t + SystemEmisRate * import_t}{B_t + E_t + import_t}
+  \end{equation*}
+
+  }
+\end{frame}
+
+
+\begin{frame}{CO$_2$ emissions rate of the regional grid and 24/7 portfolio, 2/2}
+
+  {\small
+  Third, we calculate {CO$_2$ emissions} associated with the electricity consumption of 
+  24/7 participating consumers on an hourly basis:
+  
+  \begin{equation*}
+  Emissions_t = GridSupply_t * GridSupplyEmisRate_t
+  \end{equation*}
+
+  Now, we have the necessary components to calculate two metrics of interest for our analysis. 
+  A first metric is the \alert{average emissions rate of 24/7 consumers}:
+
+  \begin{equation*}
+    (C\&I)EmisRate = \frac{\sum_{t\in T} Emissions_t}{\sum_{t\in T} Load_t}
+  \end{equation*}
+
+  A second metric is the \alert{avoided emissions} by 24/7 procurement. The calculation is based on the 
+  difference between the total {CO$_2$ emissions} in the regional grid where 24/7 consumers are located
+  with and without 24/7 procurement (\emph{'247-cfe'} and \emph{'reference'} labels, accordingly):
+
+  \begin{equation*}
+    AvoidedEmissions = \sum_{t\in T} Y(E)_t^{reference} - \sum_{t\in T} Y(E)_t^{247-cfe}
+  \end{equation*}
+  }
+
+\end{frame}
+
+
 
 \end{document}
-
 %----------------------------------------
 %----------------------------------------
