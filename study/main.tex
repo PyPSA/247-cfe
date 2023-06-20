@@ -413,24 +413,22 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
 
 
 
-\begin{frame}{Implementation of data center demand and supply \\
-  todo}
+\begin{frame}{Matching electricity supply and demand: a case of inflexible consumer}
 
   {\footnotesize
   The model optimizes a portfolio of carbon-free generation and storage technologies 
-  procured by the participating C\&I consumers. The portfolio assets have to be located in the same market zone.
+  procured by the C\&I consumers that commit to 24/7~CFE goals. The portfolio assets have to be located in the same market zone.
 
-  The hourly demand of C\&I consumers $d_t$ for hour $t$ can be met 
-  by a combination of the following: \\
+  The hourly demand of 24/7 participating consumer $d_t$ for hour $t$ can be met by a combination of the following: \\
     \begin{itemize}
-      \item dispatch $g_{r,t}$ of procured CFE generators $r\in CFE$ 
+      \item dispatch $g_{r,t}$ of procured carbon-free generators $r\in CFE$ 
       \item dispatch $\bar{g}_{s,t}$ of procured storage technologies $s\in STO$
             (requires charge $\ubar{g}_{s,t}$)
-      \item imports from the grid $im_t$.
+      \item imports of electricity from the grid $im_t$.
     \end{itemize}
 
   \begin{columns}
-  \begin{column}{7cm}
+  \begin{column}{8cm}
   \begin{equation}
   \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_t + im_t  =  d_t \hspace{.7cm} \forall t
   \label{eqn:inflexnb}
@@ -472,7 +470,7 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
   The \alert{24/7 CFE matching} is modelled with a constraint (\ref{eqn:CFE}), 
   which matches demand of participating consumers with carbon-free resources on an hourly basis.  The constraint ensures that sum over generators from procured CFE resources $r\in CFE$, discharge and charge from storage technologies $s\in STO$,
   as well as import from the grid $im_t$ multiplied by the grid's CFE factor $CFE_t$
-  must be higher or equal than a certain \alert{CFE score} $x$ multiplied with the total \alert{inflexible load} $d_t$:
+  must be higher or equal than a certain \alert{CFE score} $x$ multiplied with the total load $d_t$:
   \vspace{0.1cm}
   \begin{equation}
   \sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq x \cdot \sum_{t\in T} d_t
@@ -584,18 +582,18 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
   \begin{column}{9cm}
   \begin{itemize}
 
-  \item The premise of data center flexibility is that a known amount of computing jobs, and assosiated power usage is "flexible", i.e., electricity loads can potentially be shifted in space (across datacenter locations), or to other times (by delaying jobs' execution.\footnote{{\scriptsize A change in cluster-level CPU usage can be accurately mapped into a change in its power usage, see \href{https://arxiv.org/abs/2106.11750}{Radovanovic et al. (2021)}}}
+  \item The premise of data center flexibility is that a known amount of computing jobs, and assosiated power usage is "flexible", i.e., electricity loads can potentially be shifted in space (across datacenter locations), or to other times (by delaying jobs' execution).\footnote{{\scriptsize A change in cluster-level CPU usage can be accurately mapped into a change in its power usage, see \href{https://arxiv.org/abs/2106.11750}{Radovanovic et al. (2021)}}}
 
   \item Thus, the \alert{requested load $\widetilde{d}_t$} of a data center can deviate from the nominal load $d_t$. The requested load $\widetilde{d}_t$ is constrained by the data center capacity (an upper limit) and the inflexible loads (a lower limit).
   
   \item The range of possible deviations of the requested and nominal loads is assumed to lie within $f$~[\%] of the nominal load, such as:\\
   \begin{equation*}
-  [1-f] \cdot d_t \le  d_t + (\overline{\delta} - \underline{\delta}) \le [1+f] \cdot d_t \quad \forall t \in T
+  [1-f] \cdot d_t \le  d_t + (\overline{\Delta}_t - \underline{\Delta}_t) \le [1+f] \cdot d_t \quad \forall t \in T
   \label{eqn:range}
   \end{equation*}
   
   \vspace{0.1cm}
-  \noindent where $\overline{\delta}, \underline{\delta} \in \mathbb{R}_{+}$ stand for positive/negative deviation of $\widetilde{d}_t$ and $d_t$ in hour $t$.
+  \noindent where $\overline{\Delta}_t, \underline{\Delta}_t \in \mathbb{R}_{+}$ stand for positive/negative deviation of $\widetilde{d}_t$ and $d_t$ in hour $t$.
   \end{itemize}
 
   \end{column}
@@ -608,38 +606,36 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
 
   {\footnotesize
 
-  We introduce a concept of \alert{virtual links} as non-physical pathways for load shifts between data center nodes. \\
+  We introduce a concept of \alert{spatial load management system} that allows for shifting workloads across locations. The load shifts take place via \alert{virtual links} -- non-physical pathways between data center nodes.
 
-  \vspace{0.2cm}
-  Let $\Theta$ be the set of all virtual links; let $\delta_\vartheta \in \mathbb{R}_{+}$ be load shifts (flows via virtual pathways); and let $N_{DC}$ be the set of data centers (flexible consumers). We can define $\Theta_n^{snd} := \{\vartheta \in \Theta | snd(\vartheta) = n\} \subseteq \Theta$, $\Theta_n^{rec} := \{\vartheta \in \Theta | rec(\vartheta) = n\} \subseteq \Theta$ to be the set of sending and receiving virtual links at node $n \in N_{DC}$.\\ 
+  Let $\Theta$ be the set of all virtual links; let $\delta_\vartheta \in \mathbb{R}_{+}$ be load shifts (flows via virtual pathways); and let $N_{DC}$ be the set of data centers (flexible consumers). We can define $\Theta_n^{snd} := \{\vartheta \in \Theta | snd(\vartheta) = n\} \subseteq \Theta$, $\Theta_n^{rec} := \{\vartheta \in \Theta | rec(\vartheta) = n\} \subseteq \Theta$ to be the set of sending and receiving virtual links at node $n \in N_{DC}$.
 
-  \vspace{0.2cm}
-  The nodal energy balance defined for inflexible consumers (eq. \ref{eqn:inflexnb}) is now extended by spatial load shifts, since the requested load at a given node can include shifts to/from other nodes: 
+  The nodal energy balance defined for inflexible consumers (eq. \ref{eqn:inflexnb}) is now extended by spatial load shifts, since the requested load at a given node can include shifts to/from other data center nodes: 
   \begin{equation}
-  \sum_{r\in CFE} g_{r,t,n} + \sum_{s\in STO} \left(\bar{g}_{s,t,n} - \ubar{g}_{s,t,n}\right) - ex_{t,n} + im_{t,n}  = \textcolor{TUred}{d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
+  \sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
   \label{eqn:spatialnb}
   \end{equation}
 
   \begin{columns}
     \begin{column}{7cm}
       \centering
-      \includegraphics[width=7.5cm]{images/Zavala_2021.png}
+      \includegraphics[width=7cm]{images/Zavala_2021.png}
     \end{column}
   \begin{column}{5cm}
   \centering
   {\small
   \begin{circuitikz}
-    \draw (0,13.5) to [short,i^=$im_{t,n}$]  (1.5,13.5) to (1.5,13);
+    \draw (0,13.5) to [short,i^=$im_{n,t}$]  (1.5,13.5) to (1.5,13);
     \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
-    \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_{t,n}$] +(1.5,0.5);
+    \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_{n,t}$] +(1.5,0.5);
     \draw (0.5,13) -- +(0,-0.5) node[sground]{};
     \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
     (V2.left) -- +(0,0.6);
     \draw (3.5,13) -- (3.5,12.4);
     \draw (3.5,12.4) to [esource] (3.5,11.7);
     \draw (0.5,11.3) node{\textcolor{TUred}{$\widetilde{d_{n,t}}$}};
-    \draw (2,11.3) node{$g_{CFE,t,n}$};
-    \draw (3.5,11.3) node{$g_{STO,t,n}$};
+    \draw (2,11.3) node{$g_{CFE,n,t}$};
+    \draw (3.5,11.3) node{$g_{STO,n,t}$};
   \end{circuitikz}
   }
   \end{column}
@@ -653,56 +649,220 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
 
 
   {\footnotesize
+  \begin{columns}
 
-  Flexibility constraints
-      \begin{subequations}
-        \begin{align}
-            \widetilde{d_{n,t}} &=  d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} \quad \forall n \in N_{DC}, t \in T \label{eqn:spatiala} \\
-            \widetilde{d_{n,t}} &\le [1+f] \cdot d_{t,n}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialb} \\
-            \widetilde{d_{n,t}} &\ge [1-f] \cdot d_{t,n}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialc}
-        \end{align}
-        \label{eqn:spatialflex}
-        \end{subequations}
+    \begin{column}{6cm}
+      Computing capacity constraints (eq. \ref{eqn:spatialflex}) ensure that the requested load at each data center  $\widetilde{d}_{n,t}$ does not exceed available capacity (an upper limit, eq. \ref{eqn:spatialb}), as well as that a certain data center does not shift load that exceeds flexible jobs share (a lower limit, eq. \ref{eqn:spatialc}).
+    \end{column}
 
+  \begin{column}{7cm}
+    \begin{subequations}
+      \begin{align}
+          \widetilde{d_{n,t}} &=  d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} \quad \forall n \in N_{DC}, t \in T \label{eqn:spatiala} \\
+          \widetilde{d_{n,t}} &\le [1+f] \cdot d_{n,t}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialb} \\
+          \widetilde{d_{n,t}} &\ge [1-f] \cdot d_{n,t}  \quad \forall n \in N_{DC}, t \in T \label{eqn:spatialc}
+      \end{align}
+      \label{eqn:spatialflex}
+      \end{subequations}
+  \end{column}
+  \end{columns}
 
-  Adjusted CFE equation
+  \vspace{-0.1cm}
+  NB spatial load shifts are not subject to any eletricity network transmission constraints; as such, the only source of congestion for the virtual links is computing capacity constraints (i.e., availability of flexible workloads). \\
+
+  \vspace{0.1cm}
+  The 24/7~CFE matching constraint for inflexible consumer (eq. \ref{eqn:CFE}) is now defined over a set of data center nodes $n \in N_{DC}$ and is extended on the right-hand side by spatial load shifts. Thus, flexible consumer can benefit from an additional degree of freedom that helps relaxing the constraint for locations and times when providing demand with carbon-free electricity is difficult:
   \vspace{0.1cm}
   \begin{equation}
     \begin{split}
-  &\sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_t + \sum_{t\in T} CFE_t \cdot im_t \geq \\ 
-  &x_n \cdot \textcolor{TUred}{\sum_{t\in T} \left( d_{t,n} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}\right)} \quad \forall n \in N_{DC} \label{eqn:spatialCFE}
+  &\sum_{r\in CFE, t\in T} g_{r,n,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - \sum_{t\in T} ex_{n,t} + \sum_{t\in T} CFE_{n,t} \cdot im_{n,t} \geq \\ 
+  &x_n \cdot \textcolor{TUred}{\sum_{t\in T} \left( d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}\right)} \quad \forall n \in N_{DC} \label{eqn:spatialCFE}
     \end{split}
   \end{equation}
   }
-
   
 \end{frame}
 
 
 
-\begin{frame}{Spatial load shifting problem}
+\begin{frame}{Temporal load shifting problem 1/2}
+
+  {\footnotesize
+
+  To capture temporal flexibility, we introduce a concept a data center \alert{temporal load management system} that allows for shifting load from a given time to another time point in the future.
+
+  Consider a time horizon of our optimization problem $T = \{t_1 , t_2 , ..., t_T\}$. For simplicity, let us assume that there is a single flexible consumer (i.e., no spatial load shifts) with a demand-side temporal load management mechanism denoted with a singleton set $\{s'\}$.
+  Let variables $\bar{g}_{s',t},\ubar{g}_{s',t} \in \mathbb{R}_{+}$ to be workloads that are resheduled in time, i.e., shifted from a time $t$ to a later time $t'$. Thus, the requested load  $\widetilde{d_{t}}$ of flexible consumer can deviate from the nominal value $d_{n,t}$ due to temporal load management. The nodal energy balance is now extended with the variables $\bar{g}_{s',t},\ubar{g}_{s',t}$ accordingly:
+  \begin{equation}
+  \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_{t} + im_{t}  = \textcolor{TUred}{d_{t} + \sum_{{s'}} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right)}\hspace{.5cm} \{N_{DC}\}, \forall t \in T 
+  \label{eqn:temporalnb}
+  \end{equation}
+
+  \begin{columns}
+    \begin{column}{7cm}
+      \centering
+      \includegraphics[width=7cm]{images/Zavala_2021.png}
+    \end{column}
+  \begin{column}{5cm}
+  \centering
+
+  \vspace{-0.6cm}
+  {\small
+  \begin{circuitikz}
+    \draw (0,13.5) to [short,i^=$im_{t}$]  (1.5,13.5) to (1.5,13);
+    \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
+    \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_{t}$] +(1.5,0.5);
+    \draw (0.5,13) -- +(0,-0.5) node[sground]{};
+    \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
+    (V2.left) -- +(0,0.6);
+    \draw (3.5,13) -- (3.5,12.4);
+    \draw (3.5,12.4) to [esource] (3.5,11.7);
+    \draw (0.5,11.3) node{\textcolor{TUred}{$\widetilde{d_{t}}$}};
+    \draw (2,11.3) node{$g_{CFE,t}$};
+    \draw (3.5,11.3) node{$g_{STO,t}$};
+  \end{circuitikz}
+  }
+  \end{column}
+  \end{columns}
+  }
+\end{frame}
+
+
+
+\begin{frame}{Temporal load shifting problem 2/2}
+
+  {\footnotesize
+  \begin{columns}
+
+    \begin{column}{7.2cm}
+      Computing capacity constraints for temporal load shifting problem (eq. \ref{eqn:temporalflex}) ensure that workloads delayed to a given time $t$ do not exceed available cluster capacity (an upper limit, eq. \ref{eqn:temporalb}), as well as that only flexible workloads can be shifted in time (a lower limit, eq. \ref{eqn:temporalc}).
+    \end{column}
+
+  \begin{column}{5.8cm}
+  \begin{subequations}
+    \begin{align}
+        \widetilde{d_{t}} =  d_{t} + \sum_{{s'}} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right)\quad &\forall t \in T  \label{eqn:temporala} \\
+        \widetilde{d_{t}} \le [1+f] \cdot d_{t}  \quad &\forall t \in T  \label{eqn:temporalb} \\
+        \widetilde{d_{t}} \ge [1-f] \cdot d_{t}  \quad &\forall t \in T  \label{eqn:temporalc}
+    \end{align}
+    \label{eqn:temporalflex}
+    \end{subequations}
+  \end{column}
+  \end{columns}
+
+  \vspace{-0.1cm}
+  We follow \href{https://arxiv.org/abs/2106.11750}{Radovanovic et al. (2021)} implementing the daily usage conservation rule -- an additional constraint to ensure that the cluster-level daily compute usage is preserved when flexible workload is shifted in time:
+
+  \begin{equation}
+    \sum_{t | t \in t(DAYS)} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right) = 0 \quad \{s'\}
+    \label{eqn:dailyconserv}
+  \end{equation}
+
+  The 24/7~CFE matching constraint is also extended to account for the temporal load management mechanism. Consumer with temporally flexible loads can benefit from an additional degree of freedom that helps relaxing the 24/7~CFE constraint for the times when providing demand with carbon-free electricity is difficult:
+  \vspace{0.1cm}
+  \begin{equation}
+    \begin{split}
+  &\sum_{r\in CFE, t\in T} g_{r,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - \sum_{t\in T} ex_{t} + \sum_{t\in T} CFE_{t} \cdot im_{t} \geq \\ 
+  &x \cdot \textcolor{TUred}{\sum_{t\in T} \left( d_{t} + \sum_{{s'}}\left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right)\right)} \hspace{.5cm} \{N_{DC}\} 
+  \label{eqn:temporalCFE}
+    \end{split}
+  \end{equation}
+  
+  }
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Spatially-temporal load shifting problem 1/2}
+
+  {\footnotesize
+
+  The temporal and spatial flexibility of electricity demand can be \alert{co-optimized} to help achieving clean electricity targets. The resulting mathematical problem brings together the formulations of spatial and temporal load management systems shown above. \\
+  We consider a set data centers (flexible consumers) $n \in N_{DC}$ located in various locations within the electricity network. Data centers are interconnected with virtual links $\Theta_n^{snd}, \Theta_n^{rec}$ (complete graph). Each data center also has a temporal load management mechanism $S_n^{dsm} := \{s' \in S | dsm(s') = n\}$. \\
+  The nodal energy balance is adjusted to account for both spatial and temporal load shifting variables:
+  \begin{equation}
+    \begin{split}
+    &\sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \\
+    & \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} + \sum_{{s'} \in S_n^{dsm}} \left(\bar{g}_{s',n,t} - \ubar{g}_{s',n,t}\right)} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
+    \label{eqn:bothnb}
+    \end{split}
+  \end{equation}
+
+  \vspace{-0.1cm}
+  \begin{columns}
+    \begin{column}{7cm}
+      \centering
+      \includegraphics[width=7cm]{images/Zavala_2021.png}
+    \end{column}
+  \begin{column}{5cm}
 
   \centering
-  \includegraphics[height=8.3cm]{images/space-flex.pdf}
-  
+  {\small
+  \vspace{-0.5cm}
+  \begin{circuitikz}
+    \draw (0,13.5) to [short,i^=$im_{n,t}$]  (1.5,13.5) to (1.5,13);
+    \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
+    \draw(2.5,13) |- +(0,0.5) to [short,i^=$ex_{n,t}$] +(1.5,0.5);
+    \draw (0.5,13) -- +(0,-0.5) node[sground]{};
+    \draw (2,12) node[vsourcesinshape, rotate=270](V2){}
+    (V2.left) -- +(0,0.6);
+    \draw (3.5,13) -- (3.5,12.4);
+    \draw (3.5,12.4) to [esource] (3.5,11.7);
+    \draw (0.5,11.3) node{\textcolor{TUred}{$\widetilde{d_{n,t}}$}};
+    \draw (2,11.3) node{$g_{CFE,n,t}$};
+    \draw (3.5,11.3) node{$g_{STO,n,t}$};
+
+  \end{circuitikz}
+  }
+  \end{column}
+  \end{columns}
+  }
 \end{frame}
 
 
-\begin{frame}{Temporal load shifting problem}
 
-  \centering
-  \includegraphics[height=8.1cm]{images/time-flex.pdf}
+\begin{frame}{Spatially-temporal load shifting problem 2/2}
+
+  {\footnotesize
+  \begin{columns}
+
+    \begin{column}{5cm}
+      Computing capacity constraints (eq.~\ref{eqn:bothflex}) now ensure that the requested load at each data center  $\widetilde{d}_{n,t}$ does not exceed the limits for each data center $n \in N_{DC}$ considering both spatial and temporal load shifts at each time point $t$.
+    \end{column}
+
+  \begin{column}{8cm}
+    \begin{subequations}
+      \begin{align}
+        \begin{split}
+          &\widetilde{d_{n,t}} =  d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} \\
+          &+ \sum_{{s'} \in S_n^{dsm}} \left(\bar{g}_{s',n,t} - \ubar{g}_{s',n,t}\right) \quad \forall n \in N_{DC}, t \in T \\
+        \end{split}
+        \label{eqn:botha} \\
+        &\widetilde{d_{n,t}} \le [1+f] \cdot d_{n,t}  \quad \forall n \in N_{DC}, t \in T \label{eqn:bothb} \\
+        &\widetilde{d_{n,t}} \ge [1-f] \cdot d_{n,t}  \quad \forall n \in N_{DC}, t \in T \label{eqn:bothc}
+      \end{align}
+      \label{eqn:bothflex}
+      \end{subequations}
+  \end{column}
+  \end{columns}
+
+  Daily compute usage conservation rule is applied to each data center:
+  \begin{equation}
+    \sum_{t | t \in t(DAYS)} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right) = 0 \quad \forall {s'} \in S_n^{dsm}
+    \label{eqn:dailyconserv2}
+  \end{equation}
+
+  Finally, the 24/7~CFE matching constraint is adjusted accordingly. With co-optimization of temporal or spatial load shifting, flexibility can be harnessed to achieve clean electricity targets more effectively:
+  \vspace{0.1cm}
+  \begin{equation}
+    \begin{split}
+  &\sum_{r\in CFE, t\in T} g_{r,n,t} + \sum_{s\in STO, t\in T} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - \sum_{t\in T} ex_{n,t} + \sum_{t\in T} CFE_{n,t} \cdot im_{n,t} \geq \\ 
+  &x_n \cdot \textcolor{TUred}{\sum_{t\in T} \left( d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} + \sum_{{s'} \in S_n^{dsm}} \left(\bar{g}_{s',n,t} - \ubar{g}_{s',n,t}\right)\right)}\quad \forall n \in N_{DC} \label{eqn:spatialCFE}
+    \end{split}
+  \end{equation}
+  }
   
 \end{frame}
-
-
-\begin{frame}{Spatially-temporal load shifting problem}
-
-  \centering
-  .
-  
-\end{frame}
-
 
 
 %----------------------------------------
@@ -1198,44 +1358,6 @@ issued by the European Commission in May 2022}}
 
 %----------------------------------
 
-\begin{frame}{Base scenario: Ireland -- Palette 1}
-
-{\footnotesize
-\vspace{0.3cm}
-
-\begin{columns}[T]
-\begin{column}{9cm}
-\centering
-
-\includegraphics[width=9.4cm]{../results/report/plots/10/2025/IE/p1/used.pdf}
-\end{column}
-\begin{column}{6cm}
-
-\vspace{0.1cm}
-A plot on the left shows the {\bf fraction of hourly demand met with carbon-free
-electricity} depending on the procurement policy that C\&I consumers follow.
-
-\vspace{0.3cm}
-In the reference case, where C\&I consumers do not procure any resources,  
-relying purely on grid purchases, \alert{only 61\%} of demand is met with CFE.
-
-\vspace{0.3cm}
-100\% RES -- the best case for the annual renewable matching policy -- 
-results in 85\% fraction. Thus, \alert{CFE targets beyond 85\%} yield 
-higher share of hourly demand met with CFE
-than 100\% RES procurement policy.
-
-\vspace{0.3cm}
-When CFE target approaches 100\%, C\&I participants 
-\alert{rely more on procured resources}.
-
-\end{column}
-\end{columns}
-}
-\source{Ireland -- Palette 1 -- 2025 -- 10\% -- baseload}
-\end{frame}
-
-
 
 \begin{frame}{Base scenario: Ireland -- Palette 1}
 
@@ -1392,41 +1514,6 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
     \source{Ireland -- Palette 2 -- 2025 -- 10\% -- baseload}
 \end{frame}
 
-
-
-\begin{frame}{Base scenario: Ireland -- Palette 3}
-
-  {\footnotesize
-
-  \begin{columns}
-  \begin{column}{7cm}
-  \centering
-  \includegraphics[width=7.5cm]{../results/report/plots/10/2025/IE/p3/ci_capacity.pdf}
-  \end{column}
-
-  \begin{column}{8cm}
-  \centering
-  \includegraphics[width=7.5cm]{../results/report/plots/10/2025/IE/p3/ci_costandrev.pdf}
-  \end{column}
-
-  \end{columns}
-
-  \begin{columns}
-  \begin{column}{15cm}
-  Finally, the results for technological {\bf Palette 3} scenario show that 24/7 procurement
-  can create a market for and benefit from the advanced technologies such as 
-  NG Allam Cycle generator with carbon capture and sequestration or 
-  advanced geothermal systems. 
-  In the case of Ireland, NG Allam Cycle generator is added to the 
-  procured portfolio. The clean dispatchable technology \alert{further limits 
-  the hourly CFE cost premium} above annual renewable matching. 
-  Inclusion of clean firm generation also reduces storage requirements.
-  \end{column}
-  \end{columns}
-  }
-
-  \source{Ireland -- Palette 3 -- 2025 -- 10\% -- baseload}
-\end{frame}
 
 %----- base scenario, system effects
 
