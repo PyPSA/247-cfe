@@ -11,15 +11,14 @@
   \hrefc{https://www.tu.berlin/en/ensys}{Department of Digital Transformation in Energy Systems}, TU Berlin
   }
 
-\date{23 June 2023}
+\date{30 June 2023}
 
 \titlegraphic{%
   \vspace{0cm}
   \hspace{10.7cm}
     \includegraphics[trim=0 0cm 0 0cm,height=1.2cm,clip=true]{images/TUB.png}
-  \vspace{5.1cm}
-  \\ \faGithub \href{https://github.com/PyPSA/247-cfe}{ Open code}
-  \\ \faShareAlt \href{https://pypsa.org/}{ PyPSA community}
+  \vspace{5.5cm}
+  \\ \faGithub \href{https://github.com/PyPSA/247-cfe}{ Code to reproduce this study}
   }
 
 \begin{document}
@@ -47,7 +46,7 @@
 \end{frame}
 
 
-\begin{frame}{Summary of key findings}
+\begin{frame}{Summary of key findings TODO}
 
   \centering
   {\small
@@ -100,195 +99,186 @@
 
 \begin{frame}{Introduction}
 
+  {\footnotesize
   \centering
-    \begin{itemize}
-    \item Climate change is driving a global effort to rapidly decarbonise 
-    electricity systems across the globe. 
-    Many public and private energy buyers have joined this effort 
-    by purchasing certificates for renewable energy or
-    by procuring renewable energy directly with Power Purchase Agreements (PPAs).
-    \item Such \alert{voluntary commitments accelerate the deployment of renewable 
-    capacity} above the policy requirements in the countries and jurisdictions
-    where these companies operate, facilitating faster
-    transformation of electricity markets.
-    \item Additionally, many early actors in the field have paved the way for others to follow 
-    \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{by 
-    developing methods and establishing standard contracts} for clean energy procurement.
-    \end{itemize}
-  
-\end{frame}
-
-
-
-\begin{frame}{Introduction}
-
   \begin{columns}[T]
+  \begin{column}{9cm}
+    \begin{itemize}
+    \item Climate change is driving a global effort to \alert{rapidly decarbonise} 
+    electricity systems across the globe. Many public and private energy buyers join this effort. For example, more than 380 members of the \hrefc{https://www.there100.org/}{RE100 group} have committed to procure enough renewable energy to match 100\% of their electricity consumption on an annual basis.
+
+    \item Fully decarbonizing electricity grids, however, requires generating carbon-free energy when it is needed, not just during periods of abundant sunshine or wind. This challenge requires embracing \hrefc{https://www.iea.org/reports/advancing-decarbonisation-through-clean-electricity-procurement}{innovative strategies} for decarbonization. 
+    There is growing interest from leaders in voluntary clean  electricity procurement to cover their consumption with clean energy supply on a \alert{truly 24/7 basis}.  Achieving 24/7 Carbon-Free Energy (CFE) means that every kilowatt-hour of electricity consumption is met
+    with carbon-free electricity sources \alert{around-the-clock}.
+
+    \item The \hrefc{https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy}{24/7 Carbon-Free Energy Compact}, coordinated by the United Nations now includes more than 120 signatories on a mission to realize a 24/7 Carbon-Free Energy future. 
+
+    \end{itemize}
+    \end{column}
+
     \begin{column}{6cm}
-      \begin{itemize}
-        \item   PPAs typically are typically used for renewable energy to match generation 
-        and consumption on average over a year.
-        \item For example, more than 370 members of the \href{https://www.there100.org/}{RE100} group have committed to purchasing enough renewable energy to match
-        \alert{100\% of their electricity consumption on an annual basis}.
-      \end{itemize}
-    \end{column}
-
-  \begin{column}{10cm}
-      \centering
-      
-      \includegraphics[width=10cm]{images/100re-companies.jpg}
-      \vspace{.1cm}
-      {\footnotesize
-      More than 370 companies have joined \hrefc{https://www.there100.org/}{RE100}
-      }
-    \end{column}
-    \end{columns}
-
-    \source{source: \href{https://www.there100.org/}{RE100}}
-\end{frame}
-  
-
-
-\begin{frame}{Introduction}
-  
-    \begin{itemize}
-    \item However, electricity buyers that commit to 100\% annual matching 
-    from renewable energy sources still face times when generation 
-    from wind and solar generators is not sufficient to match 
-    the companies’ electricity demand. 
-    \item Thus, although buyers match their demand on a \alert{yearly} basis with 
-    renewable energy, on an \alert{hourly} basis they still have hours 
-    when they have to rely on carbon-emitting technologies available 
-    on the local market, such as coal and gas-fired power plants.
-    \end{itemize}
-
-  \centering
-  \includegraphics[width=14cm]{images/google-year.png}
-  \source{\href{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{source: Google 2021, 24/7 CFE: Methodologies and Metrics}}
-           
-\end{frame}
-
-
-
-\begin{frame}{Introduction}
-  
-  More generally, 100\% annual matching leads to many challenges 
-  from the electricity buyers' and system perspectives: 
-  \begin{itemize}
-  \item No \alert{simultaneity} - variable generation of wind and solar power is not aligned with the 
-  buyers' electricity consumption profile.
-  \item Lack of \alert{additionality} - some buyers procure unbundled guarantees of origin from existing 
-  facilities, which does not lead to additional renewable generation.
-  \item Displaced \alert{location} - some buyers procure PPAs from locations far away 
-  from their consumption, where there is no way to transmit the electricity to the demand.
-  \item Exposure to \alert{risk} - electricity buyers are exposed to price volatility 
-  in local electricity markets, since they still have to procure electricity to cover
-  the difference between demand and supply.
-  \item Need for \alert{backup} - the rest of the electricity system still has to 
-  maintain backup and flexibility options for hours with low renewable generation.
-  \end{itemize}
-  
-\end{frame}
-
-
-
-\begin{frame}{24/7 carbon-free energy}
-
-  \centering
-
-  There is growing interest from leaders in voluntary clean
-  electricity procurement to cover their consumption 
-  with clean energy supply on a \alert{truly 24/7 basis}. \\
-  \vspace{0.3cm}
-  Achieving 24/7 Carbon-Free Energy (CFE) means that every kilowatt-hour of electricity consumption is met
-  with carbon-free electricity sources, \alert{every hour of every day}.
-  
-\end{frame}
-
-
-
-\begin{frame}{Yearly versus hourly matching}
-  
-  24/7 CFE procurement has potential benefits over the 100\% renewable matching:
-  
-  \begin{itemize}
-  \item Ensure match of electricity consumption with carbon-free resources 
-        on an \alert{hourly basis}.
-  \item Enable much \alert{deeper reductions in CO$_2$ emissions} associated 
-        to buyer's electricity consumption.
-  \item Ensure that contracted power is \alert{additional} (i.e. leads to new capacity).
-  \item Ensure that power comes from the \alert{same bidding zone}.
-  \item Enable technology-neutral procurement of \alert{carbon-free} rather than renewable technologies 
-        (such as advanced clean dispatchable power generation and long-duration energy storage).
-  \end{itemize}
-  
-\end{frame}
-
-\begin{frame}{24/7 carbon-free energy}
-  
-  \begin{columns}[T]
-  \begin{column}{8cm}
-
-    \begin{itemize}
-    \item The \hrefc{https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy}{24/7 Carbon-free Energy Compact} 
-    initiative was launched in 2021 by Sustainable Energy for All and the United Nations. 
-    It now includes more than 80 companies, policymakers, investors, and organizations 
-    on a mission to realize a 24/7 Carbon-Free Energy future. 
-
-    \item One of the front runners in the 24/7 initiative is Google Inc. In 2020 the company committed 
-    \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{to the goal} 
-    of operating entirely on a 24/7-CFE approach at all its data centres and campuses worldwide by 2030. 
-    Shortly after, Google published 
-    \hrefc{https://www.gstatic.com/gumdrop/sustainability/policy-roadmap-carbon-free-energy.pdf}{a policy roadmap} 
-    on achieving the 24/7-CFE goal.
-
-    \end{itemize}
-  \end{column}
-
-  \begin{column}{8cm}
     \centering
-    \includegraphics[width=7.5cm]{images/247-google-web.png}
+    \includegraphics[width=6cm]{images/247-google-web.png}
     \vspace{.1cm}
   \end{column}
 
-  \source{\href{https://sustainability.google/progress/energy/}{Google Inc.}}
+  \source{\href{https://sustainability.google/progress/energy/}{sustainability.google/progress/energy/.}}
   \end{columns}
+
+  }
+\end{frame}
+
+
+\begin{frame}{Introduction}
+
+  {\footnotesize
+  \begin{itemize}
+  \item In October 2022, we published a study on the \hrefc{https://zenodo.org/record/7180097}{"System-level impacts of 24/7 carbon-free electricity procurement in Europe"} \\
+  \faGithub~\hrefc{https://github.com/PyPSA/247-cfe/releases/tag/v0.1}{Code behind the study}. 
   
+  \item In this study, we investigated the \alert{means and costs} of pursuing different clean electricity procurement strategies for companies in a selection of European countries. We also explored how the 24/7~CFE commitments \alert{affect the European electricity system} as a whole. 
+  
+  \item The study concluded that 24/7~CFE procurement has the following impacts: \\ 
+  (i) lower emissions for both the participating consumers and within the background electricity grids;\\ 
+  (ii) reduction of the needs for flexibility in the rest of the system; \\ 
+  (iii) increase in energy costs for participating consumers for CFE targets above 95\% (which could be significantly reduced if long duration energy storage or clean firm generation technologies are available); \\ 
+  (iv) stimulating innovation and learning, and creation of an early market for the advanced technologies.
+
+  \item  These European study results align with the results in studies done by \hrefc{https://acee.princeton.edu/24-7/}{Princeton ZERO lab (2021)} for regions in the United States and by \hrefc{https://www.iea.org/reports/advancing-decarbonisation-through-clean-electricity-procurement}{IEA (2022)} for regions in Asia and Indonesia.
+
+  \end{itemize}
+  }
+
+\end{frame}
+  
+
+
+\begin{frame}{Motivations}
+
+  {\footnotesize
+  \begin{itemize}
+  \item In the previous study, however, we focused on a large range of European companies from the commertial and industry (C\&I) sectors that join 24/7~CFE efforts in aggregate. The implicit assumption we made was that all 24/7~CFE participants have an \alert{inflexible demand}.
+  
+  \item In reality, many particiapnts of the 24/7~CFE movement have some degree of flexibility in their electricity consumption. The flexibility takes form of various demand response mechanisms available for \hrefc{https://doi.org/10.1016/j.rser.2021.111963}{a wide range} of commertial and industry consumers.
+
+  \item  A \hrefc{https://cerre.eu/publications/data-centres-and-the-energy-grid}{large potential for demand side flexiblity} is created by the information and communications technology (ICT) sector. Big companies such as Amazon, Google, IBM, and Microsoft are centralizing data centers to achieve economies of scale and form a computing infrastructure that is managed collectively via network operation centers. Thus, data center operators have the ability to \alert{shift computing jobs and associated power loads} in time (via scheduling of flexible compute jobs) and in space (via migration of flexible compute jobs across locations). 
+  \end{itemize}
+
+  }
+
+\end{frame}
+  
+
+\begin{frame}{Why is this important? 1/2}
+
+  {\footnotesize
+
+  \begin{columns}[T]
+    \begin{column}{9cm}
+      \begin{itemize}
+        \item   
+        Demand for computing resources and data center power is rapidly growing, now representing nearly \hrefc{https://doi.org/10.1126/science.aba3758}{1\% of final electricity demand} worldwide. 
+        Data centres and data transmission networks are responsible for \hrefc{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{0.9\% of energy-related GHG emissions} (around 300~Mt \co-eq in 2020).
+      
+        \item Despite rapidly growing demand for digital services, the growth of associated emissions was modest due to energy efficiency improvements, decarbonisation of electricity grids and renewable energy purchases by ICT companies above and beyond the policy obligations. Based on \hrefc{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{IEA (2022)} estimates, Amazon, Microsoft, Meta and Google have become the four largest purchasers of corporate renewable energy, having contracted over 38~GW to date with power purchase agreements (PPAs).
+      
+        \item Moreover, some of the ICT companies have become the front runners of the 24/7~CFE movement. Google has committed to the goal of \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{24/7 Carbon-Free Energy by 2030}. Similarly, Microsoft has announced own \hrefc{https://blogs.microsoft.com/blog/2021/07/14/made-to-measure-sustainability-commitment-progress-and-updates/}{100/100/0 by 2030} commitment.
+
+      \end{itemize}
+      \end{column}
+  
+      \begin{column}{6cm}
+      \centering
+      \vspace{.3cm}
+      \includegraphics[width=6cm]{images/iea-PPAbysector-2010-2021.png}
+      {\scriptsize
+      Global renewable energy power purchase agreements [GW]. ICT sector (dark blue), other sectors combined (light blue)}
+    \end{column}
+  
+    \source{\href{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{IEA: Data Centres and Data Transmission Networks}}
+    \end{columns}
+
+  }
+\end{frame}
+
+
+\begin{frame}{Why is this important? 2/2}
+
+  {\footnotesize
+
+  \begin{columns}[T]
+
+    \begin{column}{6cm}
+      \centering
+      \vspace{.5cm}
+      \includegraphics[width=6cm]{images/climateneutraldatacentre.png}
+      {\scriptsize
+      Data centre operators (Pact Associations) that signed \\ 
+      the Climate Neutral Data Centre Pact}
+    \end{column}
+
+    \begin{column}{9cm}
+
+      \begin{itemize}
+        \item  The initiatives to measure and reduce the environmental impacts of digital infrastructure is spanning far beyond big companies like Google and  Microsoft.
+        
+        \item In 2021, over 100 data data centre operators and industry associations in Europe signed \hrefc{https://www.climateneutraldatacentre.net/}{the Climate Neutral Data Centre Pact} aiming to make data centres climate neutral by 2030. The pledged targets include measures to increase power usage effectiveness and carbon-free energy supply. The CFE target is declared to be "[..] 75\% of renewable energy or hourly carbon-free energy by December 31, 2025 and 100\% by December 31, 2030." 
+
+        \item Considering (i) a constant growth of a global internet traffic, (ii) a large electricity consumption of data centers distributed in power grids worldwide, and (iii) the need to rapidly decarnonise electricity systems across the globe, it is \alert{important to understand the possible efficiency benefits that space-time load shifting flexibility can provide for the 24/7 carbon-free energy paradigm}. 
+
+      \end{itemize}
+      \end{column}
+  
+
+    \source{\href{https://www.climateneutraldatacentre.net/signatories/}{climateneutraldatacentre.net/signatories/}}
+    \end{columns}
+
+  }
 \end{frame}
 
 
 
-\begin{frame}{Fresh research items}
+\begin{frame}{A growing body of research}
 
-  Reference to Princeton studies, TU Berlin study 1, IEA report, etc.
+  {\footnotesize
+  \begin{itemize}
+
+  \item The unique characteristics of data centers as electricity consumers and active interest of ICT sector companies in sustainable energy drive a growing interest in the research community. Among many other, \hrefc{https://doi.org/10.1016/j.simpat.2015.01.005}{Wang et al. (2015)}, \hrefc{https://doi.org/10.1016/j.comcom.2014.03.004}{Toosi et al. (2017)},
+  \hrefc{https://doi.org/10.1016/j.future.2018.03.049}{Grange et al. (2018)},
+  \hrefc{https://doi.org/10.1016/j.comcom.2014.03.004}{Velasco et al. (2018)}, and
+  \hrefc{https://doi.org/10.1016/j.jcss.2020.11.004}{He \& Shen (2021)} investigated selected aspects of spatial or temporal demand management strategies in the context of supplying data centers power demand with intermittent renewable energy supply. 
+  
+  \item \hrefc{https://doi.org/10.1016/j.apenergy.2022.119930}{Zhang \& Zavala (2022)} elaborated a mathematical problem that captures both spatial \& temporal load-shifting flexibility provided by data centers. The authors suggest market clearing formulation treats data centers as prosumers that simultaneously request load and provide a load-shifting flexibility service to the grid. The illustrated clearing formulation satisfies fundamental economic properties of the competitive markets, such as revenue adequacy and cost recovery.
+
+  \item The Google research team published a paper on \hrefc{https://doi.org/10.1109/TPWRS.2022.3173250}{Carbon-Aware Computing for Datacenters} \href{https://doi.org/10.1109/TPWRS.2022.3173250}{(Radovanović~et~al.~(2023})). The paper introduced methodology and principles behind a carbon-intelligent compute management system, which minimizes electricity-based carbon footprint and power infrastructure costs by shifting temporally flexible workloads for all datacenter clusters across Google's fleet.
+
+  \end{itemize}
+  }
 
 \end{frame}
 
 
-\begin{frame}{Narrow down focus and outline motivation for our new study}
-
-A growing interest from C\&I sector companies to pursue 24/7 CFE \\
-A subset of C\&I, like data center operators, have the potential to use spatial and temporal flexibility to achieve high 24/7 CFE easier and help others \\
-The first study on space and time load-shifting load management for flexible C\&I that pursue 24/7 carbon-free electricity procurement goals \\
-However, in the previous study, we implicitly assumed \alert{inflexible demand} for C\&I consumers.
-
-\end{frame}
 
 \begin{frame}{Focus of the study}
 
-  In this study, we focus our analysis on \alert{space-time load-shifting} provided by flexible electricity consumers, such as data centers.
-  Thus, in the context of this study, buyers committed to 24/7 CFE procurement can \\
-  - shift loads across \alert{time} (via job scheduling); \\
-  - shift loads across \alert{space} (via service migration); \\
-  - both of the above, i.e., co-optimization of space-time flexibility.
 
-  \vspace{0.3cm}
-  We aim to answer the following quesitons:
+  {\footnotesize
   \begin{itemize}
-    \item To which extent can load-shifting flexibility reduce the \alert{means and costs} of hourly clean energy matching?\\ 
-    \item Investigate \alert{individual effects} of space/time flexibility, as well as their \alert{interplay}.\\
-    \item How the flexibility value varies across data center \alert{locations} and \alert{years}.\\
-    \item ...
+    \item In this study, we explore the potential benefits for 24/7 carbon-free energy buyers and rest of energy system associated with demand flexibility. We aim to answer the following quesitons: \\
+
+    \vspace{0.1cm}
+    -- How can demand flexibility reduce the \alert{resources} and \alert{cost-premium} for 24/7~CFE matching?\\ 
+    -- How can demand flexibility promote \alert{economic efficiency}?\\
+    -- What are the \alert{individual effects} of spatial and temporal demand flexibility, as well what are the synergies from their co-optimiastion? \\
+    -- How would advanced technologies, such as long duration storage, affect \alert{the value of demand flexibility}?
+
+    \item For this purpose, we elaborate the mathematical model developed in the previous study, by including spatial and temporal demand flexibility provided by electricity consumers following 24/7~CFE goal. Thus, a flexible 24/7 participant could benefit from \alert{co-optimising} utilisation of available demand flexibility (across space and/or time) and procurement strategies to match every kWh of electiricty consumption with carbon-free energy around-the-clock \alert{more efficiently}.
+    
+    \item The modelling exercise in this study is focused on \textit{data centers}, i.e., facilities used to house networked computer servers that store, process and distribute large amounts of data. Nevertheless, the findings of this study are likely to be of interest to a wide range of companies and organisations with flexible demand and an interest in 24/7 carbon-free energy procurement, as well as to energy industry experts and stakeholders with an empirical interest in the European energy system.
+
   \end{itemize}
+
+  }
 
 \end{frame}
 
@@ -912,7 +902,7 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
 
   \begin{column}{8cm}
   \begin{itemize}
-    \item We consider \alert{five data centers} that are located in Ireland, Denmark (West/DK1), Germany, Finland, and Portugal. These locations (i) include zones where data centers have an important share in national electricity demand [\hrefc{https://www.statista.com/statistics/878621/european-data-centers-by-country/}{1},\hrefc{https://backend.orbit.dtu.dk/ws/portalfiles/portal/236202284/The_role_of_data_centres_in_the_future_DES_clean_version.pdf}{2},\hrefc{https://www.euronews.com/next/2022/05/05/data-centres-are-consuming-more-electricity-than-rural-homes-in-ireland-for-the-first-time}{3}], and (ii) each zone has an electricity system with a unique set of characteristics, such as local generation mix, renewable potentials, national energy and climate policies, degree of interconnections, etc. 
+    \item We consider \alert{five data centers} that are located in Ireland, Denmark (West/DK1), Germany, Finland, and Portugal. These locations (i) include zones where data centers have an important share in national electricity demand [\hrefc{https://www.statista.com/statistics/878621/european-data-centers-by-country/}{1},\hrefc{https://backend.orbit.dtu.dk/ws/portalfiles/portal/236202284/The_role_of_data_centres_in_the_future_DES_clean_version.pdf}{2},\hrefc{https://www.cso.ie/en/releasesandpublications/ep/p-dcmec/datacentresmeteredelectricityconsumption2021/keyfindings/}{3}], and (ii) each zone has an electricity system with a unique set of characteristics, such as local generation mix, renewable potentials, national energy and climate policies, degree of interconnections, etc. 
     \item Data centers have a nominal load of \alert{100~MW} (baseload profile).
     \item Data center operator aims to achieve a \alert{given 24/7~CFE matching score} at all locations. 
     \item Data centers are interconnected by virtual links, forming a \alert{complete graph} (every pair is connected by a unique virtual link).
@@ -948,7 +938,8 @@ However, in the previous study, we implicitly assumed \alert{inflexible demand} 
   \vspace{0.1cm}
   -- \alert{Palette~1} includes technologies available on the European market now: onshore wind, utility scale solar PV, battery storage. \\
   -- \alert{Palette~2} includes all above plus Long Duration Energy Storage (LDES) in a form of a hydrogen storage system that is expected to be available for a commercial scale up in the near future. 
-  
+
+  \item For interested parties, we publish an \faLink~\hrefc{tba}{online annex} with a full pack of modelling results alongside this study. The annex includes modelling results for all scenario combinations in a form of plots and summary csv files. 
   % \item We focus on two periods: \alert{2025} and \alert{2030}. The two periods differ by \\ 
   % (i) Technology cost assumptions, \\
   % (ii) National renewable expansion pathways,\\
@@ -1208,36 +1199,6 @@ issued by the European Commission in May 2022}}
 
 
 %----------------------------------
-
-\begin{frame}{Scenario space}
-
-  {\small
-  The following section presents modelling results and related analysis. 
-  For convenience, we start with a \alert{base scenario} 
-  with the following setup:
-
-    \quad{\bf Zone:} IE | DE | DK1 | NL \\
-    \quad{\bf Technology palette:} 1 | 2 | 3 \\
-    \quad{\bf Year:} 2025 \\ 
-    \quad{\bf Participation rate:} 10\% of C\&I demand in a modelled zone \\
-    \quad{\bf Demand profile}: baseload (flat) \\
-  
-  \vspace{0.3cm}
-  Afterwards, we explore the scenario space further by implementing one-at-a-time 
-  adjustments to the base scenario: \\
-  (i) implementing year {\bf 2030}, \\
-  (ii) implementing participation rate of {\bf 25\%}, \\ 
-  (iii) implementing {\bf other types of demand profiles} for C\&I consumers.
-  
-  \vspace{0.3cm}
-  For interested parties, we publish an \hrefc{https://doi.org/10.5281/zenodo.7180098}{online annex} 
-  with a full pack of modelling results alongside this study. The annex 
-  includes modelling results for all scenario combinations.
-  }
-  \end{frame}
-
-%----------------------------------
-
 
 \begin{frame}{Base scenario: Ireland -- Palette 1}
 
