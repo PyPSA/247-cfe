@@ -109,7 +109,7 @@
 
     \item Fully decarbonizing electricity grids, however, requires generating carbon-free energy when it is needed, not just during periods of abundant sunshine or wind. This challenge requires embracing \hrefc{https://www.iea.org/reports/advancing-decarbonisation-through-clean-electricity-procurement}{innovative strategies} for decarbonization. 
     There is growing interest from leaders in voluntary clean  electricity procurement to cover their consumption with clean energy supply on a \alert{truly 24/7 basis}.  Achieving 24/7 Carbon-Free Energy (CFE) means that every kilowatt-hour of electricity consumption is met
-    with carbon-free electricity sources \alert{around-the-clock}.
+    with carbon-free electricity sources around-the-clock.
 
     \item The \hrefc{https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy}{24/7 Carbon-Free Energy Compact}, coordinated by the United Nations now includes more than 120 signatories on a mission to realize a 24/7 Carbon-Free Energy future. 
 
@@ -118,11 +118,12 @@
 
     \begin{column}{6cm}
     \centering
+    \vspace{0.3cm}
     \includegraphics[width=6cm]{images/247-google-web.png}
     \vspace{.1cm}
   \end{column}
 
-  \source{\href{https://sustainability.google/progress/energy/}{sustainability.google/progress/energy/.}}
+  \source{\href{https://sustainability.google/progress/energy/}{Image: sustainability.google/progress/energy/}}
   \end{columns}
 
   }
@@ -192,10 +193,11 @@
       \vspace{.3cm}
       \includegraphics[width=6cm]{images/iea-PPAbysector-2010-2021.png}
       {\scriptsize
-      Global renewable energy power purchase agreements [GW]. ICT sector (dark blue), other sectors combined (light blue)}
+      Renewable energy capacity procured with power purchase agreements globally~[GW]. \\
+      ICT sector (dark blue), all other sectors (light blue)}
     \end{column}
   
-    \source{\href{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{IEA: Data Centres and Data Transmission Networks}}
+    \source{\href{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{Image: IEA 2022}}
     \end{columns}
 
   }
@@ -230,7 +232,7 @@
       \end{column}
   
 
-    \source{\href{https://www.climateneutraldatacentre.net/signatories/}{climateneutraldatacentre.net/signatories/}}
+    \source{\href{Image: https://www.climateneutraldatacentre.net/signatories/}{Image: climateneutraldatacentre.net/signatories/}}
     \end{columns}
 
   }
@@ -243,7 +245,7 @@
   {\footnotesize
   \begin{itemize}
 
-  \item The unique characteristics of data centers as electricity consumers and active interest of ICT sector companies in sustainable energy drive a growing interest in the research community. Among many other, \hrefc{https://doi.org/10.1016/j.simpat.2015.01.005}{Wang et al. (2015)}, \hrefc{https://doi.org/10.1016/j.comcom.2014.03.004}{Toosi et al. (2017)},
+  \item The unique characteristics of data centers as electricity consumers and the active interest of ICT sector companies in sustainable energy drive a growing interest in the research community. Among many other, \hrefc{https://doi.org/10.1016/j.simpat.2015.01.005}{Wang et al. (2015)}, \hrefc{https://doi.org/10.1016/j.comcom.2014.03.004}{Toosi et al. (2017)},
   \hrefc{https://doi.org/10.1016/j.future.2018.03.049}{Grange et al. (2018)},
   \hrefc{https://doi.org/10.1016/j.comcom.2014.03.004}{Velasco et al. (2018)}, and
   \hrefc{https://doi.org/10.1016/j.jcss.2020.11.004}{He \& Shen (2021)} investigated selected aspects of spatial or temporal demand management strategies in the context of supplying data centers power demand with intermittent renewable energy supply. 
@@ -297,11 +299,9 @@
     
     \item The optimization model is based on \hrefc{https://github.com/PyPSA/pypsa-eur}{PyPSA-Eur} -- a widely-used open-source model of the European energy system.
 
-    \item We build upon the mathematical model of 24/7 carbon-free energy procurement developed in the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} (October 2022)
+    \item We build upon the mathematical model of 24/7~CFE procurement developed in the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} (October 2022)
     
     \item In this study, we encode a set of new equations and routines, which allow for modelling spatial (computing jobs migration) and temporal (computing jobs scheduling) load flexibility provided by data centers.
-
-    \item We investigate how spatial and temporal load management can facilitate achieving 24/7 carbon-free energy goals.
 
     \item We place data centers (i.e., electricity consumers committed to 24/7~CFE goals) in a 
     selection of European countries: Ireland, Denmark, Germany, Finland, and Portugal. These countries have different weather patterns, renewable potentials, national energy and climate policies, legacy fleets of generation capacities, degree of interconnectons, etc. 
@@ -332,7 +332,7 @@
 
 \centering
 \includegraphics[width=8.5cm]{images/pypsa-web.png}
-\source{\href{https://pypsa.org/}{pypsa.org}}
+\source{\href{https://pypsa.org/}{Image: pypsa.org}}
 
 \end{column}
 \end{columns}
@@ -369,7 +369,7 @@
   \end{column}
   \end{columns}
 
-  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{pypsa-eur}}
+  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{github.com/PyPSA/pypsa-eur}}
 \end{frame}
 
 
@@ -378,14 +378,12 @@
 
   {\footnotesize
   \begin{itemize}
-  \item The mathematical model of 24/7~CFE procurement is based on the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} published in October 2022.
-
-  \item The study included mathematics additional to the PyPSA-Eur model to encode a situation when a fraction of C\&I consumers in a selected European countries commit to the 24/7~CFE goals. The resulting problem optimized investment and operational decisions to meet projected electricity demand for the 24/7~CFE consumers, as well as the demand of other consumers in the European electricity system, while meeting all relevant engineering, reliability, and policy constraints.
+  \item The mathematical model of 24/7~CFE procurement is based on the former work of authors: \hrefc{https://zenodo.org/record/7180097}{System-level impacts of 24/7 carbon-free electricity procurement in Europe} published in October 2022. The study included mathematics additional to the PyPSA-Eur model to encode a situation when a fraction of C\&I consumers in a selected European countries commit to the 24/7~CFE goals. The resulting problem optimized investment and operational decisions to meet projected electricity demand for the 24/7~CFE consumers, as well as the demand of other consumers in the European electricity system, while meeting all relevant engineering, reliability, and policy constraints.
   
   \item In this study, we enhance the mathematical model of 24/7~CFE procurement 
-  by considering demand flexibility that can take form of \alert{temporal} (computing jobs scheduling) and \alert{spatial} (computing jobs migration) load management. 
+  by considering demand flexibility that can take form of \alert{temporal} (computing jobs scheduling) and \alert{spatial} (computing jobs migration) load shifting by data centers. 
   
-  \item Thus, flexible participants such as data centers can meet their CFE targets by either procuring energy generation \& storage assets directly, and/or buying electricity from a local grid in hours when electricity mix is sufficiently clean  (like in the previous study), and utilizing spatial \& temporal flexibility of demand to achieve clean electricity targets more efficiently.
+  \item Thus, a data center operator (i.e., a flexible consumer following 24/7~CFE goal) can meet a given CFE target by either procuring energy generation and storage assets directly, and buying electricity from a local grid in hours when electricity mix is sufficiently clean  (like in the previous study), as well as utilize spatial and/or temporal flexibility to achieve hourly matching of demand with clean electricity more efficiently.
 
   \end{itemize}
   }
@@ -398,7 +396,7 @@
 
   {\footnotesize
   The model optimizes a portfolio of carbon-free generation and storage technologies 
-  procured by the C\&I consumers that commit to 24/7~CFE goals. The portfolio assets have to be located in the same market zone.
+  procured by the C\&I consumers that commit to 24/7~CFE goal. The portfolio assets have to be located in the same market zone.
 
   The hourly demand of 24/7 participating consumer $d_t$ for hour $t$ can be met by a combination of the following: \\
     \begin{itemize}
@@ -583,24 +581,39 @@
 \end{frame}
 
 
-\begin{frame}{Spatial load shifting problem 1/2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Spatial load shifting problem 1/3}
 
   {\footnotesize
 
-  We introduce a concept of \alert{spatial load management system} that allows for shifting workloads across locations. The load shifts take place via \alert{virtual links} -- non-physical pathways between data center nodes.
+  We introduce a concept of \alert{spatial load management system} that allows for shifting workloads across locations. The load shifts take place via \alert{virtual links} -- non-physical pathways between data center nodes (\href{https://doi.org/10.1016/j.apenergy.2022.119930}{Zhang \& Zavala (2022)}).
 
-  Let $\Theta$ be the set of all virtual links; let $\delta_\vartheta \in \mathbb{R}_{+}$ be load shifts (flows via virtual pathways); and let $N_{DC}$ be the set of data centers (flexible consumers). We can define $\Theta_n^{snd} := \{\vartheta \in \Theta | snd(\vartheta) = n\} \subseteq \Theta$, $\Theta_n^{rec} := \{\vartheta \in \Theta | rec(\vartheta) = n\} \subseteq \Theta$ to be the set of sending and receiving virtual links at node $n \in N_{DC}$.
+  \centering
+  \hspace*{0.7cm}\includegraphics[width=12cm]{images/spatial-vlinks.png}
+  }
+\end{frame}
 
-  The nodal energy balance defined for inflexible consumers (eq. \ref{eqn:inflexnb}) is now extended by spatial load shifts, since the requested load at a given node can include shifts to/from other data center nodes: 
-  \begin{equation}
-  \sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
-  \label{eqn:spatialnb}
-  \end{equation}
+
+\begin{frame}{Spatial load shifting problem 2/3}
+
+  {\footnotesize
+
+  We introduce a concept of \alert{spatial load management system} that allows for shifting workloads across locations. The load shifts take place via \alert{virtual links} -- non-physical pathways between data center nodes (\href{https://doi.org/10.1016/j.apenergy.2022.119930}{Zhang \& Zavala (2022)}).
+
+  Let $\Theta$ be the set of all virtual links; let $\delta_\vartheta \in \mathbb{R}_{+}$ be load shifts (flows via virtual pathways); and let $N_{DC}$ be the set of data centers (flexible consumers). We can define $\Theta_n^{snd} := \{\vartheta \in \Theta | snd(\vartheta) = n\} \subseteq \Theta$, $\Theta_n^{rec} := \{\vartheta \in \Theta | rec(\vartheta) = n\} \subseteq \Theta$ to be the set of sending and receiving virtual links at node $n \in N_{DC}$. 
+
+  The nodal energy balance defined for inflexible consumers (eq.~\ref{eqn:inflexnb}) is now extended by variables representing shifts of load \alert{across locations}, since the requested load at a given node can include shifts to/from other data center nodes: 
 
   \begin{columns}
-    \begin{column}{7cm}
-      \centering
-      \includegraphics[width=7cm]{images/Zavala_2021.png}
+    \begin{column}{8cm}
+      \begin{equation}
+        \begin{split}
+     & \sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \\
+     & \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t}} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
+        \end{split}
+      \label{eqn:spatialnb}
+      \end{equation}
     \end{column}
   \begin{column}{5cm}
   \centering
@@ -625,9 +638,7 @@
 \end{frame}
 
 
-
-\begin{frame}{Spatial load shifting problem 2/2}
-
+\begin{frame}{Spatial load shifting problem 3/3}
 
   {\footnotesize
   \begin{columns}
@@ -665,29 +676,41 @@
 \end{frame}
 
 
-
-\begin{frame}{Temporal load shifting problem 1/2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Temporal load shifting problem 1/3}
 
   {\footnotesize
 
   To capture temporal flexibility, we introduce a concept a data center \alert{temporal load management system} that allows for shifting load from a given time to another time point in the future.
 
-  Consider a time horizon of our optimization problem $T = \{t_1 , t_2 , ..., t_T\}$. For simplicity, let us assume that there is a single flexible consumer (i.e., no spatial load shifts) with a demand-side temporal load management mechanism denoted with a singleton set $\{s'\}$.
-  Let variables $\bar{g}_{s',t},\ubar{g}_{s',t} \in \mathbb{R}_{+}$ to be workloads that are resheduled in time, i.e., shifted from a time $t$ to a later time $t'$. Thus, the requested load  $\widetilde{d_{t}}$ of flexible consumer can deviate from the nominal value $d_{n,t}$ due to temporal load management. The nodal energy balance is now extended with the variables $\bar{g}_{s',t},\ubar{g}_{s',t}$ accordingly:
-  \begin{equation}
-  \sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_{t} + im_{t}  = \textcolor{TUred}{d_{t} + \sum_{{s'}} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right)}\hspace{.5cm} \{N_{DC}\}, \forall t \in T 
-  \label{eqn:temporalnb}
-  \end{equation}
+  \centering
+  \hspace*{0.7cm}\includegraphics[width=12cm]{images/temporal-vlinks.png}
+  }
+\end{frame}
+
+
+\begin{frame}{Temporal load shifting problem 2/2}
+
+  {\footnotesize
+
+  To capture temporal flexibility, we introduce a concept a data center \alert{temporal load management system} that allows for shifting load from a given time to another time point in the future.
+
+  Consider a time horizon of our optimization problem $T = \{t_1 , t_2 , ..., t_T\}$. For simplicity, let us assume that there is a single flexible consumer (i.e., no spatial load shifts) with a demand-side temporal load management mechanism denoted with a singleton set $\{s'\}$. Let variables $\bar{g}_{s',t},\ubar{g}_{s',t} \in \mathbb{R}_{+}$ to be workloads that are resheduled in time, i.e., shifted from a time $t$ to a later time $t'$. Thus, the requested load  $\widetilde{d_{t}}$ of flexible consumer can deviate from the nominal value $d_{n,t}$ due to temporal load management. 
+  
+  The nodal energy balance is now extended with variables representing shifts of load \alert{across time}:
 
   \begin{columns}
-    \begin{column}{7cm}
-      \centering
-      \includegraphics[width=7cm]{images/Zavala_2021.png}
-    \end{column}
+    \begin{column}{8cm}
+      \begin{equation}
+        \begin{split}
+        &\sum_{r\in CFE} g_{r,t} + \sum_{s\in STO} \left(\bar{g}_{s,t} - \ubar{g}_{s,t}\right) - ex_{t} + im_{t}  = \\
+        &\textcolor{TUred}{d_{t} + \sum_{{s'}} \left(\bar{g}_{s',t} - \ubar{g}_{s',t}\right)}\hspace{.5cm} \{N_{DC}\}, \forall t \in T 
+        \label{eqn:temporalnb}
+        \end{split}
+      \end{equation}
+      \end{column}
   \begin{column}{5cm}
   \centering
-
-  \vspace{-0.6cm}
   {\small
   \begin{circuitikz}
     \draw (0,13.5) to [short,i^=$im_{t}$]  (1.5,13.5) to (1.5,13);
@@ -709,8 +732,7 @@
 \end{frame}
 
 
-
-\begin{frame}{Temporal load shifting problem 2/2}
+\begin{frame}{Temporal load shifting problem 3/3}
 
   {\footnotesize
   \begin{columns}
@@ -754,32 +776,38 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Spatially-temporal load shifting problem 1/2}
+\begin{frame}{Spatially-temporal load shifting problem 1/3}
+  \centering
+  \vspace{0.3cm}
+  \includegraphics[width=12cm]{images/spatial-temporal-vlinks.png}
+\end{frame}
+
+
+\begin{frame}{Spatially-temporal load shifting problem 2/3}
 
   {\footnotesize
 
-  The temporal and spatial flexibility of electricity demand can be \alert{co-optimized} to help achieving clean electricity targets. The resulting mathematical problem brings together the formulations of spatial and temporal load management systems shown above. \\
-  We consider a set data centers (flexible consumers) $n \in N_{DC}$ located in various locations within the electricity network. Data centers are interconnected with virtual links $\Theta_n^{snd}, \Theta_n^{rec}$ (complete graph). Each data center also has a temporal load management mechanism $S_n^{dsm} := \{s' \in S | dsm(s') = n\}$. \\
-  The nodal energy balance is adjusted to account for both spatial and temporal load shifting variables:
-  \begin{equation}
-    \begin{split}
-    &\sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \\
-    & \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} + \sum_{{s'} \in S_n^{dsm}} \left(\bar{g}_{s',n,t} - \ubar{g}_{s',n,t}\right)} \hspace{.5cm} \forall n \in N_{DC}, t \in T 
-    \label{eqn:bothnb}
-    \end{split}
-  \end{equation}
+  The temporal and spatial flexibility of electricity demand can be \alert{co-optimized} to help achieving clean electricity targets. The resulting mathematical problem brings together the formulations of spatial and temporal load management systems shown above.
 
-  \vspace{-0.1cm}
+  We consider a set data centers (flexible consumers) $n \in N_{DC}$ located in various locations within the electricity network. Data centers are interconnected with virtual links $\Theta_n^{snd}, \Theta_n^{rec}$ (complete graph). Each data center also has a temporal load management mechanism $S_n^{dsm} := \{s' \in S | dsm(s') = n\}$.
+
+  The nodal energy balance is adjusted to account for variables represeting load shifts \alert{across space and time}:
+
+  \vspace{0.2cm}
   \begin{columns}
-    \begin{column}{7cm}
-      \centering
-      \includegraphics[width=7cm]{images/Zavala_2021.png}
+    \begin{column}{9cm}
+      \begin{equation}
+        \begin{split}
+        &\sum_{r\in CFE} g_{r,n,t} + \sum_{s\in STO} \left(\bar{g}_{s,n,t} - \ubar{g}_{s,n,t}\right) - ex_{n,t} + im_{n,t}  = \\
+        & \textcolor{TUred}{d_{n,t} + \sum_{\vartheta \in \Theta_n^{rec}}\delta_{\vartheta, t} - \sum_{\vartheta \in \Theta_n^{snd}}\delta_{\vartheta, t} + \sum_{{s'} \in S_n^{dsm}} \left(\bar{g}_{s',n,t} - \ubar{g}_{s',n,t}\right)} \\ 
+        & \hspace{.5cm} \forall n \in N_{DC}, t \in T 
+        \label{eqn:bothnb}
+        \end{split}
+      \end{equation}
     \end{column}
   \begin{column}{5cm}
-
   \centering
   {\small
-  \vspace{-0.5cm}
   \begin{circuitikz}
     \draw (0,13.5) to [short,i^=$im_{n,t}$]  (1.5,13.5) to (1.5,13);
     \draw [ultra thick] (0,13) node[anchor=south]{} -- (4,13);
@@ -802,7 +830,7 @@
 
 
 
-\begin{frame}{Spatially-temporal load shifting problem 2/2}
+\begin{frame}{Spatially-temporal load shifting problem 3/3}
 
   {\footnotesize
   \begin{columns}
@@ -925,9 +953,9 @@
   \item We model various scenarios for data center demand flexibility, which include \\
   \vspace{0.1cm}
   Three modes of operation: \\
-    -- \alert{Co-optimized spatial and temporal} load management \\
-    -- \alert{Isolated spatial} load management (shifting flexible workloads across locations)\\ 
-    -- \alert{Isolated temporal} load management (shifting flexible workloads in time) \\ 
+    -- Co-optimized \alert{spatial and temporal} load management \\
+    -- Isolated \alert{spatial} load management (shifting flexible workloads across locations)\\ 
+    -- Isolated \alert{temporal} load management (shifting flexible workloads in time) \\ 
   \vspace{0.1cm}
   and four scenarios for flexible workloads range: \alert{$f$ = \{0\%, 10\%, 20\%, 40\%\}}.
 
@@ -953,18 +981,17 @@
 
 
 
-
 \begin{frame}{Study design: limitations}
   
+  {\footnotesize 
+  \begin{itemize}
 
-  -- Caveat: report on why and how rather than modelling for numbers
+  \item This study is done in a spirit of \alert{modelling for insight} rather than \alert{modelling for numbers}. The design of this study does not aim at quantifying the real-life benefits of demand side flexibility for data centers. It is rather a model experiment to explore \textit{why and how} flexibility of demand can be beneficial for achiving 24/7 carbon-free energy goals. The results we present can thus be viewed with a fair degree of caution, i.e., as a modelling-based insights rather than quantitative projections for the future. 
   
-  assumptions 
+  \item Quantifying the actual costs benefits for the ICT industry of utilising demand flexibility requires \alert{additional empirical research}. Further studies could usefully explore the costs of achieving a certain share of flexible workloads beared by data center operators, which are not considered in this study. Including information on implicit flexibility costs would help to quantify the flexibility benefits with a greater degree of accuracy. Another empirical improvement could address technical aspects and properties of flexible workloads, such as physical constraints associated with quick ramping of power usage up/down, safety constraints, etc.
   
-  -- flexibility costs not included
-  
-  -- Finally, we conduct an analysis for different (synthetic) load profiles of C\&I participants, which represent a \alert{'baseload'} (flat), a \alert{'datacenter'}, and an \alert{'industry consumer'} consumption patterns.   
-  
+  \end{itemize}
+  }
   \end{frame}
 
 
@@ -1004,7 +1031,7 @@
   \end{column}
   \end{columns}
 
-  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{pypsa-eur}}
+  \source{Image: \href{https://github.com/PyPSA/pypsa-eur}{github.com/PyPSA/pypsa-eur}}
 \end{frame}
 
 
@@ -1037,7 +1064,7 @@
   \end{column}
 
   \end{columns}
-  \source{Image: \href{https://github.com/PyPSA/powerplantmatching}{powerplantmatching}}
+  \source{Image: \href{https://github.com/PyPSA/powerplantmatching}{github.com/PyPSA/powerplantmatching}}
 
 \end{frame}
 
@@ -1055,8 +1082,8 @@
       \item The technology-data project compiles information about energy technologies from a variety of sources. The complied dataset has standardized technology names and energy units. All values are linked to original sources.
 
       \item  technology-data is an open-source project maintained by TU Berlin team. \\
-      \faGithub~\hrefc{https://github.com/PyPSA/powerplantmatching}{GitHub} \\
-      \faBook~\hrefc{https://powerplantmatching.readthedocs.io/en/latest/index.html}{Documentation}
+      \faGithub~\hrefc{https://github.com/PyPSA/technology-data}{GitHub} \\
+      \faBook~\hrefc{https://technology-data.readthedocs.io/en/latest/}{Documentation}
 
     \end{itemize}}  
   \end{column}
@@ -1071,8 +1098,9 @@
   \end{flushright}
   }
   \end{column}
-  
   \end{columns}
+
+  \source{Image: \href{https://github.com/PyPSA/technology-data}{github.com/PyPSA/technology-data}}
 \end{frame}
 
 
@@ -1110,7 +1138,7 @@
   \end{column}
   \end{columns}
 
-\source{Image: \href{https://github.com/PyPSA/atlite}{atlite}}
+\source{Image: \href{https://github.com/PyPSA/atlite}{atlite.readthedocs.io/}}
 \end{frame}
 
 
@@ -1399,27 +1427,6 @@ As CFE target is tightened further, average emissions \alert{drop to zero}.
   \end{columns}
   }
   \source{Ireland -- Palette 3 -- 2025 -- 10\% -- baseload}
-\end{frame}
-
-%----------------------------------------
-%Base scenario - other countries
-
-\begin{frame}{Base scenario: other regions}
-  \centering
-  
-  Results for other regions in Europe where C\&I load commits to voluntary  \\ 
-  CFE procurement 
-  show \alert{similar trends.} \\ 
-  
-  \vspace{0.3cm}
-  However, each region has a \alert{unique set of characteristics} 
-  that depend on local resources, renewable potentials,
-  national energy and climate policies, degree of interconnections, etc.
-
-  \vspace{0.3cm}
-  Despite regional differences, the dynamics of 24/7 CFE procurement, \\
-  observed in the example of Ireland, repeat in other regions.
-
 \end{frame}
 
 
