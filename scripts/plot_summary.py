@@ -17,6 +17,7 @@ matplotlib.use('Agg')
 
 from solve_network import palette, geoscope
 from pypsa.plot import add_legend_patches
+import seaborn as sns
 
 
 def format_column_names(col_tuple):
@@ -25,7 +26,7 @@ def format_column_names(col_tuple):
 def ci_capacity():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
@@ -57,6 +58,10 @@ def ci_capacity():
     #ax.set_xlabel("CFE target")
     ax.set_ylabel("DC portfolio capacity [MW]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
+    
+    space = len(ldf.columns)/len(datacenters)
+    for l in range(len(datacenters)-1):
+        plt.axvline(x = (space-0.5)+space*l, color = 'gray', linestyle="--")
 
     formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
     ax.set_xticklabels(formatted_columns)
@@ -68,7 +73,7 @@ def ci_capacity():
 def ci_costandrev():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     techs = clean_techs + ["grid",
                            "battery_storage",
@@ -111,8 +116,12 @@ def ci_costandrev():
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_ylabel("24/7 CFE cost and revenue [€/MWh]")
-    ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    ax.set_ylim(top=max(ldf.sum())*2)
+    ax.legend(loc="upper left", ncol = 3, prop={"size":9})
+    ax.set_ylim(top=max(ldf.sum())*1.5)
+
+    space = len(ldf.columns)/len(datacenters)
+    for l in range(len(datacenters)-1):
+        plt.axvline(x = (space-0.5)+space*l, color = 'gray', linestyle="--")
 
     formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
     ax.set_xticklabels(formatted_columns)
@@ -124,7 +133,7 @@ def ci_costandrev():
 def ci_generation():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     generation = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
     discharge = df.loc[["ci_generation_" + t for t in clean_dischargers]].rename({"ci_generation_" + t : t for t in clean_dischargers})/1000.
@@ -167,7 +176,7 @@ def ci_generation():
 def zone_emissions():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     ldf = df.loc['emissions_zone'] #.to_frame()
 
@@ -242,7 +251,7 @@ def system_capacity_diff():
 def ci_curtailment():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((6,4.5))
+    fig.set_size_inches((8,6))
 
     #Data for ci res curtailment across all locations
     ci_res = snakemake.config['ci']['res_techs']
@@ -263,7 +272,7 @@ def ci_curtailment():
     up = ldf.sum(axis=1).max()
     ax.set_ylim(top=up*1.5)
 
-    ax.legend(loc='upper right', ncol=2, prop={"size":8}, fancybox=True)
+    ax.legend(loc='upper right', ncol=2, prop={"size":9}, fancybox=True)
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_curtailment.pdf"),
                 transparent=True)
@@ -324,15 +333,20 @@ def ci_abs_costs():
     #Sort final dataframe before plotting
     ldf.sort_index(axis='rows', ascending=True, inplace=True)
     
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ldf.columns = formatted_columns
+
     ldf.plot(kind="bar", stacked=True, ax=ax, 
-        width=0.65, edgecolor = "black", linewidth=0.05)
+            width=0.65, edgecolor = "black", linewidth=0.05,
+            color=sns.color_palette("rocket", len(ldf.columns)))
  
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     
     value = (ldf.sum(axis=1)[0] -  ldf.sum(axis=1)[-1])
-    ax.set_xlabel(f"Cost diff for min/max flex scenarios: {round(value, 1)} MEUR/a")
+    pp = int(round(value/ldf.sum(axis=1)[0]*100, 0))
+    ax.set_xlabel(f"Share of flexible workloads.\n Economic efficiency gains in max flexibility scenario: {pp}% ({round(value, 1)} MEUR/a)")
     plt.axhline(y = ldf.sum(axis=1).max(), color = 'gray', linestyle="--", linewidth=1.5)
     plt.axhline(y = ldf.sum(axis=1).min(), color = 'gray', linestyle="--", linewidth=1.5)
 
@@ -849,9 +863,9 @@ ci_capacity()
 ci_costandrev()
 ci_generation()
 ci_abs_costs()
-zone_emissions()
+#zone_emissions()
 system_capacity_diff()
-objective_abs()
+#objective_abs()
 
 ci_curtailment()
 system_curtailment()
