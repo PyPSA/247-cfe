@@ -31,7 +31,7 @@
   \begin{itemize}
     {\small
     \item This study is done in a spirit of open and reproducible research: \faGithub~\hrefc{https://github.com/PyPSA/247-cfe}{GitHub}.
-    \item {\bf Funding:} This study was supported by a grant from Google, Inc. 
+    \item {\bf Funding:} This study was supported by a grant from Google, LLC. 
     \item {\bf Acknowledgements:} The authors thank members of the Google energy markets and policy team 
     for their feedback and inputs on earlier drafts of this study. 
     We also thank the \hrefc{https://pypsa.org/}{PyPSA team} and many contributors to the open-source 
@@ -141,7 +141,7 @@
   (iii) Reaching CFE for 90-95\% of the time can be done with only a small cost premium. Reaching 100\% CFE target is possible but costly with existing renewable and storage technologies, with costs increasing rapidly above 95\%. 100\% CFE target could have a much smaller cost premium if long duration storage or clean firm generation technologies are available. \\ 
   (iv) 24/7 CFE procurement stimulates innovation and learning, and creates an early market for the advanced technologies.
 
-  \item  These European study results align with the results in studies done by \hrefc{https://acee.princeton.edu/24-7/}{Princeton ZERO lab (2021)} for regions in the United States and by \hrefc{https://www.iea.org/reports/advancing-decarbonisation-through-clean-electricity-procurement}{IEA (2022)} for regions in Asia and Indonesia.
+  \item  These European study results align with the results in studies done by \hrefc{https://acee.princeton.edu/24-7/}{Princeton ZERO lab (2021)} for regions in the United States and by \hrefc{https://www.iea.org/reports/advancing-decarbonisation-through-clean-electricity-procurement}{IEA (2022)} for India and Indonesia.
 
   \end{itemize}
   }
@@ -179,7 +179,7 @@
       
         \item Despite rapidly growing demand for digital services, the growth of associated emissions was modest due to energy efficiency improvements, decarbonisation of electricity grids and renewable energy purchases by ICT companies above and beyond the policy obligations. Based on \hrefc{https://www.iea.org/reports/data-centres-and-data-transmission-networks}{IEA (2022)} estimates, Amazon, Microsoft, Meta and Google have become the four largest purchasers of corporate renewable energy, having contracted over 38~GW to date with power purchase agreements (PPAs).
       
-        \item Moreover, some of the ICT companies have become the front runners of the 24/7~CFE movement. Google has committed to the goal of \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{24/7 Carbon-Free Energy by 2030}. Similarly, Microsoft has announced own \hrefc{https://blogs.microsoft.com/blog/2021/07/14/made-to-measure-sustainability-commitment-progress-and-updates/}{100/100/0 by 2030} commitment.
+        \item Moreover, some of the ICT companies have become the front runners of the 24/7~CFE movement. Google has committed to the goal of \hrefc{https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf}{24/7 Carbon-Free Energy by 2030}. Similarly, Microsoft has announced its own \hrefc{https://blogs.microsoft.com/blog/2021/07/14/made-to-measure-sustainability-commitment-progress-and-updates/}{100/100/0 by 2030} commitment.
 
       \end{itemize}
       \end{column}
@@ -419,9 +419,10 @@
 
   \begin{column}{6cm}
   \begin{itemize}
-    \vspace{0.3cm}
+    \vspace{0.1cm}
     \item To capture spatial flexibility, we implement a spatial load management system that can shift load across data center locations via virtual links.
     \item To capture temporal flexibility, we implement a load scheduling system that can shift load of a data center over time.
+    \item The spatial and temporal load shifting are subject to a shared set of computing capacity constraints; the temporal shifting is further constrained by the daily compute usage conservation rule.
     \item For the mathematics and detail on the optimization model, see \alert{\hyperlink{methodology}{Annex A: Methodology}}.
   \end{itemize}
 
@@ -466,9 +467,9 @@
   {\footnotesize 
   \begin{itemize}
 
-  \item This study is done in a spirit of \alert{modelling for insight} rather than \alert{modelling for numbers}. The design of this study does not aim at quantifying the real-life benefits of demand side flexibility for data centers. It is rather a model experiment to explore \textit{why and how} flexibility of demand can be beneficial for achiving 24/7 carbon-free energy goals. The results we present can thus be viewed with a fair degree of caution, i.e., as a modelling-based insight rather than quantitative projection. 
+  \item This study is done in a spirit of \alert{modelling for insight} rather than \alert{modelling for numbers}. The design of this study does not aim at quantifying the real-life benefits of demand side flexibility for data centers. It is rather a model experiment to explore \textit{why and how} flexibility of demand can be beneficial for achiving 24/7 carbon-free energy goals. The results we present should thus be viewed with a fair degree of caution, i.e., as a modelling-based insight rather than quantitative projection. 
   
-  \item Quantifying the actual costs benefits for the ICT industry of utilising demand flexibility requires \alert{additional empirical research}. Further studies could usefully explore the costs of achieving a certain share of flexible workloads beared by data center operators, which are \alert{not considered} in this study. Including information on implicit flexibility costs would help to quantify the flexibility benefits with a greater degree of accuracy. Another empirical improvement could address technical aspects and properties of flexible workloads, such as physical constraints associated with quick ramping of power usage up/down, safety constraints, etc.
+  \item Quantifying the actual costs and benefits for the ICT industry of utilising demand flexibility requires \alert{additional empirical research}. Further studies could usefully explore the costs of achieving a certain share of flexible workloads beared by data center operators, which are \alert{not considered} in this study, i.e., flexibility is modeled as \enquote{cost-free}.  Including information on implicit flexibility costs would help to quantify the flexibility benefits with a greater degree of accuracy. Another empirical improvement could address technical aspects and properties of flexible workloads, such as physical constraints associated with quick ramping of power usage up/down, safety constraints, etc.
   
   \end{itemize}
   }
@@ -702,7 +703,7 @@
   \end{column}
   
   \begin{column}{7cm}
-    A plot on the left shows the \alert{net annual costs [\euro/a]} for achieving 24/7~CFE policy in all locations as a function of load flexibility potential. 
+    A plot on the left shows the \alert{total annual costs [\euro/a]} for achieving 24/7~CFE policy in all locations as a function of load flexibility potential. 
     
     \vspace{0.1cm} 
     The plot gives a summary perspective on the observations above: increasing potential of demand flexibility facilitates the \alert{efficiency and affordability} of 24/7 CFE procurement. The costs of achieving 100\%~CFE score in all five locations is reduced by one third (34\%) if 40\% of workloads are flexible (right column), compared to the inflexible demand scenario (left column).
@@ -722,7 +723,7 @@
 \label{isolated-hook}
 
   {\footnotesize
-  The results above are for the case when data centers \alert{co-optimize} shifting of the flexible loads across locations and over time. It is also interesting to look at the economic efficiency when flexibility usage is isolated, i.e., data centers implement either a spatial or a temporal load management system. The plots below show net annual costs for achieving 24/7 policy with isolated {\bf spatial (left)} and {\bf temporal (right)} load shifting.
+  The results above are for the case when data centers \alert{co-optimize} shifting of the flexible loads across locations and over time. It is also interesting to look at the economic efficiency when flexibility usage is isolated, i.e., data centers implement either a spatial or a temporal load management system. The plots below show total annual costs for achieving 24/7 policy with isolated {\bf spatial (left)} and {\bf temporal (right)} load shifting.
 
   \vspace{0.4cm} 
   \begin{columns}
@@ -789,7 +790,7 @@
 
   Finally, the same perspective for the scenario with \alert{100\% CFE score and palette~2 (with LDES)}. 
   Once a LDES system is added to the technology mix of the 24/7 consumer, it 
-  can store excess generation from variable renewable resources for extended periods. It helps matching demand with CFE around-the-clock with considerably fewer resources everywhere, including the resource-constrained locations. Co-optimization of spatial load management and LDES brings additional synergies. Lond duration storage helps harvesting renewable electricity in the best locations and spatial flexibility \textit{indirectly} opens access to the cheaper clean electricity for all locations. We discuss this effect in more detail in the analysis of {\bf \hyperlink{redistribution-p2}{redistribution of average data center loads}}.
+  can store excess generation from variable renewable resources for extended periods. It helps matching demand with CFE around-the-clock with considerably fewer resources everywhere, including the resource-constrained locations. Co-optimization of spatial load management and LDES brings additional synergies. Long duration storage helps harvesting renewable electricity in the best locations and spatial flexibility \textit{indirectly} opens access to the cheaper clean electricity for all locations. We discuss this effect in more detail in the analysis of {\bf \hyperlink{redistribution-p2}{redistribution of average data center loads}}.
 
   \begin{columns}
     \begin{column}{7cm}
@@ -1005,7 +1006,7 @@
 
   \vspace{0.1cm}
   A interesting aspect of this result is that the increase of data center average utilization does not occur in locations with \enquote{greener} backgrounds grids, such as DK or FI. As shown above, for 100\% CFE, the carbon content of the background system does not play a big role. 
-  Instead, the average utilization of data centers increases in locations wwith good renewable resources that have generation profiles distinct to other locations, such PT (a high capacity factor for solar PV) or IE (a good wind profile that is also uncorrelated to the four continental locations). 
+  Instead, the average utilization of data centers increases in locations with good renewable resources that have generation profiles distinct to other locations, such PT (a high capacity factor for solar PV) or IE (a good wind profile that is also uncorrelated to the four continental locations). 
 
   \end{column}
   \end{columns}
@@ -1068,7 +1069,6 @@
 \end{frame}
 
 
-
 \begin{frame}{Further remarks}
 \label{ssec:remarks}
 
@@ -1076,15 +1076,14 @@
 
   \begin{itemize}
 
-  \item As shown in this study, space-time load shifting makes clean electricity more accessible and gives flexible consumers more options for matching demand with carbon-free electricity around-the-clock. Thus, the system decarbonization impact associated with the 24/7~CFE procurement can be achieved with fewer resources. As a result, more data center operators, as well as businesses from commercial and industrial sectors with flexible demands, may be interested in \alert{joining the 24/7 CFE campaign}. 
+  \item As shown in this study, space-time load shifting makes clean electricity more accessible and gives flexible consumers more options for matching demand with carbon-free electricity around-the-clock. Thus, the system decarbonization impact associated with the 24/7~CFE procurement can be achieved with fewer resources. As a result, data center operators and other commercial and industrial consumers with flexible demands can \alert{achieve high degrees of CFE matching at lower costs}, and may be interested in joining the \hrefc{https://gocarbonfree247.com/}{24/7 CFE movement}.
   
-  \item Furthermore, if granular certificates allow companies to trade carbon-free electricity credits in each hour, the space-time load-shifting flexibility provided by data centers will decrease certificate costs for \alert{all electricity consumers} interested in sustainability goals, \alert{regardless of their ability to shift loads}.
+  \item There is a number of initiatives to improve the European Guarantee of Origin (GO) mechanism---the largest standardized market for Energy Attribute Certificates (EACs) in the world---that has currently no recognised system of verifying renewable electricity supply on an hourly basis. For example, the \hrefc{https://energytag.org/}{EnergyTag} initiative is developing a framework for adding a timestamp to EACs, which will make them more reflective of the physical availability of clean energy and allow companies trading CFE credits on hourly basis. ENTSO-E also published a \hrefc{https://www.entsoe.eu/2022/07/20/views-on-a-future-proof-market-design-for-guarantees-of-origin/}{position paper} highlighting the need for the 24/7 GO system. When a market for the 24/7 GOs is created, the space-time load-shifting flexibility provided by data centers will decrease demand for GOs in hours when carbon-free electricity is the most expensive, which in turn will reduce  certificate costs for \alert{all electricity consumers} interested in sustainability goals, \alert{regardless of their ability to shift loads}.
+  
   \end{itemize}
-
   }
 
 \end{frame}
-
 
 
 % %----------------------------------------
@@ -2006,7 +2005,7 @@ issued by the European Commission in 2022.}}
   {\footnotesize
   
   Isolating values of spatial and temporal load management for a scenario with {\bf CFE score of 100\% and technology palette~1}. 
-  The plots below show the average costs (per MWh of consumption) {\bf (left)} and the net annual costs (per annum) for achieving 24/7 policy in all locations {\bf (right)} with {\bf spatial} load shifting.
+  The plots below show the average costs (per MWh of consumption) {\bf (left)} and the total annual costs (per annum) for achieving 24/7 policy in all locations {\bf (right)} with {\bf spatial} load shifting.
 
   \begin{columns}[T]
   \begin{column}{8cm}
@@ -2030,7 +2029,7 @@ issued by the European Commission in 2022.}}
   {\footnotesize
   
   Isolating values of spatial and temporal load management for a scenario with {\bf CFE score of 100\% and technology palette~1}. 
-  The plots below show the average costs (per MWh of consumption) {\bf (left)} and the net annual costs (per annum) for achieving 24/7 policy in all locations {\bf (right)} with {\bf temporal} load shifting.
+  The plots below show the average costs (per MWh of consumption) {\bf (left)} and the total annual costs (per annum) for achieving 24/7 policy in all locations {\bf (right)} with {\bf temporal} load shifting.
 
   \begin{columns}[T]
   \begin{column}{8cm}
