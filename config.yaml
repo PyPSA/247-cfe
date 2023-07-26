@@ -13,35 +13,24 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 1H-IEDKDEFIPT-allflex
+run: 1H-IEDKDEFIPT-allflex #-spatial, -temporal
 
 #wildcards
 scenario:
   flexibility: ['0', '10', '20', '40',] #possible deviation [%] of requested load from nominal level
-  policy:  ["cfe90", "cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
+  policy:  ["cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
   palette: [ "p1", # onwind + solar + battery 
              "p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: [ #"IE",
-          #"IEDK"
-          #"DK",
-          #"DE",
-          #"NL",
-          #"FR",
-          #"DKDE",
-          "EU" #37-node network of ENTSO-E area
+  zone: [ 
+        "EU" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
         ]
-  year: ['2025', 
-         '2030'
+  year: [ '2025', 
+         #'2030'
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:
-  #datacenters: {"IE5 0": "dublin"}
-  #datacenters: {"FR1 0": "paris"}
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica"}
-  #datacenters: {"DK1 0": "frederica", "DE1 0": "berlin"}
-  #datacenters: {"IE5 0": "dublin", "DK1 0": "frederica", "NL1 0": "middenmeer", "FI2 0": "hamina", "BE1 0": "ghislain",}
   datacenters: {"IE5 0": "ireland", "DK1 0": "denmark", "DE1 0": "germany", "FI2 0": "finland", "PT1 0": "portugal"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
@@ -110,14 +99,8 @@ costs:
   adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
-  # price_gas_2025: 50.0 # https://www.powernext.com/futures-market-data
-  # price_oil = 50.0 # EUR/MWhth -> TYNDP2020 = default 
-  # price_uranium = 1.7 EUR/MWhth -> TYNDP2020  is 2.6
-  # TYNDP2020: https://2022.entsos-tyndp-scenarios.eu/download/
 
-#~size of C&I electricity load per country
-#https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
-#https://ec.europa.eu/eurostat/databrowser/view/ten00128/default/table?lang=en
+#~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
 ci_load: 
   IE: 2200.
   DK: 2240.
@@ -126,11 +109,9 @@ ci_load:
 
 
 #national policies
-#countries with nuclear phase-out policy (FR and BE shifted plan to 2035)
-#source: https://world-nuclear.org/
+#countries with nuclear phase-out policy (FR and BE shifted plan to 2035). https://world-nuclear.org/
 nodes_with_nucsban: ["DE1 0"]
-#countries with coal phase-out policy before 2025 and 2030
-#source: https://beyond-coal.eu/europes-coal-exit/
+#countries with coal phase-out policy before 2025 and 2030 https://beyond-coal.eu/europes-coal-exit/
 policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
 policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
 #source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
@@ -180,7 +161,7 @@ solving:
       threads: 4
       method: 2         # barrier
       crossover: 0
-      BarConvTol: 1.e-6
+      BarConvTol: 1.e-7
       Seed: 123         # Consistent seed for all plattforms
       AggFill: 0
       PreDual: 0

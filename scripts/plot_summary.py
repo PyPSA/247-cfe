@@ -5,9 +5,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
-from matplotlib.transforms import Bbox
 import matplotlib.colors as mc 
 from matplotlib.cm import ScalarMappable
 import matplotlib.ticker as ticker
@@ -15,7 +13,7 @@ import matplotlib.ticker as ticker
 #allow plotting without Xwindows
 matplotlib.use('Agg')
 
-from solve_network import palette, geoscope
+from solve_network import palette
 from pypsa.plot import add_legend_patches
 import seaborn as sns
 
@@ -569,7 +567,6 @@ def plot_heatmap_utilization(carrier):
 def retrieve_nb(n, node):
     '''
     Retrieve nodal energy balance per hour
-    This simple function works only for the Data center nodes: 
         -> lines and links are bidirectional AND their subsets are exclusive.
         -> links include fossil gens
     NB {-1} multiplier is a nodal balance sign
@@ -896,13 +893,12 @@ ci_capacity()
 ci_costandrev()
 ci_generation()
 ci_abs_costs()
-#zone_emissions()
-system_capacity_diff()
-#objective_abs()
-
 ci_curtailment()
+system_capacity_diff()
 system_curtailment()
 
+#objective_abs()
+#zone_emissions()
 
 if (snakemake.config['ci']['spatial_shifting'] == True and snakemake.config['plot_timeseries'] == True):  
     utilization_dc(names, flexibilities)
