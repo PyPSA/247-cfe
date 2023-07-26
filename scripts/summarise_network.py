@@ -1,7 +1,7 @@
 
 import pypsa, numpy as np, pandas as pd
 import yaml
-from solve_network import palette, geoscope, timescope
+from solve_network import palette
 from _helpers import override_component_attrs
 
 

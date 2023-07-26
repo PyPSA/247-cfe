@@ -5,9 +5,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
-from matplotlib.transforms import Bbox
 import matplotlib.colors as mc 
 from matplotlib.cm import ScalarMappable
 import matplotlib.ticker as ticker
@@ -15,8 +13,9 @@ import matplotlib.ticker as ticker
 #allow plotting without Xwindows
 matplotlib.use('Agg')
 
-from solve_network import palette, geoscope
+from solve_network import palette
 from pypsa.plot import add_legend_patches
+import seaborn as sns
 
 
 def format_column_names(col_tuple):
@@ -25,7 +24,7 @@ def format_column_names(col_tuple):
 def ci_capacity():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     gen_inv = df.loc[["ci_cap_" + t for t in clean_techs]].rename({"ci_cap_" + t : t for t in clean_techs})
     discharge_inv = df.loc[["ci_cap_" + t for t in clean_dischargers]].rename({"ci_cap_" + t : t for t in clean_dischargers})
@@ -45,8 +44,11 @@ def ci_capacity():
     #Sort final dataframe before plotting
     ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
 
-    (ldf).T.plot(kind="bar",stacked=True,
-                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+    if not ldf.empty:
+        (ldf).T.plot(kind="bar",stacked=True,
+                    ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+    else:
+        print(f"Dataframe to plot is empty")
 
     plt.xticks(rotation=0)
     ax.set_xticklabels([''.join(item) for item in ldf.columns.tolist()])
@@ -57,6 +59,10 @@ def ci_capacity():
     #ax.set_xlabel("CFE target")
     ax.set_ylabel("DC portfolio capacity [MW]")
     ax.legend(loc="upper left", ncol=2, prop={"size":9})
+    
+    space = len(ldf.columns)/len(datacenters)
+    for l in range(len(datacenters)-1):
+        plt.axvline(x = (space-0.5)+space*l, color = 'gray', linestyle="--")
 
     formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
     ax.set_xticklabels(formatted_columns)
@@ -68,7 +74,7 @@ def ci_capacity():
 def ci_costandrev():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     techs = clean_techs + ["grid",
                            "battery_storage",
@@ -94,9 +100,12 @@ def ci_costandrev():
     #Sort final dataframe before plotting
     ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
 
-    ldf.T.plot(kind="bar",stacked=True,
-               ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
-    
+    if not ldf.empty:
+        ldf.T.plot(kind="bar",stacked=True,
+                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+    else:
+        print(f"Dataframe to plot is empty")
+
     netc=ldf.sum()
     x = 0
     for i in range(len(netc)):
@@ -111,8 +120,12 @@ def ci_costandrev():
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
     ax.set_ylabel("24/7 CFE cost and revenue [€/MWh]")
-    ax.legend(loc="upper left", ncol = 3, prop={"size":8})
-    ax.set_ylim(top=max(ldf.sum())*2)
+    ax.legend(loc="upper left", ncol = 3, prop={"size":9})
+    ax.set_ylim(top=max(ldf.sum())*1.5)
+
+    space = len(ldf.columns)/len(datacenters)
+    for l in range(len(datacenters)-1):
+        plt.axvline(x = (space-0.5)+space*l, color = 'gray', linestyle="--")
 
     formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
     ax.set_xticklabels(formatted_columns)
@@ -124,7 +137,7 @@ def ci_costandrev():
 def ci_generation():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     generation = df.loc[["ci_generation_" + t for t in clean_techs]].rename({"ci_generation_" + t : t for t in clean_techs})/1000.
     discharge = df.loc[["ci_generation_" + t for t in clean_dischargers]].rename({"ci_generation_" + t : t for t in clean_dischargers})/1000.
@@ -145,8 +158,12 @@ def ci_generation():
     #Sort final dataframe before plotting
     ldf.sort_index(axis='columns', level=[1,0], ascending=[False, True], inplace=True)
 
-    (ldf).T.plot(kind="bar",stacked=True,
-                ax=ax, color=tech_colors, width=0.65, edgecolor = "black", linewidth=0.05)
+    if not ldf.empty:
+        (ldf).T.plot(kind="bar",stacked=True,
+                    ax=ax, color=tech_colors, width=0.65, edgecolor = "black", 
+                    linewidth=0.05)
+    else:
+        print(f"Dataframe to plot is empty")
 
     plt.xticks(rotation=0)
     ax.set_xticklabels([''.join(item) for item in ldf.columns.tolist()])
@@ -167,7 +184,7 @@ def ci_generation():
 def zone_emissions():
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((8,4.5))
+    fig.set_size_inches((8,6))
 
     ldf = df.loc['emissions_zone'] #.to_frame()
 
@@ -253,8 +270,15 @@ def ci_curtailment():
     ldf = pd.DataFrame(ldf.sum(axis=0), columns=['RES curtailment']).unstack()
     ldf = ldf['RES curtailment']/1e3 
 
-    ldf.plot(kind="bar",stacked=True,
-                ax=ax, width=0.65, edgecolor = "black", linewidth=0.05)
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ldf.columns = formatted_columns
+
+    if not ldf.empty:
+        ldf.plot(kind="bar",stacked=True,
+                ax=ax, width=0.65, edgecolor = "black", linewidth=0.05,
+                color=sns.color_palette("rocket", len(ldf.columns)))
+    else:
+        print(f"Dataframe to plot is empty")
 
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
@@ -263,10 +287,9 @@ def ci_curtailment():
     up = ldf.sum(axis=1).max()
     ax.set_ylim(top=up*1.5)
 
-    ax.legend(loc='upper right', ncol=2, prop={"size":8}, fancybox=True)
+    ax.legend(loc='upper right', ncol=2, prop={"size":9}, fancybox=True)
     fig.tight_layout()
-    fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_curtailment.pdf"),
-                transparent=True)
+    fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_curtailment.pdf"), transparent=True)
 
 
 def system_curtailment():
@@ -324,19 +347,40 @@ def ci_abs_costs():
     #Sort final dataframe before plotting
     ldf.sort_index(axis='rows', ascending=True, inplace=True)
     
-    ldf.plot(kind="bar", stacked=True, ax=ax, 
-        width=0.65, edgecolor = "black", linewidth=0.05)
+    formatted_columns = [format_column_names(col) for col in ldf.columns.tolist()]
+    ldf.columns = formatted_columns
+
+    if not ldf.empty:
+        ldf.plot(kind="bar", stacked=True, ax=ax, 
+                width=0.65, edgecolor = "black", linewidth=0.05,
+                color=sns.color_palette("rocket", len(ldf.columns)))
+    else:
+        print(f"Dataframe to plot is empty")
  
     plt.xticks(rotation=0)
     ax.grid(alpha=0.3)
     ax.set_axisbelow(True)
-    
     value = (ldf.sum(axis=1)[0] -  ldf.sum(axis=1)[-1])
-    ax.set_xlabel(f"Cost diff for min/max flex scenarios: {round(value, 1)} MEUR/a")
-    plt.axhline(y = ldf.sum(axis=1).max(), color = 'gray', linestyle="--", linewidth=1.5)
-    plt.axhline(y = ldf.sum(axis=1).min(), color = 'gray', linestyle="--", linewidth=1.5)
+    pp = int(round(value/ldf.sum(axis=1)[0]*100, 0))
+    ax.set_xlabel(f"Share of flexible workloads.\n Costs reduction in max flexibility scenario: {pp}% ({round(value, 1)} MEUR/a)")
 
-    ax.set_ylabel("24/7 CFE net annual costs [MEUR per year]")
+    # Draw horizontal lines at the top of each bar
+    for i, val in enumerate(ldf.sum(axis=1)):
+        ax.hlines(val, ax.get_xlim()[0], ax.get_xlim()[1], color='gray', linestyle='--', linewidth=1.5, alpha=0.8)
+
+    ax.set_ylabel("24/7 CFE total annual costs [MEUR per year]")
+
+    # Add second y-axis
+    ax2 = ax.twinx()
+    ax2.set_ylim(ax.get_ylim())  # Ensure the second y-axis shares the same limits
+    
+    # Set the ticks of second y-axis to percentage
+    max_y_val = ldf.sum(axis=1)[0]  # get the max value of the first column
+    ax2.set_yticks(np.linspace(0, max_y_val, 11))  # Set ticks from 0 to max_y_val with equal intervals
+    ax2.set_ylabel(f'Relative costs [% of zero flexibility scenario]')
+
+    vals = ax2.get_yticks()
+    ax2.set_yticklabels(['{:,.0%}'.format(x/max_y_val) for x in vals])  # normalize the values based on max_y_val
 
     fig.tight_layout()
     fig.savefig(snakemake.output.plot.replace("capacity.pdf","ci_abs_costs.pdf"), transparent=True)
@@ -464,7 +508,7 @@ def plot_heatmap_cfe():
     # add some figure labels and title
     fig.text(0.5, 0.15, "Days of year", ha="center", va="center", fontsize=14)
     fig.text(0.03, 0.5, 'Hours of a day', ha="center", va="center", rotation="vertical", fontsize=14)
-    fig.suptitle(f"Carbon Heat Map | {location}", fontsize=20, y=0.98)
+    fig.suptitle(f"Carbon Heat Map | {location[:2]}", fontsize=20, y=0.98)
 
     path = snakemake.output.plot.split('capacity.pdf')[0] + f'heatmaps'
     if not os.path.exists(path):
@@ -523,7 +567,6 @@ def plot_heatmap_utilization(carrier):
 def retrieve_nb(n, node):
     '''
     Retrieve nodal energy balance per hour
-    This simple function works only for the Data center nodes: 
         -> lines and links are bidirectional AND their subsets are exclusive.
         -> links include fossil gens
     NB {-1} multiplier is a nodal balance sign
@@ -643,6 +686,7 @@ def plot_balances(n, node,
 def utilization_dc(names, flexibilities):
 
     fig, axs = plt.subplots(len(names), 1, figsize=(5, 1.3*len(names)), sharex=True, sharey=True)
+    fig.text(-0.03, 0.5, 'Change in Avg. Utilization [%]', va='center', rotation='vertical')
     #fig.suptitle("Mean Spatial Shift for each DC by Flexibility Steps")
 
     mean_data = []
@@ -675,7 +719,7 @@ def utilization_dc(names, flexibilities):
     for idx, ax in enumerate(axs):
         mean_df.iloc[:, idx].plot(ax=ax, style='o-') 
         ax.axhline(y=0.0, color='gray', linestyle='--') 
-        ax.set_ylabel(f'{names[idx]}')
+        ax.set_ylabel(f'{names[idx].capitalize()}', labelpad=0)
         ax.set_ylim([ymin, ymax])
 
     axs[-1].set_xticks([int(f) for f in flexibilities])  # Set xticks positions using integers
@@ -688,7 +732,7 @@ def utilization_dc(names, flexibilities):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fig.savefig(path + '/' + f"utilization_dc.pdf")
+    fig.savefig(path + '/' + f"utilization_dc.pdf", bbox_inches='tight')
 
 
 ####################################################################################################
@@ -697,7 +741,7 @@ if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
         snakemake = mock_snakemake('plot_summary', 
-        year='2025', zone='EU', palette='p1', policy="cfe100")   
+        year='2025', zone='EU', palette='p2', policy="cfe100")   
 
     config = snakemake.config
     scaling = int(config['time_sampling'][0]) #temporal scaling -- 3/1 for 3H/1H
@@ -849,14 +893,15 @@ ci_capacity()
 ci_costandrev()
 ci_generation()
 ci_abs_costs()
-zone_emissions()
-system_capacity_diff()
-objective_abs()
-
 ci_curtailment()
+system_capacity_diff()
 system_curtailment()
 
-utilization_dc(names, flexibilities)
+#objective_abs()
+#zone_emissions()
+
+if (snakemake.config['ci']['spatial_shifting'] == True and snakemake.config['plot_timeseries'] == True):  
+    utilization_dc(names, flexibilities)
 
 
 # TIME-SERIES DATA (per flexibility scenario)
@@ -869,8 +914,8 @@ if snakemake.config['plot_timeseries'] == True:
     
     for flex in flexibilities[0]:
 
-        grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', 
-                    index_col=0, header=[0,1])
+        grid_cfe = pd.read_csv(snakemake.input.grid_cfe.split('0.csv')[0]+f'/{flex}.csv', index_col=0, header=[0,1])
+        
         colormap = "BrBG" # https://matplotlib.org/stable/tutorials/colors/colormaps.html
 
         for location in locations:

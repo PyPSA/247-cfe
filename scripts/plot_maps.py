@@ -1,15 +1,18 @@
 
 """
-Function for plotting a generation capacity fleet and transmission infrastructure
-considering pypsa-eur-sec component structure
+Auxiliary plotting funtions:
+(i) a generation capacity fleet and transmission infrastructure
+(ii) data center locations
 
 Keep note that in this project each network has four stages:
-1) An input network (existing capacities)
-2) Regionally- and component-wise stripped input network (existing capacities) 
-3) (2) with policy adjustments for nuclear/lignite/etc.
-   That yields a brownfield fleet for the target year -- an input for the optimization.
-4) Solved network
+1) A (raw) input network from PyPSA-Eur
+2) A regionally- and component-wise stripped input network 
+3) (2) with policy adjustments for nuclear/lignite/etc, i.e., 
+    a brownfield fleet for the target year that is an input for optimization.
+4) A solved network
 
+This script is not integrated into the Snakemake workflow.
+Output: map-fleet.png and map-DCs.png are stored in ../study/images
 """
 
 import pandas as pd
@@ -25,18 +28,13 @@ from pypsa.plot import add_legend_circles, add_legend_lines, add_legend_patches
 
 from cartopy import crs as ccrs
 import cartopy.feature as cfeature
-import cartopy.mpl.ticker as cticker
 import geopandas as gpd
-
-from shapely.geometry import LineString
-from shapely.ops import transform
-
 from geopandas.tools import geocode
+
 
 def assign_location(n):
     '''
     Assign bus location per each individual component
-    From pypsa-eur-sec/plot_network.py
     '''
     for c in n.iterate_components(n.one_port_components | n.branch_components):
         ifind = pd.Series(c.df.index.str.find(" ", start=4), c.df.index)
@@ -47,9 +45,10 @@ def assign_location(n):
             c.df.loc[names, 'location'] = names.str[:i]
 
 
-def plot_map(network, components=["links", "stores", "storage_units", "generators"],
+def plot_map(network, datacenters, 
+             components=["links", "stores", "storage_units", "generators"],
              bus_size_factor=6e4, transmission=True, with_legend=True):
-    '''Plotting function for stages 1 and 2'''
+    '''Plotting generation capacity fleet and transmission infrastructure'''
 
     tech_colors = snakemake.config['tech_colors']
 
@@ -62,8 +61,11 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     # Drop virtual stores
     n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
     
-    # For now simple drop -> to add 2/3/4 stage difference
-    for name in ['dublin', 'frederica', "berlin", "middenmeer", "hamina", "ghislain", "paris", "lisbon"]:
+    # Drop DSM links
+    n.links.drop(n.links[n.links.carrier == "dsm"].index, inplace=True)
+
+    # Drop data center nodes
+    for name in datacenters:
         if name in n.buses.index:
             n.mremove('Bus', [name])
 
@@ -137,11 +139,6 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     fig, ax = plt.subplots(subplot_kw={"projection": ccrs.EqualEarth(n.buses.x.mean())})
     fig.set_size_inches(9, 6)
 
-    # # Define the xticks for longitude
-    # ax.set_xticks(np.arange(-10,30,10), crs=ccrs.PlateCarree())
-    # lon_formatter = cticker.LongitudeFormatter()
-    # ax.xaxis.set_major_formatter(lon_formatter)
-
     n.plot(
         bus_sizes=df / bus_size_factor,
         bus_colors=tech_colors,
@@ -212,39 +209,26 @@ def plot_map(network, components=["links", "stores", "storage_units", "generator
     fig.tight_layout()
     fig.savefig(snakemake.output.plot, facecolor='white', 
         bbox_inches = Bbox([[0,0],[9.5,6]]), 
-        dpi=300)
-
-
-def partial_great_circle(start, end, num_points=100, arc_fraction=0.3):
-    """
-    Calculate partial great circle points between start and end coordinates.
-    """
-    start_lat, start_lon = np.radians(start)
-    end_lat, end_lon = np.radians(end)
-    delta_lon = end_lon - start_lon
-
-    # Spherical interpolation parameter
-    t = np.linspace(0, arc_fraction, num_points)
-
-    # Spherical linear interpolation between start and end coordinates
-    angle = np.arccos(np.sin(start_lat) * np.sin(end_lat) +
-                      np.cos(start_lat) * np.cos(end_lat) * np.cos(delta_lon))
-    sin_angle = np.sin(angle)
-    A = np.sin((1 - t) * angle) / sin_angle
-    B = np.sin(t * angle) / sin_angle
-
-    x = A * np.cos(start_lat) * np.cos(start_lon) + B * np.cos(end_lat) * np.cos(end_lon)
-    y = A * np.cos(start_lat) * np.sin(start_lon) + B * np.cos(end_lat) * np.sin(end_lon)
-    z = A * np.sin(start_lat) + B * np.sin(end_lat)
-
-    lat, lon = np.degrees(np.arctan2(z, np.sqrt(x**2 + y**2))), np.degrees(np.arctan2(y, x))
-
-    return lat, lon
+        dpi=600)
 
 
 def plot_datacenters(network, datacenters):
     n = network.copy()
     assign_location(n)
+
+    # Drop pypsa-eur-sec artificial buses connected to equator
+    n.buses.drop(n.buses.index[n.buses.carrier != "AC"], inplace=True)
+
+    # Drop virtual stores
+    n.stores.drop(n.stores[n.stores.index.str.contains("EU")].index, inplace=True)
+    
+    # Drop DSM links
+    n.links.drop(n.links[n.links.carrier == "dsm"].index, inplace=True)
+
+    # Drop data center nodes
+    for name in datacenters:
+        if name in n.buses.index:
+            n.mremove('Bus', [name])
 
     # Load the geometries of datacenters
     world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
@@ -285,15 +269,16 @@ def plot_datacenters(network, datacenters):
         ax.scatter(centroid_i.x, centroid_i.y, color='darkblue', marker='o', s=50, transform=ccrs.PlateCarree())
         
     fig.tight_layout()
-    fig.savefig(snakemake.output.plot_DC, bbox_inches='tight', facecolor='white', dpi=300)
+    fig.savefig(snakemake.output.plot_DC, bbox_inches='tight', facecolor='white', dpi=600)
 
 
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         #from _helpers import mock_snakemake
-        #snakemake = mock_snakemake('plot_summary', palette='p3', zone='DK', year='2030', participation='10')   
+        #snakemake = mock_snakemake('plot_summary', palette='p1', zone='EU', year='2030')   
 
+        #Emulate snakemake object with dictionary
         snakemake = Dict()
         with open(f"../config.yaml",'r') as f:
             snakemake.config = yaml.safe_load(f)
@@ -301,17 +286,16 @@ if __name__ == "__main__":
         snakemake.input = Dict()
         snakemake.output = Dict()
 
-
-    folder="../results/report-EU-1H-GoogleDC-spatial"
+    images="../study/images"
+    results="../results/"+snakemake['config']['run']
 
     #snakemake.input.data = f"{folder}/networks/{scenario}/ref.csv"
-    snakemake.output.plot = f"{folder}/map-empty.pdf"
-    snakemake.output.plot_DC = f"{folder}/map-DC-2.pdf"
-    original_network = f"../input/v6_elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
-    stripped_network = f"{folder}/networks/2025/EU/p1/cfe100/0.nc"
+    snakemake.output.plot = f"{images}/map-fleet.png"
+    snakemake.output.plot_DC = f"{images}/map-DCs.png"
+    original_network = f"../input/v6_elec_s_37_lv1.0__1H-B-solar+p3_2025.nc"
+    stripped_network = f"{results}/networks/2025/EU/p1/cfe100/0.nc"
 
     n = pypsa.Network(stripped_network)
-
 
 rename = {
     "solar": "solar",
@@ -333,18 +317,8 @@ rename = {
     'urban central solid biomass CHP': 'solid biomass'
 }
 
-plot_map(n, bus_size_factor=8e4)
+datacenters = snakemake['config']['ci']['datacenters']
 
-datacenters = ["Ireland", 
-               "Denmark", 
-               "Finland",  
-               "Belgium", 
-               "Netherlands"]
+plot_map(network=n, datacenters=list(datacenters.values()), bus_size_factor=4e4)
 
-datacenters_2 = ["Ireland", 
-               "Denmark", 
-               "Finland",  
-               "Portugal", 
-               "France"]
-
-plot_datacenters(n, datacenters=datacenters_2)
+plot_datacenters(network=n, datacenters=list(datacenters.values()))
