@@ -25,10 +25,10 @@ NB The Study 1 is now also available with [Linopy](https://github.com/pypsa/lino
 
 ### Study 2: 
 
-In the second study, we elaborate our by implementing space-time load-shifting flexibility provided by data centers. Thus, data centers (i.e. buyers committed to 24/7 clean energy procurement) can (i) shift loads across time (via job scheduling) and (i) shift loads across space (via service migration).
+In this study, we explore how and why space-time load-shifting flexibility can be used to meet high 24/7 carbon-free energy targets, as well as what potential benefits it may offer to 24/7 participants and to the rest of the energy system. To answer these questions, we expand the mathematical model of 24/7 CFE procurement developed in the previous work by incorporating spatial and temporal demand flexibility provided by electricity consumers that follow 24/7 carbon-free energy goals.
 
-*Ongoing development*
-
+- [Complete study](https://zenodo.org/record/8185850)
+- [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.3)
 
 ## Background
 
@@ -61,7 +61,7 @@ Parallel to the repository you should also clone the [technology-data](https://g
 
 ### Software
 
-The code is known to work with PyPSA 0.21.3, pandas 1.5.2, numpy 1.24.1, vresutils 0.3.1 and gurobi 10.0.0.
+The code is known to work with python 3.11, PyPSA 0.23, pandas 1.5.3, numpy 1.24.2, linopy 0.1.5, and gurobi 10.0.1.
 
 The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yaml) file. The environment can be installed and activated using:
 
