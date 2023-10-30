@@ -12,9 +12,8 @@ gurobi.log
 /workflow
 /talks
 /report_WP1
-/scripts/_playground.py
-/scripts/_playground-ts.ipynb
-/scripts/_summarise_balances.py
+/report_WP2
+/report_WP3
 
 *.org
 *~
