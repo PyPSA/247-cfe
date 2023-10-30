@@ -1,0 +1,20 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: 247-cfe
+Upstream-Contact: Iegor Riepin <iegor.riepin@tu-berlin.de>
+Source: https://github.com/PyPSA/247-cfe
+
+Files: study/*
+Copyright: : 2022-2023 Iegor Riepin, Tom Brown
+License: CC-BY-4.0
+
+Files: Snakefile
+Copyright: : 2022-2023 Iegor Riepin, Tom Brown
+License: MIT
+
+Files: scripts/*.ipynb
+Copyright: : 2022-2023 Iegor Riepin, Tom Brown
+License: MIT
+
+Files: input/*
+Copyright: :  2017-2023 The PyPSA-Eur Authors
+License: CC-BY-4.0

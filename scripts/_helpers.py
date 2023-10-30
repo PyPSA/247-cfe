@@ -1,7 +1,8 @@
-# Snakemake mocking function 
+# Snakemake mocking function
 # see: https://github.com/PyPSA/pypsa-eur/blob/master/scripts/_helpers.py
 
 # SPDX-FileCopyrightText: 2017-2020 The PyPSA-Eur Authors
+#
 # SPDX-License-Identifier: MIT
 
 import pypsa, numpy as np, pandas as pd
@@ -9,18 +10,73 @@ from pathlib import Path
 
 
 def override_component_attrs():
-
     # from https://github.com/PyPSA/pypsa-eur-sec/blob/93eb86eec87d34832ebc061697e289eabb38c105/scripts/solve_network.py
-    override_component_attrs = pypsa.descriptors.Dict({k : v.copy() for k,v in pypsa.components.component_attrs.items()})
-    override_component_attrs["Link"].loc["bus2"] = ["string",np.nan,np.nan,"2nd bus","Input (optional)"]
-    override_component_attrs["Link"].loc["bus3"] = ["string",np.nan,np.nan,"3rd bus","Input (optional)"]
-    override_component_attrs["Link"].loc["bus4"] = ["string",np.nan,np.nan,"4th bus","Input (optional)"]
-    override_component_attrs["Link"].loc["efficiency2"] = ["static or series","per unit",1.,"2nd bus efficiency","Input (optional)"]
-    override_component_attrs["Link"].loc["efficiency3"] = ["static or series","per unit",1.,"3rd bus efficiency","Input (optional)"]
-    override_component_attrs["Link"].loc["efficiency4"] = ["static or series","per unit",1.,"4th bus efficiency","Input (optional)"]
-    override_component_attrs["Link"].loc["p2"] = ["series","MW",0.,"2nd bus output","Output"]
-    override_component_attrs["Link"].loc["p3"] = ["series","MW",0.,"3rd bus output","Output"]
-    override_component_attrs["Link"].loc["p4"] = ["series","MW",0.,"4th bus output","Output"]
+    override_component_attrs = pypsa.descriptors.Dict(
+        {k: v.copy() for k, v in pypsa.components.component_attrs.items()}
+    )
+    override_component_attrs["Link"].loc["bus2"] = [
+        "string",
+        np.nan,
+        np.nan,
+        "2nd bus",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["bus3"] = [
+        "string",
+        np.nan,
+        np.nan,
+        "3rd bus",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["bus4"] = [
+        "string",
+        np.nan,
+        np.nan,
+        "4th bus",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["efficiency2"] = [
+        "static or series",
+        "per unit",
+        1.0,
+        "2nd bus efficiency",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["efficiency3"] = [
+        "static or series",
+        "per unit",
+        1.0,
+        "3rd bus efficiency",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["efficiency4"] = [
+        "static or series",
+        "per unit",
+        1.0,
+        "4th bus efficiency",
+        "Input (optional)",
+    ]
+    override_component_attrs["Link"].loc["p2"] = [
+        "series",
+        "MW",
+        0.0,
+        "2nd bus output",
+        "Output",
+    ]
+    override_component_attrs["Link"].loc["p3"] = [
+        "series",
+        "MW",
+        0.0,
+        "3rd bus output",
+        "Output",
+    ]
+    override_component_attrs["Link"].loc["p4"] = [
+        "series",
+        "MW",
+        0.0,
+        "4th bus output",
+        "Output",
+    ]
 
     return override_component_attrs
 
@@ -48,18 +104,19 @@ def mock_snakemake(rulename, **wildcards):
     from packaging.version import Version, parse
 
     script_dir = Path(__file__).parent.resolve()
-    #comment for a debug
-    assert Path.cwd().resolve() == script_dir, \
-      f'mock_snakemake has to be run from the repository scripts directory {script_dir}'
+    # comment for a debug
+    assert (
+        Path.cwd().resolve() == script_dir
+    ), f"mock_snakemake has to be run from the repository scripts directory {script_dir}"
     os.chdir(script_dir.parent)
     for p in sm.SNAKEFILE_CHOICES:
         if os.path.exists(p):
             snakefile = p
             break
 
-    kwargs=dict(rerun_triggers=[]) if parse(sm.__version__) > Version("7.7.0") else {}
+    kwargs = dict(rerun_triggers=[]) if parse(sm.__version__) > Version("7.7.0") else {}
     workflow = sm.Workflow(snakefile, overwrite_configfiles=[], **kwargs)
-    
+
     workflow.include(snakefile)
     workflow.global_resources = {}
     rule = workflow.get_rule(rulename)
@@ -73,9 +130,18 @@ def mock_snakemake(rulename, **wildcards):
                 io[i] = os.path.abspath(io[i])
 
     make_accessable(job.input, job.output, job.log)
-    snakemake = Snakemake(job.input, job.output, job.params, job.wildcards,
-                          job.threads, job.resources, job.log,
-                          job.dag.workflow.config, job.rule.name, None,)
+    snakemake = Snakemake(
+        job.input,
+        job.output,
+        job.params,
+        job.wildcards,
+        job.threads,
+        job.resources,
+        job.log,
+        job.dag.workflow.config,
+        job.rule.name,
+        None,
+    )
     # create log and output dir if not existent
     for path in list(snakemake.log) + list(snakemake.output):
         Path(path).parent.mkdir(parents=True, exist_ok=True)
