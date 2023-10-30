@@ -7,9 +7,9 @@ This project explores the means, costs and impacts of 24/7 Carbon-Free Energy pr
 
 Three invididual studies are planned as deliverables of this research project. The three studies will be linked to GitHub releases and individual Zenodo repositories. All studies are focused on the topic of 24/7 Carbon-Free Energy procurement in Europe; however, studies will differ in terms of their focuses, model formulations, scenarios, etc.
 
-We aim to make the workflow & results for each study to be fully reproducible. See [Requirements](#requirements) and [Software](#software).
+We aim to make the scientific workflow and results for each study to be fully reproducible. To access code for published studies, clone a corresponding GitHub release, see sections [Study 1](#study-1) and [Study 2](#study-2). More information is in [Requirements](#requirements) and [Software](#software). 
 
-This research is supported by a grant from Google Inc.
+This research is supported by a grant from Google LLC.
 
 ### Study 1: 
 
@@ -30,6 +30,11 @@ In this study, we explore how and why space-time load-shifting flexibility can 
 - [Complete study](https://zenodo.org/record/8185850)
 - [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.3)
 
+### Study 3: 
+
+On the role of 24/7 CFE in accelerating advanced clean energy technologies 
+*(work in progress).*
+
 ## Background
 
 Traditional Power Purchase Agreements (PPAs) for renewable
@@ -49,6 +54,38 @@ Further information:
 - [Google's 24/7 CFE concept](https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf)
 - [Google's 24/7 CFE metrics and methodology](https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf)
 - [UN's 24/7 Carbon-free Energy Compact](https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy)
+
+
+## How to reproduce results of a study?
+
+First, clone the repository:
+
+```
+git clone https://github.com/PyPSA/247-cfe --branch <tag_name> --single-branch
+```
+- `--single-branch` option allows for cloning only git history leading to tip of the tag. This saves a lot of unnecessary code from being cloned.
+
+- `tag_name` is v0.2 for [Study 1](#study-1) or v0.3 for [Study 2](#study-2)
+
+Second, install the necessary dependencies using `environment.yml` file. The following commands will do the job:
+
+```
+conda env create -f envs/environment.yml
+conda activate 247-cfe
+```
+Third, to run all the scenarios from the study, run the [snakemake](https://snakemake.readthedocs.io/en/stable/) worflow:
+
+```
+snakemake -call
+```
+
+- Note that this call requires a high-performance computing environment.
+
+- It is possible to run a smaller version of the model by adjusting the settings in `config.yaml`. For example, changing the config setting `area` from "EU" to "regions" reduces the regional coverage of the model, making the size of the problem feasible to solve on a private laptop with 8GB RAM.
+
+Finally, when the workflow is complete, the results will be stored in `results` directory. The directory will contain solved networks, plots, summary csvs and logs.
+
+4. At this point, you can also compile the LaTeX project to reproduce the study .pdf file.
 
 
 ## Requirements
