@@ -2,6 +2,8 @@
 # see: https://github.com/PyPSA/pypsa-eur/blob/master/scripts/_helpers.py
 
 # SPDX-FileCopyrightText: 2017-2020 The PyPSA-Eur Authors
+# SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+#
 # SPDX-License-Identifier: MIT
 
 import pypsa, numpy as np, pandas as pd

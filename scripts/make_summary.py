@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: MIT
+
 import pypsa
 import numpy as np
 import pandas as pd

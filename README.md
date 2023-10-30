@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+
+SPDX-License-Identifier: CC0-1.0
+-->
 
 # PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
 
@@ -121,4 +126,5 @@ mamba env create -f envs/environment.yaml
 
 ## License
 
-Copyright 2022 Tom Brown, Iegor Riepin. This code is licensed under the open source MIT License.
+This code is licensed under the open source [MIT License](LICENSES/MIT.txt). 
+Different open licenses apply to LaTeX files and input data, see [Specifications](.reuse/dep5).

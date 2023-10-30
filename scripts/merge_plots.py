@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: MIT
+
 import os
 import pandas as pd
 from PyPDF2 import PdfMerger, PdfReader
