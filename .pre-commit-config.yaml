@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: CC0-1.0
+
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+  - id: check-yaml
+  - id: check-added-large-files
+    args: ['--maxkb=20000']
+
+  # Find common spelling mistakes in comments and docstrings
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.2.6
+  hooks:
+  - id: codespell
+    args: ['--ignore-regex="(\b[A-Z]+\b)"', '--ignore-words-list=fom,appartment,bage,ore,setis,tabacco,berfore,vor'] # Ignore capital case words, e.g. country codes
+    types_or: [python, rst, markdown]
+    files: ^(scripts|doc)/
+
+  # Formatting with "black" coding style
+- repo: https://github.com/psf/black
+  rev: 23.10.0
+  hooks:
+      # Format Python files
+  - id: black
+      # Format Jupyter Python notebooks
+  - id: black-jupyter
+
+  # Remove output from Jupyter notebooks
+- repo: https://github.com/aflc/pre-commit-jupyter
+  rev: v1.2.1
+  hooks:
+  - id: jupyter-notebook-cleanup
+    args: ["--remove-kernel-metadata"]
+
+  # Format Snakemake rule / workflow files
+- repo: https://github.com/snakemake/snakefmt
+  rev: v0.8.5
+  hooks:
+  - id: snakefmt
+
+  # For cleaning jupyter notebooks
+- repo: https://github.com/aflc/pre-commit-jupyter
+  rev: v1.2.1
+  hooks:
+  - id: jupyter-notebook-cleanup
+    exclude: examples/solve-on-remote.ipynb
+
+  # Check for REUSE compliance (licensing)
+- repo: https://github.com/fsfe/reuse-tool
+  rev: v2.1.0
+  hooks:
+  - id: reuse

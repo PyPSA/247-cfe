@@ -27,6 +27,6 @@ dependencies:
   - snakemake
   - ipykernel
   - gurobi
-  - pip: 
+  - pip:
     - vresutils
- 
+

@@ -17,25 +17,25 @@ n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
 ###################
 # Scenario controls
 
-run: 1H-IEDKDEFIPT-allflex #-spatial, -temporal
+run: test
 
 #wildcards
 scenario:
-  flexibility: ['0', '10', '20', '40',] #possible deviation [%] of requested load from nominal level
-  policy:  ["cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
-  palette: [ "p1", # onwind + solar + battery 
-             "p2", # onwind + solar + battery + LDES
+  flexibility: ['0', ] #possible deviation [%] of requested load from nominal level
+  policy:  ["cfe100"] # "ref", "res100", "cfe..", "cfe100"
+  palette: [ "p1", # onwind + solar + battery
+             #"p2", # onwind + solar + battery + LDES
              #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
             ]
-  zone: [ 
-        "EU" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
+  zone: [
+        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
         ]
-  year: [ '2025', 
+  year: [ '2025',
          #'2030'
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:
-  datacenters: {"IE5 0": "ireland", "DK1 0": "denmark", "DE1 0": "germany", "FI2 0": "finland", "PT1 0": "portugal"}
+  datacenters: {"IE5 0": "ireland"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   load: 100. # nominal load of data centers in MW
   res_techs: ["onwind","solar"]
@@ -47,20 +47,20 @@ ci:
 ###################
 # Time-series management
 
-time_sampling: '1H' # one of ["1H", "3H"]
-plot_timeseries: True
+time_sampling: '3H' # one of ["1H", "3H"]
+plot_timeseries: False
 
 
 ###################
 # Fixed settings
 
-node_suffixes_to_keep: ["H2","battery"] #"low voltage","home battery"]                            
+node_suffixes_to_keep: ["H2","battery"] #"low voltage","home battery"]
 carrier_to_keep: [ #generators
                   "offwind","offwind-ac","offwind-dc","solar", "onwind","ror", #"solar rooftop",
                   #storage units
-                  "PHS","hydro", 
+                  "PHS","hydro",
                   #lines, links
-                  "AC", "DC", 
+                  "AC", "DC",
                   #links
                   "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
                   "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
@@ -69,8 +69,8 @@ carrier_to_keep: [ #generators
                   #Stores
                   "H2 Store","co2","co2 stored","battery", "solid biomass", #"home battery"
                   #Loads ('industry electricity' is included)
-                  "electricity"  
-                    ]  
+                  "electricity"
+                    ]
 additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
 
 
@@ -78,11 +78,11 @@ global:
   policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
   co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
   co2_share: 0.5 #pu  - rough target for 2030
-  limit_res_exp_2025: 2 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology 
-  limit_res_exp_2030: 4 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology 
+  limit_res_exp_2025: 2 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
+  limit_res_exp_2030: 4 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
   co2_price_2025: 80 #EUR/tCO2
   co2_price_2030: 130 #EUR/tCO2
-  grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar", 
+  grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
                     "hydro","urban central solid biomass CHP"] #"solar rooftop"
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
                     "hydro", "nuclear", "urban central solid biomass CHP"] #"solar rooftop"
@@ -105,7 +105,7 @@ costs:
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
 
 #~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
-ci_load: 
+ci_load:
   IE: 2200.
   DK: 2240.
   DE: 38410.
