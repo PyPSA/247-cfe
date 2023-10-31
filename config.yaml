@@ -2,17 +2,28 @@
 #
 # SPDX-License-Identifier: MIT
 
+###################
+# General settings
+
 logging_level: INFO
-solve_network: solve  #'solve' or 'skip'
-
+solve_network: solve  #'solve' or 'skip' to skip network optimization step
 results_dir: 'results'
-costs_dir: '../technology-data/outputs'
 
-# from ../pypsa-eur-sec/results/<run>/prenetworks-brownfield
+###################
+# Data dependencies
+
+# Networks retrieved from ../pypsa-eur/results/<run>/prenetworks-brownfield
 n_2025_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc'
 n_2030_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc'
 n_2025_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
 n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
+
+# Retrieve technology data <version> for <year>
+# Source https://github.com/PyPSA/technology-data
+retrieve_cost_data: true
+technology_data:
+  year: 2025
+  version: v0.6.2
 
 ###################
 # Scenario controls
@@ -31,7 +42,7 @@ scenario:
         "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
         ]
   year: [ '2025',
-         #'2030'
+          #'2030'
          ] # controls both the brownfield fleet and tech costs projection
 
 ci:

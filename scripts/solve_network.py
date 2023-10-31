@@ -179,16 +179,8 @@ def timescope(year):
     d = dict()
 
     d["coal_phaseout"] = snakemake.config[f"policy_{year}"]
-
-    if year == "2030":
-        d["network_file"] = snakemake.input.network2030
-        d["costs_projection"] = snakemake.input.costs2030
-    elif year == "2025":
-        d["network_file"] = snakemake.input.network2025
-        d["costs_projection"] = snakemake.input.costs2025
-    else:
-        print(f"'year' wildcard must be one of '2025', '2030'. Now is {year}.")
-        sys.exit()
+    d["network_file"] = snakemake.input.network
+    d["costs_projection"] = snakemake.input.costs
 
     return d
 
@@ -1432,11 +1424,11 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake(
             "solve_network",
-            year="2025",
-            zone="DKDE",
+            year="2030",
+            zone="IE",
             palette="p1",
             policy="cfe100",
-            flexibility="40",
+            flexibility="0",
         )
 
     logging.basicConfig(
