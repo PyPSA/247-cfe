@@ -150,18 +150,19 @@ def timescope(year: str) -> Dict[str, str]:
     }
 
 
-def cost_parametrization(n):
+def cost_parametrization(n) -> None:
     """
-    overwrite default price assumptions for primary energy carriers
-    only for virtual generators located in 'EU {carrier}' buses
+    Overwrites default price assumptions for primary energy carriers only for virtual generators located in 'EU {carrier}' buses.
+
+    n: a PyPSA network object.
     """
 
-    for carrier in ["lignite", "coal", "gas"]:
-        n.generators.loc[
-            n.generators.index.str.contains(f"EU {carrier}"), "marginal_cost"
-        ] = snakemake.config["costs"][f"price_{carrier}"]
-    # n.generators[n.generators.index.str.contains('EU')].T
+    carriers = ["lignite", "coal", "gas"]
+    prices = [snakemake.config["costs"][f"price_{carrier}"] for carrier in carriers]
 
+    n.generators.loc[
+        n.generators.index.str.contains(f"EU {'|'.join(carriers)}"), "marginal_cost"
+    ] = prices
     n.generators.loc[n.generators.carrier == "onwind", "marginal_cost"] = 0.015
 
 
@@ -254,7 +255,33 @@ def load_profile(n, profile_shape, config):
     return profile
 
 
-def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
+def prepare_costs(
+    cost_file: str,
+    USD_to_EUR: float,
+    discount_rate: float,
+    lifetime: int,
+    year: str,
+    Nyears: int = 1,
+) -> pd.DataFrame:
+    """
+    Reads in a cost file and prepares the costs for use in the model.
+
+    Args:
+    - cost_file (str): path to the cost file
+    - USD_to_EUR (float): conversion rate from USD to EUR
+    - discount_rate (float): discount rate to use for calculating annuity factor
+    - Nyears (int): number of years to run the model
+    - lifetime (float): lifetime of the asset in years
+    - year (int): year of the model run
+
+    Returns:
+    - costs (pd.DataFrame): a DataFrame containing the prepared costs
+    """
+    #  cost_file=timescope(year)["costs_projection"]
+    #  USD_to_EUR=snakemake.config["costs"]["USD2013_to_EUR2013"]
+    #  discount_rate=snakemake.config["costs"]["discountrate"]
+    #  lifetime=snakemake.config["costs"]["lifetime"]
+
     # set all asset costs and other parameters
     costs = pd.read_csv(cost_file, index_col=[0, 1]).sort_index()
 
@@ -264,19 +291,22 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
 
     # min_count=1 is important to generate NaNs which are then filled by fillna
     costs = (
-        costs.loc[:, "value"].unstack(level=1).groupby("technology").sum(min_count=1)
-    )
-    costs = costs.fillna(
-        {
-            "CO2 intensity": 0,
-            "FOM": 0,
-            "VOM": 0,
-            "discount rate": discount_rate,
-            "efficiency": 1,
-            "fuel": 0,
-            "investment": 0,
-            "lifetime": lifetime,
-        }
+        costs.loc[:, "value"]
+        .unstack(level=1)
+        .groupby("technology")
+        .sum(min_count=1)
+        .fillna(
+            {
+                "CO2 intensity": 0,
+                "FOM": 0,
+                "VOM": 0,
+                "discount rate": discount_rate,
+                "efficiency": 1,
+                "fuel": 0,
+                "investment": 0,
+                "lifetime": lifetime,
+            }
+        )
     )
 
     # Advanced nuclear
@@ -296,14 +326,8 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
         name="adv_nuclear",
     )
 
-    if year == "2025":
-        adv_geo_overnight = snakemake.config["costs"]["adv_geo_overnight_2025"]
-        allam_ccs_overnight = snakemake.config["costs"]["allam_ccs_overnight_2025"]
-    elif year == "2030":
-        adv_geo_overnight = snakemake.config["costs"]["adv_geo_overnight_2030"]
-        allam_ccs_overnight = snakemake.config["costs"]["allam_ccs_overnight_2030"]
-
     # Advanced geothermal
+    adv_geo_overnight = snakemake.config["costs"][f"adv_geo_overnight_{year}"]
     data_geo = pd.Series(
         {
             "CO2 intensity": 0,
@@ -319,6 +343,7 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
     )
 
     # Allam cycle ccs
+    allam_ccs_overnight = snakemake.config["costs"][f"allam_ccs_overnight_{year}"]
     data_allam = pd.Series(
         {
             "CO2 intensity": 0,
@@ -343,7 +368,7 @@ def prepare_costs(cost_file, USD_to_EUR, discount_rate, Nyears, lifetime, year):
         lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
     )
     costs["fixed"] = [
-        annuity_factor(v) * v["investment"] * Nyears for i, v in costs.iterrows()
+        annuity_factor(v) * v["investment"] * Nyears for _, v in costs.iterrows()
     ]
 
     return costs
@@ -1430,12 +1455,12 @@ if __name__ == "__main__":
 
     Nyears = 1  # years in simulation
     costs = prepare_costs(
-        timescope(year)["costs_projection"],
-        snakemake.config["costs"]["USD2013_to_EUR2013"],
-        snakemake.config["costs"]["discountrate"],
-        Nyears,
-        snakemake.config["costs"]["lifetime"],
-        year,
+        cost_file=timescope(year)["costs_projection"],
+        USD_to_EUR=snakemake.config["costs"]["USD2013_to_EUR2013"],
+        discount_rate=snakemake.config["costs"]["discountrate"],
+        year=year,
+        Nyears=Nyears,
+        lifetime=snakemake.config["costs"]["lifetime"],
     )
 
     # nhours = 240
