@@ -1,3 +1,9 @@
+from shutil import copyfile, move
+from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
+
+HTTP = HTTPRemoteProvider()
+
+
 configfile: "config.yaml"
 
 
@@ -6,8 +12,12 @@ wildcard_constraints:
 
 
 RDIR = os.path.join(config["results_dir"], config["run"])
-CDIR = config["costs_dir"]
 RUN = config["run"]
+
+# Technology data inputs
+version = config["technology_data"]["version"]
+year = config["technology_data"]["year"]
+url = f"https://raw.githubusercontent.com/PyPSA/technology-data/{version}/outputs/costs_{year}.csv"
 
 
 rule merge_all_plots:
@@ -97,10 +107,8 @@ if config["solve_network"] == "solve":
 
     rule solve_network:
         input:
-            network2030=config[f'n_2030_{config["time_sampling"]}'],
-            network2025=config[f'n_2025_{config["time_sampling"]}'],
-            costs2030=CDIR + "/costs_2030.csv",
-            costs2025=CDIR + "/costs_2025.csv",
+            network=config[f'n_{year}_{config["time_sampling"]}'],
+            costs="input/costs_{year}.csv",
         output:
             network=RDIR + "/networks/{year}/{zone}/{palette}/{policy}/{flexibility}.nc",
             grid_cfe=RDIR
@@ -140,6 +148,20 @@ rule copy_config:
         mem_mb=1000,
     script:
         "scripts/copy_config.py"
+
+
+if config.get("retrieve_cost_data", True):
+
+    rule retrieve_cost_data:
+        input:
+            HTTP.remote(url, keep_local=True),
+        output:
+            f"input/costs_{year}.csv",
+        # log: f"logs/{RDIR}retrieve_cost_data_{year}.log"
+        resources:
+            mem_mb=1000,
+        run:
+            move(input[0], output[0])
 
 
 # additional rules for cluster communication -> not included into a workflow
