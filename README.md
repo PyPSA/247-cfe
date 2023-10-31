@@ -96,14 +96,14 @@ Finally, when the workflow is complete, the results will be stored in `results` 
 ## Requirements
 ### Data
 
-Code is based on the brownfield networks exported from [PyPSA-Eur-Sec](https://github.com/PyPSA/pypsa-eur-sec) with `myopic` setting to get brownfield networks for 2025/2030. For convenience, the sample networks are pushed to git and located in the `input` folder.
+Code is based on the brownfield networks exported from [PyPSA-Eur](https://github.com/PyPSA/pypsa-eur-sec) with `myopic` setting to get brownfield networks for 2025/2030. For convenience, sample networks are provided in the `input/` folder.
 
-Parallel to the repository you should also clone the [technology-data](https://github.com/PyPSA/technology-data) repository.
+Technology data assumptions are automatically retrieved from [technology-data](https://github.com/PyPSA/technology-data) repository for `<year>` and `<version>`, as specified in `config.yaml`.
 
 
 ### Software
 
-The code is known to work with python 3.11, PyPSA 0.23, pandas 1.5.3, numpy 1.24.2, linopy 0.1.5, and gurobi 10.0.1.
+The code is known to work with python 3.11, PyPSA 0.25, pandas 1.5.3, numpy 1.24.2, linopy 0.2.7, and gurobi 10.0.1.
 
 The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yaml) file. The environment can be installed and activated using:
 
