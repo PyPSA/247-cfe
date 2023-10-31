@@ -7,65 +7,80 @@ import pypsa, numpy as np, pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
-import sys
-import os
-
-# Suppress logging of the slack bus choices
 pypsa.pf.logger.setLevel(logging.WARNING)
+
 from vresutils.costdata import annuity
 from vresutils.benchmark import memory_logger
 from _helpers import override_component_attrs
 
+from typing import Dict, List, Tuple
 
-def palette(tech_palette):
+
+def palette(tech_palette: str) -> tuple:
     """
     Define technology palette available for C&I clean energy buyers
+
+    Args:
+    tech_palette (str): The technology palette to use based on config setting.
+
+    Returns:
+    tuple: A tuple containing the available clean technologies, storage technologies, storage chargers, and storage dischargers.
     """
 
-    if tech_palette == "p1":
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery"]
-        storage_chargers = ["battery charger"]
-        storage_dischargers = ["battery discharger"]
+    palettes = {
+        "p1": {
+            "clean_techs": ["onwind", "solar"],
+            "storage_techs": ["battery"],
+            "storage_chargers": ["battery charger"],
+            "storage_dischargers": ["battery discharger"],
+        },
+        "p2": {
+            "clean_techs": ["onwind", "solar"],
+            "storage_techs": ["battery", "hydrogen"],
+            "storage_chargers": ["battery charger", "H2 Electrolysis"],
+            "storage_dischargers": ["battery discharger", "H2 Fuel Cell"],
+        },
+        "p3": {
+            "clean_techs": ["onwind", "solar", "allam_ccs"],
+            "storage_techs": ["battery"],
+            "storage_chargers": ["battery charger"],
+            "storage_dischargers": ["battery discharger"],
+        },
+    }
 
-    elif tech_palette == "p2":
-        clean_techs = ["onwind", "solar"]
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-
-    elif tech_palette == "p3":
-        clean_techs = [
-            "onwind",
-            "solar",
-            "allam_ccs",
-            "adv_geothermal",
-        ]  # "adv_nuclear", "adv_geothermal"
-        storage_techs = ["battery", "hydrogen"]
-        storage_chargers = ["battery charger", "H2 Electrolysis"]
-        storage_dischargers = ["battery discharger", "H2 Fuel Cell"]
-
-    else:
+    if tech_palette not in palettes:
         print(
             f"'palette' wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}."
         )
         sys.exit()
 
-    return clean_techs, storage_techs, storage_chargers, storage_dischargers
+    return tuple(
+        palettes[tech_palette][key]
+        for key in [
+            "clean_techs",
+            "storage_techs",
+            "storage_chargers",
+            "storage_dischargers",
+        ]
+    )
 
 
-def geoscope(zone):
+def geoscope(zone: str):
     """
-    zone: controls basenodes_to_keep list -> sets geographical scope of the model
-    country_nodes -> countries subject to national RES policy constraints
+    Returns a dictionary containing the geographical scope of the model based on the given zone.
+
+    Args:
+    - zone (str): controls basenodes_to_keep list -> sets geographical scope of the model
+
+    Returns:
+    - A dictionary containing the following keys:
+        - basenodes_to_keep (List[str]): list of bus IDs representing the geographical scope of the model
+        - country_nodes (Dict[str, List[str]]): dictionary containing bus IDs of countries subject to national RES policy constraints
+
+    NB zone is used as a wildcard, while area as a switcher option.
     """
-    d = dict()
-
-    # A few toy regional networks for test & play purposes and the whole network
-    # NB zone is used as a wildcard, while area as a switcher option; thus these are not merged
-
+    # A few toy regional networks for test & play purposes
     IRELAND = ["IE5 0", "GB0 0", "GB5 0"]
-    DENMARK = ["DK1 0", "DK2 0", "SE2 0", "NO2 0", "NL1 0", "DE1 0"]
     GERMANY = [
         "DE1 0",
         "BE1 0",
@@ -82,107 +97,57 @@ def geoscope(zone):
         "CH1 0",
         "CZ1 0",
     ]
-    NETHERLANDS = ["NL1 0", "GB0 0", "DK1 0", "NO2 0", "BE1 0", "DE1 0"]
+    DKDE = ["DE1 0", "DK1 0", "DK2 0", "PL1 0"]
     IEDK = (
         IRELAND
         + ["DK1 0", "DK2 0"]
         + ["FR1 0", "LU1 0", "DE1 0", "BE1 0", "NL1 0", "NO2 0", "SE2 0"]
     )
-    DKDE = ["DE1 0", "DK1 0", "DK2 0", "PL1 0"]
-    EU = [
-        "AL1 0",
-        "AT1 0",
-        "BA1 0",
-        "BE1 0",
-        "BG1 0",
-        "CH1 0",
-        "CZ1 0",
-        "DE1 0",
-        "DK1 0",
-        "DK2 0",
-        "EE6 0",
-        "ES1 0",
-        "ES4 0",
-        "FI2 0",
-        "FR1 0",
-        "GB0 0",
-        "GB5 0",
-        "GR1 0",
-        "HR1 0",
-        "HU1 0",
-        "IE5 0",
-        "IT1 0",
-        "IT3 0",
-        "LT6 0",
-        "LU1 0",
-        "LV6 0",
-        "ME1 0",
-        "MK1 0",
-        "NL1 0",
-        "NO2 0",
-        "PL1 0",
-        "PT1 0",
-        "RO1 0",
-        "RS1 0",
-        "SE2 0",
-        "SI1 0",
-        "SK1 0",
-    ]
 
-    if zone == "IE":
-        d["basenodes_to_keep"] = IRELAND
-    elif zone == "DK":
-        d["basenodes_to_keep"] = DENMARK
-    elif zone == "DE":
-        d["basenodes_to_keep"] = GERMANY
-    elif zone == "NL":
-        d["basenodes_to_keep"] = NETHERLANDS
-    elif zone == "GB":
-        d["basenodes_to_keep"] = IRELAND
-    elif zone == "IEDK":
-        d["basenodes_to_keep"] = IEDK
-    elif zone == "FR":
-        d["basenodes_to_keep"] = IEDK  # intentionally larger network
-    elif zone == "DKDE":
-        d["basenodes_to_keep"] = DKDE
-    elif zone == "EU":
-        d["basenodes_to_keep"] = EU
-    else:
+    # Full geographical scope
+    EU = n.buses[n.buses["carrier"] == "AC"].index.tolist()
+
+    basenodes_to_keep = {
+        "IE": IRELAND,
+        "DE": GERMANY,
+        "IEDK": IEDK,
+        "DKDE": DKDE,
+        "EU": EU,
+    }.get(zone)
+
+    if not basenodes_to_keep:
         print(f"'zone' wildcard cannot be {zone}.")
         sys.exit()
 
-    temp = dict()
-    if "IE5 0" in locations:
-        temp["IE5 0"] = ["IE5 0"]
-    if "DK1 0" in locations:
-        temp["DK1 0"] = ["DK1 0", "DK2 0"]
-    if "DE1 0" in locations:
-        temp["DE1 0"] = ["DE1 0"]
-    if "NL1 0" in locations:
-        temp["NL1 0"] = ["NL1 0"]
-    if "GB0 0" in locations:
-        temp["GB0 0"] = ["GB0 0", "GB5 0"]
-    if "FR1 0" in locations:
-        temp["FR1 0"] = ["FR1 0"]
-    d["country_nodes"] = temp
+    country_nodes = {
+        "IE5 0": ["IE5 0"],
+        "DK1 0": ["DK1 0", "DK2 0"],
+        "DE1 0": ["DE1 0"],
+        "NL1 0": ["NL1 0"],
+        "GB0 0": ["GB0 0", "GB5 0"],
+        "FR1 0": ["FR1 0"],
+    }
+    country_nodes = {k: v for k, v in country_nodes.items() if k in basenodes_to_keep}
 
-    return d
+    return {"basenodes_to_keep": basenodes_to_keep, "country_nodes": country_nodes}
 
 
-def timescope(year):
+def timescope(year: str) -> Dict[str, str]:
     """
-    coal_phaseout -> countries that implement coal phase-out policy until {year}
-    network_file -> input file with pypsa-eur-sec brownfield network for {year}
-    costs_projection -> input file with technology costs for {year}
+    Args:
+    - year (str): the year of optimisation based on config setting
+
+    Returns:
+    - A dictionary with the following keys:
+        - "coal_phaseout": the list of countries that implement coal phase-out policy for the given year.
+        - "network_file": the path to the input file with the pypsa-eur brownfield network.
+        - "costs_projection": the path to the input file with technology costs for the given year.
     """
-
-    d = dict()
-
-    d["coal_phaseout"] = snakemake.config[f"policy_{year}"]
-    d["network_file"] = snakemake.input.network
-    d["costs_projection"] = snakemake.input.costs
-
-    return d
+    return {
+        "coal_phaseout": snakemake.config[f"policy_{year}"],
+        "network_file": snakemake.input.network,
+        "costs_projection": snakemake.input.costs,
+    }
 
 
 def cost_parametrization(n):
