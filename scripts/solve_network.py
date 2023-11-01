@@ -365,10 +365,10 @@ def strip_network(n) -> None:
     Removes unnecessary components from a pypsa network.
 
     Args:
-        n (pypsa.Network): The network object to be stripped.
+    - n (pypsa.Network): The network object to be stripped.
 
     Returns:
-        None
+    - None
     """
     nodes_to_keep = geoscope(zone)["basenodes_to_keep"]
 
@@ -407,17 +407,13 @@ def shutdown_lineexp(n: pypsa.Network) -> None:
     Removes the option to expand lines and DC links.
 
     Args:
-        n (pypsa.Network): The network object to be modified.
+    - n (pypsa.Network): The network object to be modified.
 
     Returns:
-        None
+    - None
     """
     n.lines.s_nom_extendable = False
     n.links.loc[n.links.carrier == "DC", "p_nom_extendable"] = False
-
-
-from typing import Dict
-import pypsa
 
 
 def limit_resexp(n: pypsa.Network, year: str, config: Dict[str, Any]) -> None:
@@ -464,12 +460,12 @@ def nuclear_policy(n: pypsa.Network, config: Dict[str, Any]) -> None:
     Remove nuclear power plant fleet for countries with nuclear ban policy.
 
     Args:
-        n: The network object to be modified.
-        config: config.yaml settings
-        -> nuclear_phaseout: List of countries with nuclear ban policy.
+    - n: The network object to be modified.
+    - config: config.yaml settings
+    -> nuclear_phaseout: List of countries with nuclear ban policy.
 
     Returns:
-        None
+    - None
     """
     countries = config["nuclear_phaseout"]
     for country in countries:
@@ -485,12 +481,12 @@ def coal_policy(n: pypsa.Network, year: str, config: Dict[str, Any]) -> None:
     Remove coal power plant fleet for countries with coal phase-out policy for {year}.
 
     Args:
-        n: The network object to be modified.
-        year: The year of optimisation (i.e. year for which the coal phase-out policy is in effect).
-        config: config.yaml settings
+    - n: The network object to be modified.
+    - year: The year of optimisation (i.e. year for which the coal phase-out policy is in effect).
+    - config: config.yaml settings
 
     Returns:
-        None
+    - None
     """
     countries = config[f"coal_phaseout_{year}"]
     coal_links = n.links.index.str.contains("coal")
@@ -506,16 +502,16 @@ def biomass_potential(n: pypsa.Network) -> None:
     Remove solid biomass demand for industrial processes from overall biomass potential.
 
     Args:
-        n: pypsa network to modify.
+    - n: pypsa network to modify.
 
     Returns:
-        None
+    - None
     """
     n.stores.loc[n.stores.index == "EU solid biomass", "e_nom"] *= 0.45
     n.stores.loc[n.stores.index == "EU solid biomass", "e_initial"] *= 0.45
 
 
-def co2_policy(n: Network, year: str, config: Dict[str, Any]) -> None:
+def co2_policy(n, year: str, config: Dict[str, Any]) -> None:
     """
     Set EU carbon emissions policy as cap or price, update costs.
 
@@ -530,13 +526,13 @@ def co2_policy(n: Network, year: str, config: Dict[str, Any]) -> None:
     gl_policy = config["global"]["policy_type"]
 
     if gl_policy == "co2 cap":
-        co2_cap = gl_policy["co2_share"] * gl_policy["co2_baseline"]
+        co2_cap = config["global"]["co2_share"] * config["global"]["co2_baseline"]
         n.global_constraints.at["CO2Limit", "constant"] = co2_cap
         print(f"Setting global CO2 cap to {co2_cap}")
 
     elif gl_policy == "co2 price":
         n.global_constraints.drop("CO2Limit", inplace=True)
-        co2_price = gl_policy[f"co2_price_{year}"]
+        co2_price = config["global"][f"co2_price_{year}"]
         print(f"Setting CO2 price to {co2_price}")
         for carrier in ["coal", "oil", "gas", "lignite"]:
             n.generators.at[f"EU {carrier}", "marginal_cost"] += (
@@ -544,17 +540,22 @@ def co2_policy(n: Network, year: str, config: Dict[str, Any]) -> None:
             )
 
 
-def add_ci(n, year):
+def add_ci(n: pypsa.Network, year: str) -> None:
     """
-    Add C&I buyer(s)
-    """
+    Add C&I buyer(s) to the network.
 
+    Args:
+    - n: pypsa.Network to which the C&I buyer(s) will be added.
+    year: the year of optimisation based on config setting.
+
+    Returns:
+    - None
+    """
     # tech_palette options
     clean_techs = palette(tech_palette)[0]
     storage_techs = palette(tech_palette)[1]
 
     for location, name in datacenters.items():
-        # Add C&I bus
         n.add("Bus", name)
 
         n.add(
@@ -575,7 +576,6 @@ def add_ci(n, year):
             p_nom=1e6,
         )
 
-        # Add C&I load
         n.add(
             "Load",
             f"{name}" + " load",
@@ -584,7 +584,7 @@ def add_ci(n, year):
             p_set=load_profile(n, profile_shape, config),
         )
 
-        # C&I following 24/7 approach is a share of C&I load -> subtract it from node's profile
+        # C&I following voluntary clean energy procurement is a share of C&I load -> subtract it from node's profile
         n.loads_t.p_set[location] -= n.loads_t.p_set[f"{name}" + " load"]
 
         # Add clean firm advanced generators
@@ -771,8 +771,17 @@ def add_ci(n, year):
             )
 
 
-def add_vl(n):
-    "Add virtual links connecting data centers across physical network"
+def add_vl(n, names: List[str]) -> None:
+    """
+    Add virtual links connecting data centers across physical network.
+
+    Args:
+    - n: The network to add virtual links to.
+    - names: A list of data center names.
+
+    Returns:
+    - None
+    """
     # Complete graph: n * (n - 1) / 2 edges
     for i in range(len(names)):
         for j in range(len(names)):
@@ -789,8 +798,16 @@ def add_vl(n):
                 )
 
 
-def add_shifters(n):
-    "Alternative form of virtual links connecting data centers across physical network"
+def add_shifters(n) -> None:
+    """
+    Alternative form of virtual links connecting data centers across physical network
+
+    Args:
+    - n: The network to which the virtual links will be added
+
+    Returns:
+    - None
+    """
     for i in range(len(names)):
         gen_name = f"vl_{names[i]}"
         n.add(
@@ -805,9 +822,16 @@ def add_shifters(n):
         )
 
 
-def add_dsm(n):
-    "Add option to shift loads over time, aka temporal DSM"
+def add_dsm(n) -> None:
+    """
+    Add option to shift loads over time, aka temporal DSM
 
+    Args:
+    - n: The network object to which the DSM components will be added
+
+    Returns:
+    - None
+    """
     for location, name in datacenters.items():
         n.add("Bus", f"{name} DSM", carrier="dsm")
 
@@ -846,11 +870,16 @@ def add_dsm(n):
         )
 
 
-def hack_links(n):
+def revert_links(n: pypsa.Network) -> None:
     """
-    Virtual links and DSM mechanism shift loads, while <link> object in pypsa architecture shifts energy
-    Here we add additional attribute "sign" and fix it to -1. This reverts sign in nodal balance constraint.
-    extra_functionality code is aligned accordingly.
+    Modifies the sign attribute of links in the given PyPSA network object to -1 for virtual links and DSM mechanisms,
+    and 1 for all other links. This reverts the sign in nodal balance constraint and aligns the extra_functionality code accordingly.
+
+    Args:
+    - n: The PyPSA network object to modify.
+
+    Returns:
+    - None
     """
     n.links.loc[
         (n.links.carrier == "virtual_link") | (n.links.carrier == "dsm"), "sign"
@@ -860,7 +889,18 @@ def hack_links(n):
     ] = 1
 
 
-def calculate_grid_cfe(n, name, node):
+def calculate_grid_cfe(n, name: str, node: str) -> pd.Series:
+    """
+    Calculates the time-series of grid supply CFE score for each C&I consumer.
+
+    Args:
+    - n: pypsa network.
+    - name: name of a C&I consumer.
+    - node: location (node) of a C&I consumer.
+
+    Returns:
+    - pd.Series: A pandas series containing the grid CFE supply score.
+    """
     grid_buses = n.buses.index[
         ~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(node)
     ]
@@ -925,20 +965,31 @@ def calculate_grid_cfe(n, name, node):
     line_imp_subsetA[line_imp_subsetA < 0] = 0.0
     line_imp_subsetB[line_imp_subsetB < 0] = 0.0
 
-    links_imp_subsetA = n.links_t.p1.loc[
-        :,
-        n.links.bus0.str.contains(node)
-        & (n.links.carrier == "DC")
-        & ~(n.links.index.str.contains(name)),
-    ].sum(axis=1)
-    links_imp_subsetB = n.links_t.p0.loc[
-        :,
-        n.links.bus1.str.contains(node)
-        & (n.links.carrier == "DC")
-        & ~(n.links.index.str.contains(name)),
-    ].sum(axis=1)
-    links_imp_subsetA[links_imp_subsetA < 0] = 0.0
-    links_imp_subsetB[links_imp_subsetB < 0] = 0.0
+    links_imp_subsetA = (
+        n.links_t.p1.loc[
+            :,
+            (
+                n.links.bus0.str.contains(node)
+                & (n.links.carrier == "DC")
+                & ~(n.links.index.str.contains(name))
+            ),
+        ]
+        .clip(lower=0)
+        .sum(axis=1)
+    )
+
+    links_imp_subsetB = (
+        n.links_t.p0.loc[
+            :,
+            (
+                n.links.bus1.str.contains(node)
+                & (n.links.carrier == "DC")
+                & ~(n.links.index.str.contains(name))
+            ),
+        ]
+        .clip(lower=0)
+        .sum(axis=1)
+    )
 
     country_import = (
         line_imp_subsetA + line_imp_subsetB + links_imp_subsetA + links_imp_subsetB
@@ -1353,7 +1404,7 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake(
             "solve_network",
-            year="2030",
+            year="2025",
             zone="IE",
             palette="p1",
             policy="cfe100",
@@ -1417,12 +1468,12 @@ if __name__ == "__main__":
         nuclear_policy(n, config)
         coal_policy(n, year, config)
         biomass_potential(n)
-        co2_policy(n, year)
+        co2_policy(n, year, config)
 
         add_ci(n, year)
         add_vl(n) if snakemake.config["ci"]["spatial_shifting"] else None
+        revert_links(n) if snakemake.config["ci"]["spatial_shifting"] else None
         add_dsm(n) if snakemake.config["ci"]["temporal_shifting"] else None
-        hack_links(n)
 
         solve_network(n, policy, penetration, tech_palette)
 
