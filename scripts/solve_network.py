@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pypsa, numpy as np, pandas as pd
+import pypsa
+import numpy as np, pandas as pd
+import sys
+import os
 
 import logging
 
@@ -357,13 +360,23 @@ def prepare_costs(
     return costs
 
 
-def strip_network(n):
-    nodes_to_keep = geoscope(zone)["basenodes_to_keep"]
-    new_nodes = []
+def strip_network(n) -> None:
+    """
+    Removes unnecessary components from a pypsa network.
 
-    for b in nodes_to_keep:
-        for s in snakemake.config["node_suffixes_to_keep"]:
-            new_nodes.append(b + " " + s)
+    Args:
+        n (pypsa.Network): The network object to be stripped.
+
+    Returns:
+        None
+    """
+    nodes_to_keep = geoscope(zone)["basenodes_to_keep"]
+
+    new_nodes = [
+        f"{b} {s}"
+        for b in nodes_to_keep
+        for s in snakemake.config["node_suffixes_to_keep"]
+    ]
 
     nodes_to_keep.extend(new_nodes)
     nodes_to_keep.extend(snakemake.config["additional_nodes"])
@@ -389,22 +402,40 @@ def strip_network(n):
         n.mremove(c.name, to_drop)
 
 
-def shutdown_lineexp(n):
+def shutdown_lineexp(n: pypsa.Network) -> None:
     """
-    remove line expansion option
+    Removes the option to expand lines and DC links.
+
+    Args:
+        n (pypsa.Network): The network object to be modified.
+
+    Returns:
+        None
     """
     n.lines.s_nom_extendable = False
     n.links.loc[n.links.carrier == "DC", "p_nom_extendable"] = False
 
 
-def limit_resexp(n, year, snakemake):
-    """
-    limit expansion of renewable technologies per zone and carrier type
-    as a ratio of max increase to 2021 capacity fleet
-    (additional to zonal place availability constraint)
-    """
-    ratio = snakemake.config["global"][f"limit_res_exp_{year}"]
+from typing import Dict
+import pypsa
 
+
+def limit_resexp(n: pypsa.Network, year: str, config: Dict[str, Any]) -> None:
+    """
+    Limit expansion of renewable technologies per zone and carrier type
+    as a ratio of max increase to 2021 capacity fleet (additional to zonal place availability constraint)
+
+    Args:
+        n: The network object to be modified.
+        year: The year of optimisation based on config setting.
+        config: config.yaml settings
+
+    Returns:
+        None
+    """
+    ratio = config["global"][f"limit_res_exp_{year}"]
+
+    datacenters = config["ci"]["datacenters"]
     list_datacenters = list(datacenters.values())
     mask_datacenters = n.generators.index.str.contains(
         "|".join(list_datacenters), case=False
@@ -415,12 +446,10 @@ def limit_resexp(n, year, snakemake):
         [system_gens.bus.str[:2], system_gens.carrier]
     ).p_nom.sum()
     fleet = fleet.rename(lambda x: x.split("-")[0], level=1).groupby(level=[0, 1]).sum()
-    ct_national_target = list(snakemake.config[f"res_target_{year}"].keys()) + ["EU"]
+    ct_national_target = list(config[f"res_target_{year}"].keys()) + ["EU"]
 
     fleet.drop(ct_national_target, errors="ignore", level=0, inplace=True)
 
-    # option to allow build out of carriers which are not build yet
-    # fleet[fleet==0] = 1
     for ct, carrier in fleet.index:
         gen_i = (
             (n.generators.p_nom_extendable)
@@ -430,110 +459,22 @@ def limit_resexp(n, year, snakemake):
         n.generators.loc[gen_i, "p_nom_max"] = ratio * fleet.loc[ct, carrier]
 
 
-def groupby_assets(n):
+def nuclear_policy(n: pypsa.Network, config: Dict[str, Any]) -> None:
     """
-    groupby generators and links of same type/node over year vintage classes
-    is supposed to yield same solution somewhat faster
+    Remove nuclear power plant fleet for countries with nuclear ban policy.
+
+    Args:
+        n: The network object to be modified.
+        config: config.yaml settings
+        -> nuclear_phaseout: List of countries with nuclear ban policy.
+
+    Returns:
+        None
     """
-
-    # Groupby generators
-    # mask
-    list_datacenters = list(datacenters.values())
-    mask_datacenters = n.generators.index.str.contains(
-        "|".join(list_datacenters), case=False
-    )
-    df = n.generators[~mask_datacenters]
-    system_gens = df[~df.index.str.contains("EU")]
-    system_gens = df[~df.index.str.contains("ror")]
-    fleet = system_gens[system_gens["p_nom_extendable"] == False]
-
-    # group
-    grouped = fleet.groupby(["bus", "carrier"]).agg({"p_nom": "sum"}).reset_index()
-    grouped["bus_carrier"] = grouped["bus"] + " " + grouped["carrier"]
-    grouped = grouped.set_index("bus_carrier")
-
-    # Merge
-    fleet["bus_carrier"] = fleet["bus"] + " " + fleet["carrier"]
-    other_columns = fleet.set_index("bus_carrier").drop(
-        columns=["bus", "carrier", "p_nom"]
-    )
-    # other_columns.drop(['build_year'], axis=1, inplace=True)
-    other_columns = other_columns.groupby("bus_carrier").agg(
-        lambda x: x.dropna().iloc[0] if not x.dropna().empty else None
-    )
-    result = grouped.merge(other_columns, left_index=True, right_index=True, how="left")
-    result.index.name = "Generator"
-
-    # Update generators
-    rows_to_drop = n.generators.index.intersection(fleet.index)
-    n.generators = n.generators.drop(rows_to_drop)
-    n.generators = n.generators.append(result)
-
-    # Give new generators a time series
-    def find_timeseries(col_name):
-        second_space = col_name.find(" ", col_name.find(" ") + 1)
-        node = col_name[:second_space]
-        carrier = col_name[second_space + 1 :]
-
-        # If carrier is 'offwind', use 'offwind-dc' to match column names
-        if carrier == "offwind":
-            carrier = "offwind-ac"
-
-        search_pattern = f"{node}  {carrier}"
-        for col in n.generators_t.p_max_pu.columns:
-            if search_pattern in col:
-                return col
-        return None
-
-    for col_name in result.index:
-        col = find_timeseries(col_name)
-        if col is not None:
-            n.generators_t.p_max_pu[col_name] = n.generators_t.p_max_pu[col]
-
-    # Groupby links
-    # mask
-    gen_links = [
-        "OCGT",
-        "CCGT",
-        "coal",
-        "lignite",
-        "nuclear",
-        "oil",
-        "urban central solid biomass CHP",
-    ]
-    df = n.links[n.links["carrier"].isin(gen_links)]
-    lfleet = df[df["p_nom_extendable"] == False]
-
-    # group
-    grouped = lfleet.groupby(["bus1", "carrier"]).agg({"p_nom": "sum"}).reset_index()
-    grouped["bus_carrier"] = grouped["bus1"] + " " + grouped["carrier"]
-    grouped = grouped.set_index("bus_carrier")
-
-    # Merge
-    lfleet["bus_carrier"] = lfleet["bus1"] + " " + lfleet["carrier"]
-    other_columns = lfleet.set_index("bus_carrier").drop(
-        columns=["bus1", "carrier", "p_nom"]
-    )
-    # other_columns.drop(['build_year', 'lifetime'], axis=1, inplace=True)
-    other_columns = other_columns.groupby("bus_carrier").agg(
-        lambda x: x.dropna().iloc[0] if not x.dropna().empty else None
-    )
-    result = grouped.merge(other_columns, left_index=True, right_index=True, how="left")
-    result.index.name = "Link"
-
-    # Update links
-    rows_to_drop = n.links.index.intersection(lfleet.index)
-    n.links = n.links.drop(rows_to_drop)
-    n.links = n.links.append(result)
-
-
-def nuclear_policy(n):
-    """
-    remove nuclear PPs fleet for countries with nuclear ban policy
-    """
-    for node in snakemake.config["nodes_with_nucsban"]:
+    countries = config["nuclear_phaseout"]
+    for country in countries:
         n.links.loc[
-            n.links["bus1"].str.contains(f"{node}")
+            (n.links["bus1"].str.contains(country))
             & (n.links.index.str.contains("nuclear")),
             "p_nom",
         ] = 0
@@ -560,26 +501,40 @@ def coal_policy(n: pypsa.Network, year: str, config: Dict[str, Any]) -> None:
         n.links.loc[n.links["bus1"].str.contains(country) & lignite_links, "p_nom"] = 0
 
 
-def biomass_potential(n):
+def biomass_potential(n: pypsa.Network) -> None:
     """
-    remove solid biomass demand for industrial processes from overall biomass potential
+    Remove solid biomass demand for industrial processes from overall biomass potential.
+
+    Args:
+        n: pypsa network to modify.
+
+    Returns:
+        None
     """
     n.stores.loc[n.stores.index == "EU solid biomass", "e_nom"] *= 0.45
     n.stores.loc[n.stores.index == "EU solid biomass", "e_initial"] *= 0.45
 
 
-def co2_policy(n, year):
+def co2_policy(n: Network, year: str, config: Dict[str, Any]) -> None:
     """
-    set EU carbon emissions policy as cap or price, update costs
-    """
-    gl_policy = snakemake.config["global"]
+    Set EU carbon emissions policy as cap or price, update costs.
 
-    if gl_policy["policy_type"] == "co2 cap":
+    Args:
+    - n: a pypsa network object
+    - year: a year of optimisation based on config setting
+    - config: config.yaml settings
+
+    Returns:
+    - None
+    """
+    gl_policy = config["global"]["policy_type"]
+
+    if gl_policy == "co2 cap":
         co2_cap = gl_policy["co2_share"] * gl_policy["co2_baseline"]
         n.global_constraints.at["CO2Limit", "constant"] = co2_cap
         print(f"Setting global CO2 cap to {co2_cap}")
 
-    elif gl_policy["policy_type"] == "co2 price":
+    elif gl_policy == "co2 price":
         n.global_constraints.drop("CO2Limit", inplace=True)
         co2_price = gl_policy[f"co2_price_{year}"]
         print(f"Setting CO2 price to {co2_price}")
@@ -1455,15 +1410,14 @@ if __name__ == "__main__":
         filename=getattr(snakemake.log, "memory", None), interval=30.0
     ) as mem:
         strip_network(n)
-        # groupby_assets(n)
-        limit_resexp(n, year, snakemake)
-        shutdown_lineexp(n)
-        nuclear_policy(n)
-        coal_policy(n)
-        biomass_potential(n)
         cost_parametrization(n)
+
+        shutdown_lineexp(n)
+        limit_resexp(n, year, config)
+        nuclear_policy(n, config)
+        coal_policy(n, year, config)
+        biomass_potential(n)
         co2_policy(n, year)
-        load_profile(n, profile_shape, config)
 
         add_ci(n, year)
         add_vl(n) if snakemake.config["ci"]["spatial_shifting"] else None

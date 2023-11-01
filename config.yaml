@@ -123,9 +123,10 @@ ci_load:
   NL: 8140.
 
 
-#national policies
-#countries with nuclear phase-out policy (FR and BE shifted plan to 2035). https://world-nuclear.org/
-nodes_with_nucsban: ["DE1 0"]
+# nuclear phase-out policies (FR and BE shifted plan to 2035)
+# source:  https://world-nuclear.org/
+nuclear_phaseout: ["DE"]
+
 # coal phase-out policies
 # source: https://beyond-coal.eu/europes-coal-exit/
 coal_phaseout_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
