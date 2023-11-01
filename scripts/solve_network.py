@@ -13,7 +13,7 @@ from vresutils.costdata import annuity
 from vresutils.benchmark import memory_logger
 from _helpers import override_component_attrs
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 
 
 def palette(tech_palette: str) -> tuple:
@@ -166,91 +166,75 @@ def cost_parametrization(n) -> None:
     n.generators.loc[n.generators.carrier == "onwind", "marginal_cost"] = 0.015
 
 
-def load_profile(n, profile_shape, config):
+def load_profile(
+    n: pypsa.Network,
+    profile_shape: str,
+    config: Dict[str, Any],
+) -> pd.Series:
     """
-    create daily load profile for 24/7 CFE buyers based on config setting
+    Create daily load profile for C&I buyers based on config setting.
+
+    Args:
+    - n (object): object
+    - profile_shape (str): shape of the load profile, must be one of 'baseload' or 'industry'
+    - config (dict): config settings
+
+    Returns:
+    - pd.Series: annual load profile for C&I buyers
     """
 
     scaling = int(config["time_sampling"][0])  # 3/1 for 3H/1H
 
-    shape_base = [1 / 24] * 24
+    shapes = {
+        "baseload": [1 / 24] * 24,
+        "industry": [
+            0.009,
+            0.009,
+            0.009,
+            0.009,
+            0.009,
+            0.009,
+            0.016,
+            0.031,
+            0.070,
+            0.072,
+            0.073,
+            0.072,
+            0.070,
+            0.052,
+            0.054,
+            0.066,
+            0.070,
+            0.068,
+            0.063,
+            0.035,
+            0.037,
+            0.045,
+            0.045,
+            0.009,
+        ],
+    }
 
-    shape_it = [
-        0.034,
-        0.034,
-        0.034,
-        0.034,
-        0.034,
-        0.034,
-        0.038,
-        0.042,
-        0.044,
-        0.046,
-        0.047,
-        0.048,
-        0.049,
-        0.049,
-        0.049,
-        0.049,
-        0.049,
-        0.048,
-        0.047,
-        0.043,
-        0.038,
-        0.037,
-        0.036,
-        0.035,
-    ]
-
-    shape_ind = [
-        0.009,
-        0.009,
-        0.009,
-        0.009,
-        0.009,
-        0.009,
-        0.016,
-        0.031,
-        0.070,
-        0.072,
-        0.073,
-        0.072,
-        0.070,
-        0.052,
-        0.054,
-        0.066,
-        0.070,
-        0.068,
-        0.063,
-        0.035,
-        0.037,
-        0.045,
-        0.045,
-        0.009,
-    ]
-
-    if profile_shape == "baseload":
-        shape = np.array(shape_base).reshape(-1, scaling).mean(axis=1)
-    elif profile_shape == "datacenter":
-        shape = np.array(shape_it).reshape(-1, scaling).mean(axis=1)
-    elif profile_shape == "industry":
-        shape = np.array(shape_ind).reshape(-1, scaling).mean(axis=1)
-    else:
+    try:
+        shape = shapes[profile_shape]
+    except KeyError:
         print(
-            f"'profile_shape' option must be one of 'baseload', 'datacenter' or 'industry'. Now is {profile_shape}."
+            f"'profile_shape' option must be one of 'baseload' or 'industry'. Now is {profile_shape}."
         )
         sys.exit()
 
-    load = snakemake.config["ci"]["load"]  # data center nominal load in MW
-
+    load = config["ci"]["load"]  # data center nominal load in MW
     load_day = load * 24  # 24h
-    load_profile_day = pd.Series(shape * load_day)  # 3H (or any n-hour) sampling is in
-    load_profile_year = pd.concat(
-        [load_profile_day] * int(len(n.snapshots) / (24 / scaling))
-    )
 
+    load_profile_day = pd.Series(shape) * load_day
+
+    if scaling == 3:
+        load_profile_day = load_profile_day.groupby(
+            np.arange(len(load_profile_day)) // 3
+        ).mean()  # 3H sampling
+
+    load_profile_year = pd.concat([load_profile_day] * 365)
     profile = load_profile_year.set_axis(n.snapshots)
-    # baseload = pd.Series(load,index=n.snapshots)
 
     return profile
 
