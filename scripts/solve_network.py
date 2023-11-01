@@ -152,15 +152,20 @@ def timescope(year: str) -> Dict[str, str]:
     }
 
 
-def cost_parametrization(n) -> None:
+def cost_parametrization(n, config) -> None:
     """
     Overwrites default price assumptions for primary energy carriers only for virtual generators located in 'EU {carrier}' buses.
 
-    n: a PyPSA network object.
+    Args:
+    - n: a PyPSA network object.
+    - config: config.yaml settings
+
+    Returns:
+    - None
     """
 
     carriers = ["lignite", "coal", "gas"]
-    prices = [snakemake.config["costs"][f"price_{carrier}"] for carrier in carriers]
+    prices = [config["costs"][f"price_{carrier}"] for carrier in carriers]
 
     n.generators.loc[
         n.generators.index.str.contains(f"EU {'|'.join(carriers)}"), "marginal_cost"
@@ -247,6 +252,7 @@ def prepare_costs(
     discount_rate: float,
     lifetime: int,
     year: str,
+    config: Dict[str, Any],
     Nyears: int = 1,
 ) -> pd.DataFrame:
     """
@@ -263,10 +269,6 @@ def prepare_costs(
     Returns:
     - costs (pd.DataFrame): a DataFrame containing the prepared costs
     """
-    #  cost_file=timescope(year)["costs_projection"]
-    #  USD_to_EUR=snakemake.config["costs"]["USD2013_to_EUR2013"]
-    #  discount_rate=snakemake.config["costs"]["discountrate"]
-    #  lifetime=snakemake.config["costs"]["lifetime"]
 
     # set all asset costs and other parameters
     costs = pd.read_csv(cost_file, index_col=[0, 1]).sort_index()
@@ -304,16 +306,16 @@ def prepare_costs(
             "discount rate": discount_rate,
             "efficiency": 0.36,
             "fuel": costs.loc["nuclear"]["fuel"],
-            "investment": snakemake.config["costs"]["adv_nuclear_overnight"]
+            "investment": config["costs"]["adv_nuclear_overnight"]
             * 1e3
-            * snakemake.config["costs"]["USD2021_to_EUR2021"],
+            * config["costs"]["USD2021_to_EUR2021"],
             "lifetime": 40.0,
         },
         name="adv_nuclear",
     )
 
     # Advanced geothermal
-    adv_geo_overnight = snakemake.config["costs"][f"adv_geo_overnight_{year}"]
+    adv_geo_overnight = config["costs"][f"adv_geo_overnight_{year}"]
     data_geo = pd.Series(
         {
             "CO2 intensity": 0,
@@ -329,7 +331,7 @@ def prepare_costs(
     )
 
     # Allam cycle ccs
-    allam_ccs_overnight = snakemake.config["costs"][f"allam_ccs_overnight_{year}"]
+    allam_ccs_overnight = config["costs"][f"allam_ccs_overnight_{year}"]
     data_allam = pd.Series(
         {
             "CO2 intensity": 0,
@@ -339,7 +341,7 @@ def prepare_costs(
             "co2_seq": 40,  # $/ton
             "discount rate": discount_rate,
             "efficiency": 0.54,
-            "fuel": snakemake.config["costs"]["price_gas"],
+            "fuel": config["costs"]["price_gas"],
             "investment": allam_ccs_overnight * 1e3 * 1,
             "lifetime": 30.0,
         },
@@ -360,7 +362,7 @@ def prepare_costs(
     return costs
 
 
-def strip_network(n) -> None:
+def strip_network(n, config) -> None:
     """
     Removes unnecessary components from a pypsa network.
 
@@ -373,20 +375,18 @@ def strip_network(n) -> None:
     nodes_to_keep = geoscope(zone)["basenodes_to_keep"]
 
     new_nodes = [
-        f"{b} {s}"
-        for b in nodes_to_keep
-        for s in snakemake.config["node_suffixes_to_keep"]
+        f"{b} {s}" for b in nodes_to_keep for s in config["node_suffixes_to_keep"]
     ]
 
     nodes_to_keep.extend(new_nodes)
-    nodes_to_keep.extend(snakemake.config["additional_nodes"])
+    nodes_to_keep.extend(config["additional_nodes"])
 
     n.mremove("Bus", n.buses.index.symmetric_difference(nodes_to_keep))
 
     # make sure lines are kept
     n.lines.carrier = "AC"
 
-    carrier_to_keep = snakemake.config["carrier_to_keep"]
+    carrier_to_keep = config["carrier_to_keep"]
 
     for c in n.iterate_components(
         ["Generator", "Link", "Line", "Store", "StorageUnit", "Load"]
@@ -889,7 +889,7 @@ def revert_links(n: pypsa.Network) -> None:
     ] = 1
 
 
-def calculate_grid_cfe(n, name: str, node: str) -> pd.Series:
+def calculate_grid_cfe(n, name: str, node: str, config) -> pd.Series:
     """
     Calculates the time-series of grid supply CFE score for each C&I consumer.
 
@@ -897,6 +897,7 @@ def calculate_grid_cfe(n, name: str, node: str) -> pd.Series:
     - n: pypsa network.
     - name: name of a C&I consumer.
     - node: location (node) of a C&I consumer.
+    - config: config.yaml settings
 
     Returns:
     - pd.Series: A pandas series containing the grid CFE supply score.
@@ -906,8 +907,8 @@ def calculate_grid_cfe(n, name: str, node: str) -> pd.Series:
     ]
     country_buses = n.buses.index[n.buses.index.str.contains(node)]
 
-    clean_techs = pd.Index(snakemake.config["global"]["grid_clean_techs"])
-    emitters = pd.Index(snakemake.config["global"]["emitters"])
+    clean_techs = pd.Index(config["global"]["grid_clean_techs"])
+    emitters = pd.Index(config["global"]["emitters"])
 
     clean_grid_generators = n.generators.index[
         n.generators.bus.isin(grid_buses) & n.generators.carrier.isin(clean_techs)
@@ -1005,11 +1006,31 @@ def calculate_grid_cfe(n, name: str, node: str) -> pd.Series:
     return grid_supply_cfe
 
 
-def solve_network(n, policy, penetration, tech_palette):
-    n_iterations = snakemake.config["solving"]["options"]["n_iterations"]
+def solve_network(
+    n: pypsa.Network,
+    policy: str,
+    penetration: float,
+    tech_palette: str,
+    n_iterations: int,
+    config: Dict[str, Any],
+) -> None:
+    """
+    Solves a network optimization problem given a network object, policy, penetration rate, technology palette, and number of iterations.
+
+    Args:
+    - n: The network object to be optimized.
+    - policy: The voluntary procurement policy of C&I consumers.
+    - penetration: Effectively the target CFE score.
+    - tech_palette: The technology palette available for C&I consumers.
+    - n_iterations: The number of iterations to be used for optimization (-> relaxed bilinear term in 24/7 CFE constraint).
+    - config: config.yaml settings
+
+    Returns:
+    - None
+    """
 
     # techs for RES annual matching
-    res_techs = snakemake.config["ci"]["res_techs"]
+    res_techs = config["ci"]["res_techs"]
 
     # techs for CFE hourly matching
     clean_techs = palette(tech_palette)[0]
@@ -1171,22 +1192,18 @@ def solve_network(n, policy, penetration, tech_palette):
                 total_rec - total_snd + total_delayout - total_delayin
             )
 
-            # vls_local = vls.query('bus==@name').index
-            # shift_local = (n.model['Generator-p'].loc[:, vls_local]*weights).sum()
-
             n.model.add_constraints(
                 lhs - flex >= penetration * (total_load), name=f"CFE_constraint_{name}"
             )
-            # n.model.add_constraints(lhs + shift_local >= penetration*(total_load), name=f"CFE_constraint_{name}")
 
-    def excess_constraints(n, snakemake):
+    def excess_constraints(n, config):
         weights = n.snapshot_weightings["generators"]
 
         for location, name in datacenters.items():
             ci_export = n.model["Link-p"].loc[:, [name + " export"]]
             excess = (ci_export * weights).sum()
             total_load = (n.loads_t.p_set[name + " load"] * weights).sum()
-            share = snakemake.config["ci"][
+            share = config["ci"][
                 "excess_share"
             ]  # 'sliding': max(0., penetration - 0.8)
 
@@ -1213,7 +1230,7 @@ def solve_network(n, policy, penetration, tech_palette):
         for location, name in datacenters.items():
             zone = n.buses.loc[f"{location}", :].country
 
-            grid_res_techs = snakemake.config["global"]["grid_res_techs"]
+            grid_res_techs = config["global"]["grid_res_techs"]
             grid_buses = n.buses.index[
                 n.buses.location.isin(geoscope(zone)["country_nodes"][location])
             ]
@@ -1243,7 +1260,7 @@ def solve_network(n, policy, penetration, tech_palette):
             )
             lhs = gens.sum() + sus.sum() + links.sum()
 
-            target = snakemake.config[f"res_target_{year}"][f"{zone}"]
+            target = config[f"res_target_{year}"][f"{zone}"]
             total_load = (
                 n.loads_t.p_set[grid_loads].sum(axis=1) * weights
             ).sum()  # number
@@ -1252,18 +1269,17 @@ def solve_network(n, policy, penetration, tech_palette):
                 lhs == target * total_load, name=f"country_res_constraints_{zone}"
             )
 
-    def system_res_constraints(n, snakemake):
+    def system_res_constraints(n, year, config) -> None:
         """
-        An alternative implementation of system-wide level RES constraint.
-        NB CI load is not counted within country_load ->
-        - to avoid big overshoot of national RES targets due to CI-procured portfolio
-        - also EU RE directive counts corporate PPA within NECPs.
+        Set a system-wide national RES constraints based on NECPs.
+
+        Here CI load is not counted within country_load ->
+        this avoids avoid big overshoot of national RES targets due to CI-procured portfolio. Note that EU RE directive counts corporate PPA within NECPs.
         """
         zones = [key[:2] for key in datacenters.keys()]
-        year = snakemake.wildcards.year
-        country_targets = snakemake.config[f"res_target_{year}"]
+        country_targets = config[f"res_target_{year}"]
 
-        grid_res_techs = snakemake.config["global"]["grid_res_techs"]
+        grid_res_techs = config["global"]["grid_res_techs"]
         weights = n.snapshot_weightings["generators"]
 
         for ct in country_targets.keys():
@@ -1296,7 +1312,7 @@ def solve_network(n, policy, penetration, tech_palette):
             )
             lhs = gens.sum() + sus.sum() + links.sum()
 
-            target = snakemake.config[f"res_target_{year}"][f"{ct}"]
+            target = config[f"res_target_{year}"][f"{ct}"]
             total_load = (n.loads_t.p_set[country_loads].sum(axis=1) * weights).sum()
 
             print(
@@ -1332,37 +1348,35 @@ def solve_network(n, policy, penetration, tech_palette):
     def extra_functionality(n, snapshots):
         add_battery_constraints(n)
         # country_res_constraints(n)
-        system_res_constraints(n, snakemake)
+        system_res_constraints(n, year, config)
 
         if policy == "ref":
             print("no target set")
         elif policy == "cfe":
             print("setting CFE target of", penetration)
             cfe_constraints(n)
-            excess_constraints(n, snakemake)
-            # vl_constraints(n) if snakemake.config['ci']['spatial_shifting'] else None
-            # DSM_constraints(n) if snakemake.config['ci']['temporal_shifting'] else None
+            excess_constraints(n, config)
+            # vl_constraints(n) # redundant with DSM_constraints(n)
+            # DSM_constraints(n) # redundant with DC_constraints(n)
             DC_constraints(n)
-            DSM_conservation(n) if snakemake.config["ci"]["temporal_shifting"] else None
+            DSM_conservation(n) if config["ci"]["temporal_shifting"] else None
         elif policy == "res":
             print("setting annual RES target of", penetration)
             res_constraints(n)
-            excess_constraints(n, snakemake)
+            excess_constraints(n, config)
         else:
             print(
-                f"'policy' wildcard must be one of 'ref', 'res__' or 'cfe__'. Now is {policy}."
+                f"'policy' wildcard must be one of 'ref', 'resXX' or 'cfeXX'. Now is {policy}."
             )
             sys.exit()
 
     n.consistency_check()
 
-    set_of_options = snakemake.config["solving"]["solver"]["options"]
+    set_of_options = config["solving"]["solver"]["options"]
     solver_options = (
-        snakemake.config["solving"]["solver_options"][set_of_options]
-        if set_of_options
-        else {}
+        config["solving"]["solver_options"][set_of_options] if set_of_options else {}
     )
-    solver_name = snakemake.config["solving"]["solver"]["name"]
+    solver_name = config["solving"]["solver"]["name"]
 
     # CFE dataframe
     values = [f"iteration {i}" for i in range(n_iterations + 1)]
@@ -1391,7 +1405,7 @@ def solve_network(n, policy, penetration, tech_palette):
         for location, name in zip(locations, names):
             grid_cfe_df.loc[
                 :, (f"{location}", f"iteration {i+1}")
-            ] = calculate_grid_cfe(n, name=name, node=location)
+            ] = calculate_grid_cfe(n, name=name, node=location, config=config)
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
@@ -1423,9 +1437,9 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
-    profile_shape = snakemake.config["ci"]["profile_shape"]
+    profile_shape = config["ci"]["profile_shape"]
 
-    datacenters = snakemake.config["ci"]["datacenters"]
+    datacenters = config["ci"]["datacenters"]
     locations = list(datacenters.keys())
     names = list(datacenters.values())
     flexibility = snakemake.wildcards.flexibility
@@ -1446,11 +1460,12 @@ if __name__ == "__main__":
     Nyears = 1  # years in simulation
     costs = prepare_costs(
         cost_file=timescope(year)["costs_projection"],
-        USD_to_EUR=snakemake.config["costs"]["USD2013_to_EUR2013"],
-        discount_rate=snakemake.config["costs"]["discountrate"],
+        USD_to_EUR=config["costs"]["USD2013_to_EUR2013"],
+        discount_rate=config["costs"]["discountrate"],
         year=year,
         Nyears=Nyears,
-        lifetime=snakemake.config["costs"]["lifetime"],
+        config=config,
+        lifetime=config["costs"]["lifetime"],
     )
 
     # nhours = 240
@@ -1460,8 +1475,8 @@ if __name__ == "__main__":
     with memory_logger(
         filename=getattr(snakemake.log, "memory", None), interval=30.0
     ) as mem:
-        strip_network(n)
-        cost_parametrization(n)
+        strip_network(n, config)
+        cost_parametrization(n, config)
 
         shutdown_lineexp(n)
         limit_resexp(n, year, config)
@@ -1471,11 +1486,18 @@ if __name__ == "__main__":
         co2_policy(n, year, config)
 
         add_ci(n, year)
-        add_vl(n) if snakemake.config["ci"]["spatial_shifting"] else None
-        revert_links(n) if snakemake.config["ci"]["spatial_shifting"] else None
-        add_dsm(n) if snakemake.config["ci"]["temporal_shifting"] else None
+        add_vl(n) if config["ci"]["spatial_shifting"] else None
+        revert_links(n) if config["ci"]["spatial_shifting"] else None
+        add_dsm(n) if config["ci"]["temporal_shifting"] else None
 
-        solve_network(n, policy, penetration, tech_palette)
+        solve_network(
+            n=n,
+            policy=policy,
+            penetration=penetration,
+            tech_palette=tech_palette,
+            n_iterations=config["solving"]["options"]["n_iterations"],
+            config=config,
+        )
 
         n.export_to_netcdf(snakemake.output.network)
 
