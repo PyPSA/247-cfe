@@ -6,17 +6,17 @@
 # General settings
 
 logging_level: INFO
-solve_network: solve  #'solve' or 'skip' to skip network optimization step
-results_dir: 'results'
+solve_network: solve  #"solve" or "skip" to skip network optimization step
+results_dir: "results"
 
 ###################
 # Data dependencies
 
 # Networks retrieved from ../pypsa-eur/results/<run>/prenetworks-brownfield
-n_2025_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc'
-n_2030_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc'
-n_2025_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
-n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
+n_2025_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc"
+n_2030_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc"
+n_2025_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
+n_2030_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc"
 
 # Retrieve technology data <version> for <year>
 # Source https://github.com/PyPSA/technology-data
@@ -79,7 +79,7 @@ carrier_to_keep: [ #generators
                   "urban central solid biomass CHP", #"electricity distribution grid",
                   #Stores
                   "H2 Store","co2","co2 stored","battery", "solid biomass", #"home battery"
-                  #Loads ('industry electricity' is included)
+                  #Loads ("industry electricity" is included)
                   "electricity"
                     ]
 additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
@@ -115,6 +115,7 @@ costs:
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
 
+
 #~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
 ci_load:
   IE: 2200.
@@ -127,10 +128,11 @@ ci_load:
 # source:  https://world-nuclear.org/
 nuclear_phaseout: ["DE"]
 
+
 # coal phase-out policies
 # source: https://beyond-coal.eu/europes-coal-exit/
-coal_phaseout_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
-coal_phaseout_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
+coal_phaseout_2025: ["BE", "SE", "PT", "AT", "FR", "GB"]
+coal_phaseout_2030: ["BE", "SE", "PT", "AT", "FR", "GB", "IT", "IE", "HU", "MK", "DK", "GR", "NL", "FI", "RS", "ES", "SK"]
 
 # renewable target policies (RES share in electricity consumption)
 # source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
@@ -200,15 +202,15 @@ tech_colors:
   "offshore wind": "#6895dd"
   "onshore wind": "#74c6f2"
   "solar": "#ffef60"
-  "solar rooftop": '#000000'
+  "solar rooftop": "#000000"
   # Clean Dispatchable
   "advanced nuclear": "#df3439"
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
   "clean dispatchable": "#99582a"
   "NG-Allam": "#540b0e"
-  'hydroelectricity': '#298c81'
-  'nuclear': '#ff8c00'
+  "hydroelectricity": "#298c81"
+  "nuclear": "#ff8c00"
   # Storage
   "battery": "#666666"
   "battery inverter": "#444444"
@@ -216,20 +218,20 @@ tech_colors:
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
   "hydrogen electrolysis": "#550055"
-  'pumped hydro storage': '#51dbcc'
+  "pumped hydro storage": "#51dbcc"
   # Emitters
   "OCGT": "#d35050"
   "CCGT": "#b20101"
   "Gas OC": "#d35050"
-  'hard coal': '#545454'
-  'lignite': '#826837'
-  'oil': "#808080"
+  "hard coal": "#545454"
+  "lignite": "#826837"
+  "oil": "#808080"
   # biomass
-  'solid biomass': '#baa741'
+  "solid biomass": "#baa741"
   # power transmission
-  "lines": '#6c9459'
-  "transmission lines": '#6c9459'
-  "electricity distribution grid": '#97ad8c'
+  "lines": "#6c9459"
+  "transmission lines": "#6c9459"
+  "electricity distribution grid": "#97ad8c"
   #virtual links
-  "spatial shift": '#ff8c00'
-  "temporal shift": '#d26303'
+  "spatial shift": "#ff8c00"
+  "temporal shift": "#d26303"
