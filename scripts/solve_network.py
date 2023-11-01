@@ -144,7 +144,6 @@ def timescope(year: str) -> Dict[str, str]:
         - "costs_projection": the path to the input file with technology costs for the given year.
     """
     return {
-        "coal_phaseout": snakemake.config[f"policy_{year}"],
         "network_file": snakemake.input.network,
         "costs_projection": snakemake.input.costs,
     }
@@ -540,24 +539,25 @@ def nuclear_policy(n):
         ] = 0
 
 
-def coal_policy(n):
+def coal_policy(n: pypsa.Network, year: str, config: Dict[str, Any]) -> None:
     """
-    remove coal PPs fleet for countries with coal phase-out policy for {year}
-    """
+    Remove coal power plant fleet for countries with coal phase-out policy for {year}.
 
-    countries = timescope(year)["coal_phaseout"]
+    Args:
+        n: The network object to be modified.
+        year: The year of optimisation (i.e. year for which the coal phase-out policy is in effect).
+        config: config.yaml settings
+
+    Returns:
+        None
+    """
+    countries = config[f"coal_phaseout_{year}"]
+    coal_links = n.links.index.str.contains("coal")
+    lignite_links = n.links.index.str.contains("lignite")
 
     for country in countries:
-        n.links.loc[
-            n.links["bus1"].str.contains(f"{country}")
-            & (n.links.index.str.contains("coal")),
-            "p_nom",
-        ] = 0
-        n.links.loc[
-            n.links["bus1"].str.contains(f"{country}")
-            & (n.links.index.str.contains("lignite")),
-            "p_nom",
-        ] = 0
+        n.links.loc[n.links["bus1"].str.contains(country) & coal_links, "p_nom"] = 0
+        n.links.loc[n.links["bus1"].str.contains(country) & lignite_links, "p_nom"] = 0
 
 
 def biomass_potential(n):

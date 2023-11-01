@@ -126,9 +126,10 @@ ci_load:
 #national policies
 #countries with nuclear phase-out policy (FR and BE shifted plan to 2035). https://world-nuclear.org/
 nodes_with_nucsban: ["DE1 0"]
-#countries with coal phase-out policy before 2025 and 2030 https://beyond-coal.eu/europes-coal-exit/
-policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
-policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
+# coal phase-out policies
+# source: https://beyond-coal.eu/europes-coal-exit/
+coal_phaseout_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
+coal_phaseout_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
 
 # renewable target policies (RES share in electricity consumption)
 # source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
