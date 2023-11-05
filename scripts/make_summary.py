@@ -58,7 +58,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "make_summary", year="2025", zone="IE", palette="p1", policy="cfe100"
+            "make_summary", year="2030", zone="IE", palette="p3", policy="cfe100"
         )
 
     # When running via snakemake

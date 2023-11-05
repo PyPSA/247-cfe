@@ -1418,9 +1418,9 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake(
             "solve_network",
-            year="2025",
+            year="2030",
             zone="IE",
-            palette="p1",
+            palette="p3",
             policy="cfe100",
             flexibility="0",
         )

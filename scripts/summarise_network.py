@@ -599,9 +599,9 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "summarise_network",
-            year="2025",
-            zone="IEDK",
-            palette="p1",
+            year="2030",
+            zone="IE",
+            palette="p3",
             policy="cfe100",
             flexibility="0",
         )

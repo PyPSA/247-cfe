@@ -941,7 +941,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "plot_summary", year="2025", zone="EU", palette="p2", policy="cfe100"
+            "plot_summary", year="2030", zone="IE", palette="p3", policy="cfe100"
         )
 
     config = snakemake.config

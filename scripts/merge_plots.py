@@ -13,7 +13,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "merge_plots", year="2025", zone="IEDK", palette="p1", policy="cfe100"
+            "merge_plots", year="2030", zone="IE", palette="p3", policy="cfe100"
         )
 
 # Call the PdfFileMerger
