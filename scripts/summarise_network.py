@@ -537,6 +537,7 @@ def summarise_network(n, policy, tech_palette):
         # 8: Store RES curtailment
         system_res = n.generators[
             ~n.generators.index.str.contains("EU")
+            & ~n.generators.carrier.str.contains("gas")
         ].carrier.unique()
         ci_res = snakemake.config["ci"]["res_techs"]
 
