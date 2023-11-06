@@ -628,7 +628,7 @@ if __name__ == "__main__":
             zone="IE",
             palette="p3",
             policy="cfe100",
-            flexibility="0",
+            participation="10",
         )
 
     # Wildcards & Settings
@@ -637,11 +637,12 @@ if __name__ == "__main__":
     tech_palette = snakemake.wildcards.palette
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
+    participation = snakemake.wildcards.participation
 
     datacenters = snakemake.config["ci"]["datacenters"]
     locations = list(datacenters.keys())
     names = list(datacenters.values())
-    flexibility = snakemake.wildcards.flexibility
+    flexibility = snakemake.config["ci"]["flexibility"]
 
     print(f"Summary for policy {policy} and penetration {penetration}")
     print(f"Summary for palette: {tech_palette}")

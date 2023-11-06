@@ -20,9 +20,9 @@ n_2030_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc"
 
 # Retrieve technology data <version> for <year>
 # Source https://github.com/PyPSA/technology-data
-retrieve_cost_data: true
+retrieve_cost_data: True
 technology_data:
-  year: 2025
+  year: 2030
   version: v0.6.2
 
 ###################
@@ -32,33 +32,40 @@ run: test
 
 #wildcards
 scenario:
-  flexibility: ['0', ] #possible deviation [%] of requested load from nominal level
   policy:  ["cfe100"] # "ref", "res100", "cfe..", "cfe100"
-  palette: [ "p1", # onwind + solar + battery
-             #"p2", # onwind + solar + battery + LDES
-             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+  palette: [
+            # "p1", # onwind + solar + battery
+            # "p2", # onwind + solar + battery + LDES
+            "p3", # onwind + solar + battery + Allam cycle turbine with CCS
             ]
   zone: [
-        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
+        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
         ]
-  year: [ '2025',
-          #'2030'
+  participation: [
+                '10',
+                '25',
+                ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
+  year: [
+          # "2025",
+          "2030"
          ] # controls both the brownfield fleet and tech costs projection
 
+# CI consumer settings
 ci:
   datacenters: {"IE5 0": "ireland"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
-  load: 100. # nominal load of data centers in MW
+  #load: 100. # nominal load in MW -> now scaled to match participation share
   res_techs: ["onwind","solar"]
   excess_share: 0.2
-  spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
+  spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
 # Time-series management
 
-time_sampling: '3H' # one of ["1H", "3H"]
+time_sampling: "3H" # one of ["1H", "3H"]
 plot_timeseries: False
 
 

@@ -194,32 +194,12 @@ def load_profile(
 
     shapes = {
         "baseload": [1 / 24] * 24,
-        "industry": [
-            0.009,
-            0.009,
-            0.009,
-            0.009,
-            0.009,
-            0.009,
-            0.016,
-            0.031,
-            0.070,
-            0.072,
-            0.073,
-            0.072,
-            0.070,
-            0.052,
-            0.054,
-            0.066,
-            0.070,
-            0.068,
-            0.063,
-            0.035,
-            0.037,
-            0.045,
-            0.045,
-            0.009,
-        ],
+        "industry": [0.009] * 5
+        + [0.016, 0.031, 0.07, 0.072, 0.073, 0.072, 0.07]
+        + [0.052, 0.054, 0.066, 0.07, 0.068, 0.063]
+        + [0.035] * 2
+        + [0.045] * 2
+        + [0.009],
     }
 
     try:
@@ -230,9 +210,10 @@ def load_profile(
         )
         sys.exit()
 
-    load = config["ci"]["load"]  # data center nominal load in MW
-    load_day = load * 24  # 24h
+    # CI consumer nominal load in MW
+    load = config["ci_load"][zone] * float(participation) / 100
 
+    load_day = load * 24  # 24h
     load_profile_day = pd.Series(shape) * load_day
 
     if scaling == 3:
@@ -1422,7 +1403,7 @@ if __name__ == "__main__":
             zone="IE",
             palette="p3",
             policy="cfe100",
-            flexibility="0",
+            participation="10",
         )
 
     logging.basicConfig(
@@ -1438,11 +1419,12 @@ if __name__ == "__main__":
     zone = snakemake.wildcards.zone
     year = snakemake.wildcards.year
     profile_shape = config["ci"]["profile_shape"]
+    participation = snakemake.wildcards.participation
 
     datacenters = config["ci"]["datacenters"]
     locations = list(datacenters.keys())
     names = list(datacenters.values())
-    flexibility = snakemake.wildcards.flexibility
+    flexibility = config["ci"]["flexibility"]
 
     print(f"solving network for policy {policy} and penetration {penetration}")
     print(f"solving network for palette: {tech_palette}")
