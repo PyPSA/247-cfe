@@ -348,9 +348,9 @@ def prepare_costs(
         name="allam_ccs",
     )
 
-    costs = costs.append(data_nuc, ignore_index=False)
-    costs = costs.append(data_geo, ignore_index=False)
-    costs = costs.append(data_allam, ignore_index=False)
+    tech_list = [data_nuc, data_geo, data_allam]
+    for tech in tech_list:
+        costs = pd.concat([costs, tech.to_frame().transpose()], ignore_index=False)
 
     annuity_factor = (
         lambda v: annuity(v["lifetime"], v["discount rate"]) + v["FOM"] / 100
