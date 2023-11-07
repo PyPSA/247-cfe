@@ -608,8 +608,8 @@ def summarise_network(n, policy, tech_palette):
         else snakemake.config["global"][f"co2_price_{year}"]
     )
 
-    # Convert all results to float
-    results[location] = {k: float(v) for k, v in results[location].items()}
+    # Convert all results to float and round to 2 decimal places
+    results[location] = {k: round(float(v), 2) for k, v in results[location].items()}
 
     # Saving resutls as ../summaries/{}.yaml
     print(f"Summary for is completed! Saving to \n {snakemake.output.yaml}")
