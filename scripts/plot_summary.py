@@ -5,6 +5,7 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
 from solve_network import palette
 
@@ -16,6 +17,11 @@ custom_line = Line2D([0], [0], color="gray", linestyle="--", linewidth=1.0)
 def format_column_names(col_tuple):
     # return f"{col_tuple[0]}{col_tuple[1][:2]}"
     return f"{col_tuple[0]}"
+
+
+def format_country_names(col_tuple):
+    # return first two letters of country name
+    return f"{col_tuple[:2]}"
 
 
 def prepare_data_frame(df, techs, rename_dict):
@@ -245,7 +251,7 @@ def ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_or
         )
         ax.grid(alpha=0.8, which="both", linestyle="--")
         ax.set_axisbelow(True)
-        ax.set_ylabel("DC portfolio generation [GWh]", fontsize=14)
+        ax.set_ylabel("C&I portfolio generation [GWh]", fontsize=14)
         ax.legend(loc="upper left", ncol=2, prop={"size": 12})
         ax.set_ylim([0, max(ldf.sum()) * 1.2])
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.0f"))
@@ -285,6 +291,136 @@ def ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_or
     fig.tight_layout()
     fig.savefig(
         snakemake.output.plot.replace("capacity.pdf", "ci_generation.pdf"),
+        transparent=True,
+    )
+
+
+def ci_curtailment(df, rename_scen, ci_res):
+    # Data for ci res curtailment across all locations
+    ldf = df.loc[["ci_curtailment_" + t for t in ci_res]].rename(
+        {"ci_curtailment_" + t: t for t in ci_res}
+    )
+
+    # Refine data
+    ldf.rename(columns=rename_scen, level=0, inplace=True)
+    ldf = pd.DataFrame(ldf.sum(axis=0), columns=["RES curtailment"]).unstack()
+    ldf = ldf["RES curtailment"] / 1e3
+    ldf.columns = [format_country_names(col) for col in ldf.columns.tolist()]
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+
+    if not ldf.empty:
+        ldf.plot(
+            kind="bar",
+            stacked=True,
+            ax=ax,
+            width=0.65,
+            edgecolor="black",
+            linewidth=0.05,
+            color=sns.color_palette("rocket", len(ldf.columns)),
+        )
+        ax.set_xticklabels(
+            ldf.index,
+            rotation=0,
+            fontsize=12,
+        )
+        ax.grid(alpha=0.3)
+        ax.set_axisbelow(True)
+        ax.set_ylabel("C&I portfolio curtailment [GWh]", fontsize=14)
+        ax.set_ylim(top=ldf.sum(axis=1).max() * 1.3)
+        ax.tick_params(axis="y", labelsize=12)
+        ax.legend(loc="upper left", ncol=2, prop={"size": 10}, fancybox=True)
+    else:
+        print("Dataframe to plot is empty")
+
+    # Save Plot
+    fig.tight_layout()
+    fig.savefig(
+        snakemake.output.plot.replace("capacity.pdf", "ci_curtailment.pdf"),
+        transparent=True,
+    )
+
+
+def ci_emisrate(df, rename_scen):
+    ldf = df.loc["ci_emissions"]
+    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    if not ldf.empty:
+        ldf.plot(
+            kind="bar",
+            ax=ax,
+            color="#33415c",
+            width=0.65,
+            edgecolor="black",
+            linewidth=0.05,
+        )
+        ax.set_xticklabels(
+            [format_column_names(col) for col in ldf.index.tolist()],
+            rotation=0,
+            fontsize=12,
+        )
+        ax.grid(alpha=0.8, which="both", linestyle="--")
+        ax.set_axisbelow(True)
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%.0f"))
+        ax.tick_params(axis="y", labelsize=12)
+        ax.set_ylabel(r"C&I emission rate [gCO$_2$$\cdot$kWh$^{-1}$]", fontsize=14)
+        ax.set_title(
+            f"Emission rate of C&I consumption",
+            fontsize=16,
+            weight="bold",
+        )
+    else:
+        print("Dataframe to plot is empty")
+
+    # Final Adjustments and Save Plot
+    fig.tight_layout()
+    fig.savefig(
+        snakemake.output.plot.replace("capacity.pdf", "zone_emissions.pdf"),
+        transparent=True,
+    )
+
+
+def zone_emissions(df, rename_scen):
+    ldf = df.loc["emissions_zone"]
+    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    if not ldf.empty:
+        ldf.plot(
+            kind="bar",
+            ax=ax,
+            color="#33415c",
+            width=0.65,
+            edgecolor="black",
+            linewidth=0.05,
+        )
+        ax.set_xticklabels(
+            [format_column_names(col) for col in ldf.index.tolist()],
+            rotation=0,
+            fontsize=12,
+        )
+        ax.grid(alpha=0.8, which="both", linestyle="--")
+        ax.set_axisbelow(True)
+        ax.tick_params(axis="y", labelsize=12)
+        ax.set_ylabel(f"Emissions in local zone [MtCO$_2$$\\cdot$a$^-1$]", fontsize=14)
+        ax.set_title(
+            f"Annual power sector emissions in local zone: {zone}",
+            fontsize=16,
+            weight="bold",
+        )
+    else:
+        print("Dataframe to plot is empty")
+
+    # Final Adjustments and Save Plot
+    fig.tight_layout()
+    fig.savefig(
+        snakemake.output.plot.replace("capacity.pdf", "zone_emissions.pdf"),
         transparent=True,
     )
 
@@ -405,5 +541,26 @@ ci_capacity(
     preferred_order=preferred_order,
 )
 
-ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order)
-ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_order)
+ci_costandrev(
+    df=df,
+    tech_colors=tech_colors,
+    rename_scen=rename_scen,
+    rename_ci_cost=rename_ci_cost,
+    preferred_order=preferred_order,
+)
+
+ci_generation(
+    df=df,
+    tech_colors=tech_colors,
+    rename_scen=rename_scen,
+    rename_ci_capacity=rename_ci_capacity,
+    preferred_order=preferred_order,
+)
+
+ci_curtailment(
+    df=df, rename_scen=rename_scen, ci_res=snakemake.config["ci"]["res_techs"]
+)
+
+ci_emisrate(df=df, rename_scen=rename_scen)
+
+zone_emissions(df=df, rename_scen=rename_scen)
