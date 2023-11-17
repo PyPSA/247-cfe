@@ -42,6 +42,7 @@ scenario:
         "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
         ]
   participation: [
+                '0',
                 '10',
                 '25',
                 ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]

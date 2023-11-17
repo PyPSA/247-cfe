@@ -308,7 +308,7 @@ def ci_curtailment(df, rename_scen, ci_res):
     ldf.columns = [format_country_names(col) for col in ldf.columns.tolist()]
 
     # Plotting
-    fig, ax = plt.subplots(figsize=(6, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     if not ldf.empty:
         ldf.plot(
