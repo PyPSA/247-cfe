@@ -379,7 +379,7 @@ def ci_emisrate(df, rename_scen):
     # Final Adjustments and Save Plot
     fig.tight_layout()
     fig.savefig(
-        snakemake.output.plot.replace("capacity.pdf", "zone_emissions.pdf"),
+        snakemake.output.plot.replace("capacity.pdf", "ci_emissions.pdf"),
         transparent=True,
     )
 
@@ -508,7 +508,6 @@ if __name__ == "__main__":
 
     rename_scen = {
         "0": "0%",
-        "5": "5%",
         "10": "10%",
         "15": "15%",
         "20": "20%",
@@ -560,9 +559,9 @@ ci_generation(
     preferred_order=preferred_order,
 )
 
-ci_curtailment(
-    df=df, rename_scen=rename_scen, ci_res=snakemake.config["ci"]["res_techs"]
-)
+# ci_curtailment(
+#     df=df, rename_scen=rename_scen, ci_res=snakemake.config["ci"]["res_techs"]
+# )
 
 ci_emisrate(df=df, rename_scen=rename_scen)
 
