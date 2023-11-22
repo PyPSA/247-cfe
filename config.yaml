@@ -43,7 +43,10 @@ scenario:
         ]
   participation: [
                 '0',
+                '5',
                 '10',
+                '15',
+                '20',
                 '25',
                 ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
   year: [
