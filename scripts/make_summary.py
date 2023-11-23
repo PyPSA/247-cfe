@@ -2,52 +2,42 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pypsa
-import numpy as np
+import os
 import pandas as pd
 import yaml
 
 
-def create_tuples(scenarios, locations):
-    # Use a nested list comprehension to create the list of tuples
-    tuples_list = [(str(s), str(l)) for s in scenarios for l in locations]
-    return tuples_list
+def make_summary():
+    # Filter relevant filenames
+    fns = [
+        fn
+        for fn in snakemake.input
+        if "{}".format(year + "/" + zone + "/" + tech_palette + "/" + policy) in fn
+    ]
 
+    # Scenarios from filenames
+    scenarios = [os.path.splitext(os.path.basename(fn))[0] for fn in fns]
 
-def summarise_scalars():
-    fns = list(
-        filter(
-            lambda k: (
-                "{}".format(year + "/" + zone + "/" + tech_palette + "/" + policy)
-            )
-            in k,
-            snakemake.input,
-        )
-    )
-
-    # create empty dataframe with flex_scenario & locations as multi-columns
-    scenarios = [fn[fn.rfind("/") + 1 : -5] for fn in fns]
-    cols = pd.MultiIndex.from_tuples(create_tuples(scenarios, list(datacenters.keys())))
+    # Create MultiIndex for columns
+    cols = pd.MultiIndex.from_product([scenarios, list(datacenters.keys())])
     df = pd.DataFrame(columns=cols)
 
-    # fill dataframe by looping over {flex_scenario}.yaml and {location} of data centers
+    # Process each file
     for fn in fns:
-        scenario = [fn[fn.rfind("/") + 1 : -5]][0]
+        scenario = os.path.splitext(os.path.basename(fn))[0]
 
-        with open(fn, "r") as f:
-            results = yaml.safe_load(f)
+        try:
+            with open(fn, "r") as f:
+                results = yaml.safe_load(f)
+        except IOError:
+            print(f"Error reading file {fn}")
+            continue
 
-        locations = [k for k in results.keys()]
-
-        for location in locations:
-            float_keys = [
-                k
-                for k in results[f"{location}"].keys()
-                if isinstance(results[f"{location}"][k], float)
-            ]
-            df.loc[:, (scenario, location)] = pd.Series(
-                {k: results[f"{location}"][k] for k in float_keys}
-            )
+        # Iterate over locations and update DataFrame
+        for location, values in results.items():
+            for key, value in values.items():
+                if isinstance(value, float):
+                    df.at[key, (scenario, location)] = value
 
     df.to_csv(snakemake.output["summary"])
 
@@ -58,7 +48,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "make_summary", year="2025", zone="IE", palette="p1", policy="cfe100"
+            "make_summary", year="2030", zone="IE", palette="p3", policy="cfe100"
         )
 
     # When running via snakemake
@@ -68,4 +58,4 @@ if __name__ == "__main__":
     policy = snakemake.wildcards.policy
     datacenters = snakemake.config["ci"]["datacenters"]
 
-    summarise_scalars()
+    make_summary()

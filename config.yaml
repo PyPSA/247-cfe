@@ -6,23 +6,23 @@
 # General settings
 
 logging_level: INFO
-solve_network: solve  #'solve' or 'skip' to skip network optimization step
-results_dir: 'results'
+solve_network: solve  #"solve" or "skip" to skip network optimization step
+results_dir: "results"
 
 ###################
 # Data dependencies
 
 # Networks retrieved from ../pypsa-eur/results/<run>/prenetworks-brownfield
-n_2025_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc'
-n_2030_1H: 'input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc'
-n_2025_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc'
-n_2030_3H: 'input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc'
+n_2025_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc"
+n_2030_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc"
+n_2025_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
+n_2030_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc"
 
 # Retrieve technology data <version> for <year>
 # Source https://github.com/PyPSA/technology-data
-retrieve_cost_data: true
+retrieve_cost_data: True
 technology_data:
-  year: 2025
+  year: 2030
   version: v0.6.2
 
 ###################
@@ -32,33 +32,43 @@ run: test
 
 #wildcards
 scenario:
-  flexibility: ['0', ] #possible deviation [%] of requested load from nominal level
   policy:  ["cfe100"] # "ref", "res100", "cfe..", "cfe100"
-  palette: [ "p1", # onwind + solar + battery
-             #"p2", # onwind + solar + battery + LDES
-             #"p3", # onwind + solar + battery + LDES + clean dispatchable gen
+  palette: [
+            # "p1", # onwind + solar + battery
+            # "p2", # onwind + solar + battery + LDES
+            "p3", # onwind + solar + battery + Allam cycle turbine with CCS
             ]
   zone: [
-        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DK", "DE",  FR", "IEDK", "DKDE"
+        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
         ]
-  year: [ '2025',
-          #'2030'
+  participation: [
+                '0',
+                '10',
+                '15',
+                '20',
+                '25',
+                ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
+  year: [
+          # "2025",
+          "2030"
          ] # controls both the brownfield fleet and tech costs projection
 
+# CI consumer settings
 ci:
   datacenters: {"IE5 0": "ireland"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
-  load: 100. # nominal load of data centers in MW
+  #load: 100. # nominal load in MW -> now scaled to match participation share
   res_techs: ["onwind","solar"]
   excess_share: 0.2
-  spatial_shifting: true #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: true #turns on/off temporal flexibiilty (aka DSM)
+  flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
+  spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
 
 
 ###################
 # Time-series management
 
-time_sampling: '3H' # one of ["1H", "3H"]
+time_sampling: "3H" # one of ["1H", "3H"]
 plot_timeseries: False
 
 
@@ -79,7 +89,7 @@ carrier_to_keep: [ #generators
                   "urban central solid biomass CHP", #"electricity distribution grid",
                   #Stores
                   "H2 Store","co2","co2 stored","battery", "solid biomass", #"home battery"
-                  #Loads ('industry electricity' is included)
+                  #Loads ("industry electricity" is included)
                   "electricity"
                     ]
 additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
@@ -115,6 +125,7 @@ costs:
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
 
+
 #~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
 ci_load:
   IE: 2200.
@@ -123,40 +134,45 @@ ci_load:
   NL: 8140.
 
 
-#national policies
-#countries with nuclear phase-out policy (FR and BE shifted plan to 2035). https://world-nuclear.org/
-nodes_with_nucsban: ["DE1 0"]
-#countries with coal phase-out policy before 2025 and 2030 https://beyond-coal.eu/europes-coal-exit/
-policy_2025: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB']
-policy_2030: ['BE', 'SE', 'PT', 'AT', 'FR', 'GB', 'IT', 'IE', 'HU', 'MK', 'DK', 'GR', 'NL', 'FI', 'RS', 'ES', 'SK']
-#source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
+# nuclear phase-out policies (FR and BE shifted plan to 2035)
+# source:  https://world-nuclear.org/
+nuclear_phaseout: ["DE"]
+
+
+# coal phase-out policies
+# source: https://beyond-coal.eu/europes-coal-exit/
+coal_phaseout_2025: ["BE", "SE", "PT", "AT", "FR", "GB"]
+coal_phaseout_2030: ["BE", "SE", "PT", "AT", "FR", "GB", "IT", "IE", "HU", "MK", "DK", "GR", "NL", "FI", "RS", "ES", "SK"]
+
+# renewable target policies (RES share in electricity consumption)
+# source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
 res_target_2025:
   IE: 0.47
-  DK: 0.9
+  DK: 0.85  # p.3 https://ens.dk/sites/ens.dk/files/Basisfremskrivning/kf23_sektornotat_8b_forbrug_af_el.pdf
   DE: 0.55
-  NL: 0.35    # interpolated from 2020 wind+solar 19%, bioenergy 6% to 2030 target
+  NL: 0.49   # interpolated from 2020 wind+solar 19%, bioenergy 6% to 2030 target
   AT: 0.90   # 79% overall renewables in 2020 -> target 100% 2030
-  BE: 0.335  # 20% (2020) wind + solar, 6% Others
+  BE: 0.323  # p.63 https://energy.ec.europa.eu/system/files/2020-09/be_final_necp_parta_en_0.pdf, 11.156 GWh = 32.3%
   BG: 0.21   # p. 59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
   CZ: 0.14   # 4% wind+solar 2020, 12% renewable overall (2020)
-  HR: 0.56   # linear interpolated Table 2-1 p.54 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
+  HR: 0.56   # interpolated Table 2-1 p.54 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
   FR: 0.32   # 10% wind+solar 2020, 23% renewable overall
-  GB: 0.685  # 29% wind + solar 2020, 42% renewable overall
+  GB: 0.535  # interpolated from 2020: 29% wind + solar 2020, 42% renewable overall to 2030 target
   PL: 0.245  # 11% wind + solar 2020, 17% renewable overall
   ES: 0.588  # linear interpolated share 46.6% in 2021 targer 74% in 2030
   PT: 0.69   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
 res_target_2030:
   IE: 0.7
-  DK: 1.1
-  DE: 0.80
-  NL: 0.50  #https://climate-laws.org/geographies/netherlands/policies/national-climate-agreement
+  DK: 1.17  # https://ens.dk/sites/ens.dk/files/Basisfremskrivning/kf23_sektornotat_8b_forbrug_af_el.pdf
+  DE: 0.80  # https://www.bmwk.de/Redaktion/EN/Downloads/Energy/0406_ueberblickspapier_osterpaket_en.html
+  NL: 0.73  # https://energy.ec.europa.eu/system/files/2021-01/staff_working_document_assessment_necp_netherlands_en_0.pdf
   AT: 1.0   # https://windeurope.org/newsroom/news/austria-aims-to-have-100-renewable-electricity-by-2030/
-  BE: 0.404 # 32% https://windeurope.org/newsroom/news/belgium-energy-and-climate-plan-proposes-renewable-energy-target-of-18-3-by-2030/
+  BE: 0.37  # https://energy.ec.europa.eu/system/files/2020-09/be_final_necp_parta_en_0.pdf
   BG: 0.27  # p.59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
   HR: 0.64  # p.54 Table 2-1 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
   CZ: 0.17
   FR: 0.4
-  GB: 0.95  # https://www.edie.net/energy-security-strategy-uk-targets-95-low-carbon-electricity-mix-by-2030-but-will-increase-oil-and-gas-production/
+  GB: 0.65  # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/938539/NIS_Report_Web_Accessible.pdf
   PL: 0.32  # table 1.1 https://iea.blob.core.windows.net/assets/b9ea5a7d-3e41-4318-a69e-f7d456ebb118/Poland2022.pdf
   ES: 0.74  # p.10 https://energy.ec.europa.eu/system/files/2021-01/staff_working_document_assessment_necp_spain_en_0.pdf
   PT: 0.8   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
@@ -196,15 +212,15 @@ tech_colors:
   "offshore wind": "#6895dd"
   "onshore wind": "#74c6f2"
   "solar": "#ffef60"
-  "solar rooftop": '#000000'
+  "solar rooftop": "#000000"
   # Clean Dispatchable
   "advanced nuclear": "#df3439"
   "advanced geothermal": "#99582a"
   "advanced dispatchable": "#99582a"
   "clean dispatchable": "#99582a"
   "NG-Allam": "#540b0e"
-  'hydroelectricity': '#298c81'
-  'nuclear': '#ff8c00'
+  "hydroelectricity": "#298c81"
+  "nuclear": "#ff8c00"
   # Storage
   "battery": "#666666"
   "battery inverter": "#444444"
@@ -212,20 +228,20 @@ tech_colors:
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
   "hydrogen electrolysis": "#550055"
-  'pumped hydro storage': '#51dbcc'
+  "pumped hydro storage": "#51dbcc"
   # Emitters
   "OCGT": "#d35050"
   "CCGT": "#b20101"
   "Gas OC": "#d35050"
-  'hard coal': '#545454'
-  'lignite': '#826837'
-  'oil': "#808080"
+  "hard coal": "#545454"
+  "lignite": "#826837"
+  "oil": "#808080"
   # biomass
-  'solid biomass': '#baa741'
+  "solid biomass": "#baa741"
   # power transmission
-  "lines": '#6c9459'
-  "transmission lines": '#6c9459'
-  "electricity distribution grid": '#97ad8c'
+  "lines": "#6c9459"
+  "transmission lines": "#6c9459"
+  "electricity distribution grid": "#97ad8c"
   #virtual links
-  "spatial shift": '#ff8c00'
-  "temporal shift": '#d26303'
+  "spatial shift": "#ff8c00"
+  "temporal shift": "#d26303"

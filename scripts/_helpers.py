@@ -1,12 +1,34 @@
-# Snakemake mocking function
-# see: https://github.com/PyPSA/pypsa-eur/blob/master/scripts/_helpers.py
-
-# SPDX-FileCopyrightText: 2017-2020 The PyPSA-Eur Authors
+# SPDX-FileCopyrightText: 2017-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
 
 import pypsa, numpy as np, pandas as pd
 from pathlib import Path
+import yaml
+import difflib
+
+
+def load_yaml(file_path):
+    with open(file_path, "r") as file:
+        return yaml.safe_load(file)
+
+
+def compare_yaml(file1, file2):
+    yaml1 = load_yaml("path/to/file1.yaml")
+    yaml2 = load_yaml("path/to/file2.yaml")
+
+    yaml1_lines = yaml.dump(yaml1).splitlines()
+    yaml2_lines = yaml.dump(yaml2).splitlines()
+
+    diff = difflib.unified_diff(
+        yaml1_lines, yaml2_lines, lineterm="", fromfile=file1, tofile=file2
+    )
+
+    for line in diff:
+        print(line)
+
+
+# compare_yaml("file1.yaml", "file2.yaml")
 
 
 def override_component_attrs():
