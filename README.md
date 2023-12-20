@@ -5,14 +5,17 @@ SPDX-License-Identifier: CC0-1.0
 -->
 
 [![Webpage](https://img.shields.io/badge/-Project%20Webpage-blue?style=flat-square&logo=github)](https://irieo.github.io/247cfe.github.io/)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
-![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSES/MIT.txt)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=flat-square)](LICENSES/CC-BY-4.0.txt)
+[![Zenodo Study1](https://zenodo.org/badge/DOI/10.5281/zenodo.7180097.svg)](https://zenodo.org/record/7180097)
+[![Zenodo Stidy2](https://zenodo.org/badge/DOI/10.5281/zenodo.8185849.svg)](https://zenodo.org/record/8185849)
+
 
 # PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
 
 ## Project webpage
 
-**Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights, interactive visualizations, and more!**
+Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights about our research.
 
 ## Getting started
 
