@@ -3,11 +3,13 @@ SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
 
 SPDX-License-Identifier: CC0-1.0
 -->
-[![Webpage](https://img.shields.io/badge/-Project%20Webpage-blue?style=flat-square&logo=github)](https://irieo.github.io/247cfe.github.io/)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
-![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=flat-square)
+
 
 # PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
+
+## Project webpage
+
+**Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights, interactive visualizations, and more!**
 
 ## Getting started
 
@@ -42,26 +44,6 @@ In this study, we explore how and why space-time load-shifting flexibility can 
 
 On the role of 24/7 CFE in accelerating advanced clean energy technologies
 *(work in progress).*
-
-## Background
-
-Traditional Power Purchase Agreements (PPAs) for renewable
-energy have seen rapid growth in recent years, but they only match
-supply and demand on average over a longer period such as a
-year. There is increasing interest from corporations such as Google to
-match their demand with clean energy supply on a truly 24/7 basis,
-whether that is using variable renewables paired with storage, or
-using dispatchable clean sources such as geothermal power. In 2020
-Google committed to operating entirely on 24/7 carbon-free energy
-(CFE) at all of its data centres and campuses worldwide by 2030.  In
-this project we will explore different designs for a 24/7 carbon-free
-PPA, and how their deployment affects the rest of the energy system.
-
-Further information:
-
-- [Google's 24/7 CFE concept](https://www.gstatic.com/gumdrop/sustainability/247-carbon-free-energy.pdf)
-- [Google's 24/7 CFE metrics and methodology](https://www.gstatic.com/gumdrop/sustainability/24x7-carbon-free-energy-methodologies-metrics.pdf)
-- [UN's 24/7 Carbon-free Energy Compact](https://www.un.org/en/energy-compacts/page/compact-247-carbon-free-energy)
 
 
 ## How to reproduce results of a study?
