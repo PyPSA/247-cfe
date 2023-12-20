@@ -4,6 +4,9 @@ SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
 SPDX-License-Identifier: CC0-1.0
 -->
 
+[![Webpage](https://img.shields.io/badge/-Project%20Webpage-blue?style=flat-square&logo=github)](https://irieo.github.io/247cfe.github.io/)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
+![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=flat-square)
 
 # PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
 
