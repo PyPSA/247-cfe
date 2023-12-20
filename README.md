@@ -12,7 +12,7 @@ SPDX-License-Identifier: CC0-1.0
 
 ## Project webpage
 
-**Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights, interactive visualizations, and more!**
+Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights about our research.
 
 ## Getting started
 
