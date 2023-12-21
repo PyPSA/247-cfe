@@ -1469,8 +1469,8 @@ if __name__ == "__main__":
 
         add_ci(n, year)
         add_vl(n) if config["ci"]["spatial_shifting"] else None
-        revert_links(n) if config["ci"]["spatial_shifting"] else None
         add_dsm(n) if config["ci"]["temporal_shifting"] else None
+        revert_links(n)
 
         solve_network(
             n=n,

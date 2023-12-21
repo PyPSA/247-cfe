@@ -408,7 +408,7 @@ def zone_emissions(df, rename_scen):
         ax.grid(alpha=0.8, which="both", linestyle="--")
         ax.set_axisbelow(True)
         ax.tick_params(axis="y", labelsize=12)
-        ax.set_ylabel(f"Emissions in local zone [MtCO$_2$$\\cdot$a$^-1$]", fontsize=14)
+        ax.set_ylabel(r"Emissions in local zone [MtCO$_2\cdot a^{-1}$]", fontsize=14)
         ax.set_title(
             f"Annual power sector emissions in local zone: {zone}",
             fontsize=16,
