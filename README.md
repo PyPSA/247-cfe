@@ -51,6 +51,11 @@ In this study, we explore how and why space-time load-shifting flexibility can 
 On the role of 24/7 CFE in accelerating advanced clean energy technologies
 *(work in progress).*
 
+### Research papers related to this project:
+
+- [On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement](https://zenodo.org/records/10407830)
+- [Spatio-temporal load shifting for truly clean computing](https://zenodo.org/records/10869649)
+
 
 ## How to reproduce results of a study?
 
