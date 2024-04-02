@@ -343,7 +343,7 @@ def ci_curtailment(df, rename_scen, ci_res):
 
 
 def ci_emisrate(df, rename_scen):
-    ldf = df.loc["ci_emissions"]
+    ldf = df.loc["ci_emission_rate_true"] * 1e3  # convert to gCO2/kWh
     ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
 
     # Plotting
@@ -432,7 +432,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "plot_summary", year="2030", zone="IE", palette="p3", policy="cfe100"
+            "plot_summary", year="2025", zone="IE", palette="p3", policy="cfe100"
         )
 
     config = snakemake.config
