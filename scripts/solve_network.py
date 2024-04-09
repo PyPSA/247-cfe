@@ -39,9 +39,9 @@ def palette(tech_palette: str) -> tuple:
         },
         "p2": {
             "clean_techs": ["onwind", "solar"],
-            "storage_techs": ["battery", "hydrogen"],
-            "storage_chargers": ["battery charger", "H2 Electrolysis"],
-            "storage_dischargers": ["battery discharger", "H2 Fuel Cell"],
+            "storage_techs": ["battery", "ironair"],  # "hydrogen"
+            "storage_chargers": ["battery charger"],  # "H2 Electrolysis"
+            "storage_dischargers": ["battery discharger"],  # "H2 Fuel Cell"
         },
         "p3": {
             "clean_techs": ["onwind", "solar", "allam_ccs"],
@@ -278,6 +278,22 @@ def prepare_costs(
         )
     )
 
+    # Add advanced technologies
+    # iron-air storage
+    data_ironair = pd.Series(
+        {
+            "FOM": 0,
+            "VOM": 0,
+            "discount rate": discount_rate,
+            "efficiency": 0.5,
+            "investment": config["costs"][f"ironair_overnight_{year}"]
+            * 1e3
+            * config["costs"]["USD2023_to_EUR2023"],
+            "lifetime": 25.0,
+        },
+        name="ironair",
+    )
+
     # Advanced nuclear
     data_nuc = pd.Series(
         {
@@ -329,7 +345,7 @@ def prepare_costs(
         name="allam_ccs",
     )
 
-    tech_list = [data_nuc, data_geo, data_allam]
+    tech_list = [data_ironair, data_nuc, data_geo, data_allam]
     for tech in tech_list:
         costs = pd.concat([costs, tech.to_frame().transpose()], ignore_index=False)
 
@@ -699,6 +715,22 @@ def add_ci(n: pypsa.Network, year: str) -> None:
                 lifetime=n.links.at[
                     f"{location} battery discharger" + "-{}".format(year), "lifetime"
                 ],
+            )
+
+        # Add storage techs
+        if "ironair" in storage_techs:
+            n.add(
+                "StorageUnit",
+                f"{name} ironair",
+                bus=name,
+                carrier="pure_magic",
+                max_hours=100,
+                capital_cost=costs.loc["ironair"]["fixed"],
+                efficiency_store=1,
+                efficiency_dispatch=costs.loc["ironair"]["efficiency"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                cyclic_state_of_charge=True,
+                lifetime=costs.loc["ironair"]["lifetime"],
             )
 
         if "hydrogen" in storage_techs:
@@ -1399,11 +1431,11 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake(
             "solve_network",
-            year="2030",
+            year="2025",
             zone="IE",
-            palette="p3",
+            palette="p2",
             policy="cfe100",
-            participation="10",
+            participation="25",
         )
 
     logging.basicConfig(
