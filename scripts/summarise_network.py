@@ -114,6 +114,13 @@ def _calculate_storage_costs(storage_techs, name, network):
         "ci_cost_battery_inverter": 0.0,
     }
 
+    ironair_costs = {
+        "ci_capital_cost_ironair_storage": 0.0,
+        "ci_cost_ironair_storage": 0.0,
+        "ci_capital_cost_ironair_inverter": 0.0,
+        "ci_cost_ironair_inverter": 0.0,
+    }
+
     hydrogen_costs = {
         "ci_capital_cost_hydrogen_storage": 0.0,
         "ci_cost_hydrogen_storage": 0.0,
@@ -138,6 +145,23 @@ def _calculate_storage_costs(storage_techs, name, network):
         )
         battery_costs["ci_cost_battery_inverter"] = battery_costs[
             "ci_capital_cost_battery_inverter"
+        ]
+
+    if "ironair" in storage_techs:
+        ironair_costs["ci_capital_cost_ironair_storage"] = (
+            network.stores.at[f"{name} ironair", "e_nom_opt"]
+            * network.stores.at[f"{name} ironair", "capital_cost"]
+        )
+        ironair_costs["ci_cost_ironair_storage"] = ironair_costs[
+            "ci_capital_cost_ironair_storage"
+        ]
+
+        ironair_costs["ci_capital_cost_ironair_inverter"] = (
+            network.links.at[f"{name} ironair charger", "p_nom_opt"]
+            * network.links.at[f"{name} ironair charger", "capital_cost"]
+        )
+        ironair_costs["ci_cost_ironair_inverter"] = ironair_costs[
+            "ci_capital_cost_ironair_inverter"
         ]
 
     if "hydrogen" in storage_techs:
@@ -165,7 +189,7 @@ def _calculate_storage_costs(storage_techs, name, network):
             "ci_capital_cost_hydrogen_fuel_cell"
         ]
 
-    return battery_costs, hydrogen_costs
+    return battery_costs, ironair_costs, hydrogen_costs
 
 
 def _calculate_curtailment(network, tech, buses, weights):
@@ -564,13 +588,20 @@ def summarise_network(n, policy, tech_palette):
             }
         )
 
-        battery_costs, hydrogen_costs = _calculate_storage_costs(storage_techs, name, n)
+        battery_costs, ironair_costs, hydrogen_costs = _calculate_storage_costs(
+            storage_techs, name, n
+        )
         results[location].update(battery_costs)
+        results[location].update(ironair_costs)
         results[location].update(hydrogen_costs)
         # Only add capital costs (or operational costs, as per your model's requirement) to the total_cost
         total_cost += (
             battery_costs["ci_cost_battery_storage"]
             + battery_costs["ci_cost_battery_inverter"]
+        )
+        total_cost += (
+            ironair_costs["ci_cost_ironair_storage"]
+            + ironair_costs["ci_cost_ironair_inverter"]
         )
         total_cost += (
             hydrogen_costs["ci_cost_hydrogen_storage"]
@@ -650,11 +681,11 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "summarise_network",
-            year="2030",
+            year="2025",
             zone="IE",
-            palette="p3",
+            palette="p2",
             policy="cfe100",
-            participation="10",
+            participation="25",
         )
 
     # Wildcards & Settings

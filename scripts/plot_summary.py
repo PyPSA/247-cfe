@@ -48,7 +48,7 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
             ),
             df.loc[["ci_cap_" + t.replace(" ", "_") for t in clean_chargers]]
             .rename({"ci_cap_" + t: t for t in clean_chargers})
-            .drop(["battery_charger"]),
+            .drop(["battery_charger", "ironair_charger"]),
         ]
     )
 
@@ -112,6 +112,8 @@ def ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order)
         "grid",
         "battery_storage",
         "battery_inverter",
+        "ironair_storage",
+        "ironair_inverter",
         "hydrogen_storage",
         "hydrogen_electrolysis",
         "hydrogen_fuel_cell",
@@ -432,7 +434,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "plot_summary", year="2025", zone="IE", palette="p3", policy="cfe100"
+            "plot_summary", year="2025", zone="IE", palette="p2", policy="cfe100"
         )
 
     config = snakemake.config
@@ -486,6 +488,9 @@ if __name__ == "__main__":
             "battery_storage": "battery",
             "battery_inverter": "battery",
             "battery_discharger": "battery",
+            "ironair_storage": "iron-air",
+            "ironair_inverter": "iron-air",
+            "ironair_discharger": "iron-air",
             "hydrogen_storage": "hydrogen storage",
             "hydrogen_electrolysis": "hydrogen storage",
             "hydrogen_fuel_cell": "hydrogen storage",
@@ -499,6 +504,7 @@ if __name__ == "__main__":
             "onwind": "onshore wind",
             "solar": "solar",
             "battery_discharger": "battery",
+            "ironair_discharger": "iron-air",
             "H2_Fuel_Cell": "hydrogen fuel cell",
             "H2_Electrolysis": "hydrogen electrolysis",
             "adv_geothermal": "advanced dispatchable",
@@ -523,6 +529,7 @@ if __name__ == "__main__":
             "onshore wind",
             "solar",
             "battery",
+            "iron-air",
             "hydrogen storage",
             "hydrogen electrolysis",
             "hydrogen fuel cell",

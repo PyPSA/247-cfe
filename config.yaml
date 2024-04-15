@@ -125,8 +125,8 @@ costs:
   adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
-  ironair_overnight_2025: 1900 # 2023$/kW CAPEX 
-  ironair_overnight_2030: 1700 # 2023$/kW CAPEX -> indicative, the value is endogenised in the analysis
+  ironair_capacity_2025: 1500 # 2023$/kW CAPEX
+  ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
 
 
 #~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
@@ -228,6 +228,9 @@ tech_colors:
   "battery": "#666666"
   "battery inverter": "#444444"
   "battery storage": "#666666"
+  "iron-air": "#3B7A57"
+  "iron-air inverter": "#298c81"
+  "iron-air storage": "#3B7A57"
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
   "hydrogen electrolysis": "#550055"
