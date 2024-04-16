@@ -665,7 +665,7 @@ def summarise_network(n, policy, tech_palette):
 
         # Convert all results to float and round to 2 decimal places
         results[location] = {
-            k: round(float(v), 2) for k, v in results[location].items()
+            k: round(float(v), 3) for k, v in results[location].items()
         }
 
     # Saving resutls as ../summaries/{}.yaml
