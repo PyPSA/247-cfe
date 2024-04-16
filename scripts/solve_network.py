@@ -294,20 +294,22 @@ def prepare_costs(
             "investment": config["costs"][f"ironair_energy_{year}"]
             * 1e3
             * config["costs"]["USD2023_to_EUR2023"],
-            "lifetime": 25.0,
+            "lifetime": 15.0,
         },
         name="ironair storage",
     )
 
     data_ironair_inverter = pd.Series(
         {
-            "FOM": 0,
+            "FOM": 1,  # %/year
             "VOM": 0,
             "discount rate": discount_rate,
             "investment": config["costs"][f"ironair_capacity_{year}"]
             * 1e3
             * config["costs"]["USD2023_to_EUR2023"],
-            "lifetime": 25.0,
+            "discharge_efficiency": 0.60,
+            "charge_efficiency": 0.71,
+            "lifetime": 15.0,
         },
         name="ironair inverter",
     )
@@ -761,8 +763,8 @@ def add_ci(n: pypsa.Network, year: str) -> None:
                 bus0=name,
                 bus1=f"{name} ironair",
                 carrier="pure_magic",
-                efficiency=0.8,  # dummy
-                capital_cost=costs.loc["ironair inverter"]["fixed"],  # dummy
+                efficiency=costs.loc["ironair inverter"]["charge_efficiency"],
+                capital_cost=costs.loc["ironair inverter"]["fixed"],
                 p_nom_extendable=True if policy == "cfe" else False,
                 lifetime=costs.loc["ironair inverter"]["lifetime"],
             )
@@ -773,7 +775,7 @@ def add_ci(n: pypsa.Network, year: str) -> None:
                 bus0=f"{name} ironair",
                 bus1=name,
                 carrier="pure_magic",
-                efficiency=0.8,  # dummy
+                efficiency=costs.loc["ironair inverter"]["discharge_efficiency"],
                 p_nom_extendable=True if policy == "cfe" else False,
                 lifetime=costs.loc["ironair inverter"]["lifetime"],
             )
@@ -1616,5 +1618,7 @@ if __name__ == "__main__":
 
     logger.info(f"Maximum memory usage: {mem.mem_usage}")
 
-# n.stores.filter(like='ireland', axis=0).T
-# costs.filter(like='ironair', axis=0).round(1).T
+
+# n.stores.filter(like=f'{names[0]}', axis=0).T
+# n.links.filter(like=f'{names[0]}', axis=0).T
+# costs.filter(like='ironair', axis=0).round(2).T
