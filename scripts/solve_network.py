@@ -55,11 +55,23 @@ def palette(tech_palette: str) -> tuple:
             "storage_chargers": ["battery charger"],
             "storage_dischargers": ["battery discharger"],
         },
+        "p4": {
+            "clean_techs": ["onwind", "solar", "allam_ccs"],
+            "storage_techs": ["battery", "ironair"],  # "hydrogen"
+            "storage_chargers": [
+                "battery charger",
+                "ironair charger",
+            ],  # "H2 Electrolysis"
+            "storage_dischargers": [
+                "battery discharger",
+                "ironair discharger",
+            ],  # "H2 Fuel Cell"
+        },
     }
 
     if tech_palette not in palettes:
         print(
-            f"'palette' wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}."
+            f"'palette' wildcard must be one of 'p1', 'p2', 'p3' or 'p4'. Now is {tech_palette}."
         )
         sys.exit()
 

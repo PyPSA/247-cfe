@@ -35,8 +35,9 @@ scenario:
   policy:  ["cfe100"] # "ref", "res100", "cfe..", "cfe100"
   palette: [
             # "p1", # onwind + solar + battery
-            # "p2", # onwind + solar + battery + LDES
-            "p3", # onwind + solar + battery + Allam cycle turbine with CCS
+            #"p2", # onwind + solar + battery + LDES (here: iron-air battery)
+            #"p3", # onwind + solar + battery + Allam cycle turbine with CCS
+            "p4", # onwind + solar + battery + LDES + Allam cycle turbine with CCS
             ]
   zone: [
         "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
