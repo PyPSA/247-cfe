@@ -127,7 +127,7 @@ costs:
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
   ironair_capacity_2025: 1500 # 2023$/kW CAPEX
   ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
-
+  ironair_duration: 100 # P/E ratio of iron-air battery
 
 #~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
 ci_load:

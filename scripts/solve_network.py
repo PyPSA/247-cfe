@@ -1435,9 +1435,30 @@ def solve_network(
 
         n.model.add_constraints(lhs == 0, name="Ironair-inverter_ratio")
 
+    def add_ironair_duration_fix(n):
+        """
+        Add constraint ensuring that P/E ratio for ironair battery is 100 hours
+        (the only commercial ironair battery product has fixed duration)
+        """
+
+        energy_bool = n.stores.index.str.contains("ironair")
+        energy_ext = n.stores[energy_bool].query("e_nom_extendable").index
+
+        charger_bool = n.links.index.str.contains("ironair charger")
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        expr = (
+            n.model["Store-e_nom"].loc[energy_ext]
+            == n.model["Link-p_nom"].loc[chargers_ext]
+            * snakemake.config["costs"]["ironair_duration"]
+        )
+
+        n.model.add_constraints(expr, name="Ironair-duration")
+
     def extra_functionality(n, snapshots):
         add_battery_constraints(n)
         add_ironair_inverter_fix(n)
+        add_ironair_duration_fix(n)
         # country_res_constraints(n)
         system_res_constraints(n, year, config)
 
@@ -1513,7 +1534,7 @@ if __name__ == "__main__":
             zone="IE",
             palette="p2",
             policy="cfe100",
-            participation="25",
+            participation="5",
         )
 
     logging.basicConfig(
