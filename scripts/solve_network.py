@@ -1417,8 +1417,27 @@ def solve_network(
 
         n.model.add_constraints(lhs == 0, name="Link-charger_ratio")
 
+    def add_ironair_inverter_fix(n):
+        """
+        Add constraint ensuring that charger = discharger for ironair battery:
+        """
+        discharger_bool = n.links.index.str.contains("ironair discharger")
+        charger_bool = n.links.index.str.contains("ironair charger")
+
+        dischargers_ext = n.links[discharger_bool].query("p_nom_extendable").index
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        eff = n.links.efficiency[dischargers_ext].values
+        lhs = (
+            n.model["Link-p_nom"].loc[chargers_ext]
+            - n.model["Link-p_nom"].loc[dischargers_ext] * eff
+        )
+
+        n.model.add_constraints(lhs == 0, name="Ironair-inverter_ratio")
+
     def extra_functionality(n, snapshots):
         add_battery_constraints(n)
+        add_ironair_inverter_fix(n)
         # country_res_constraints(n)
         system_res_constraints(n, year, config)
 
