@@ -46,11 +46,13 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
             df.loc[["ci_cap_" + t.replace(" ", "_") for t in clean_dischargers]].rename(
                 {"ci_cap_" + t: t for t in clean_dischargers}
             ),
-            df.loc[["ci_cap_" + t.replace(" ", "_") for t in clean_chargers]]
-            .rename({"ci_cap_" + t: t for t in clean_chargers})
-            .drop(["battery_charger", "ironair_charger"]),
+            df.loc[["ci_cap_" + t.replace(" ", "_") for t in clean_chargers]].rename(
+                {"ci_cap_" + t: t for t in clean_chargers}
+            ),
         ]
-    )
+    ).drop(
+        ["battery_discharger", "ironair_discharger"]
+    )  # keep only hydrogen discharger
 
     # Drop rows with all values less than 0.1
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
@@ -487,10 +489,10 @@ if __name__ == "__main__":
             "revenue": "revenue",
             "battery_storage": "battery",
             "battery_inverter": "battery",
-            "battery_discharger": "battery",
+            "battery_charger": "battery",
             "ironair_storage": "iron-air",
             "ironair_inverter": "iron-air",
-            "ironair_discharger": "iron-air",
+            "ironair_charger": "iron-air",
             "hydrogen_storage": "hydrogen storage",
             "hydrogen_electrolysis": "hydrogen storage",
             "hydrogen_fuel_cell": "hydrogen storage",
@@ -504,7 +506,9 @@ if __name__ == "__main__":
             "onwind": "onshore wind",
             "solar": "solar",
             "battery_discharger": "battery",
+            "battery_charger": "battery",
             "ironair_discharger": "iron-air",
+            "ironair_charger": "iron-air",
             "H2_Fuel_Cell": "hydrogen fuel cell",
             "H2_Electrolysis": "hydrogen electrolysis",
             "adv_geothermal": "advanced dispatchable",
@@ -514,6 +518,7 @@ if __name__ == "__main__":
 
     rename_scen = {
         "0": "0%",
+        "5": "5%",
         "10": "10%",
         "15": "15%",
         "20": "20%",
