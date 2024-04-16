@@ -50,9 +50,11 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
                 {"ci_cap_" + t: t for t in clean_chargers}
             ),
         ]
-    ).drop(
-        ["battery_discharger", "ironair_discharger"]
-    )  # keep only hydrogen discharger
+    )
+
+    # Drop dischargers for storage technologies with fixed P/E ratio
+    to_drop = ["battery_discharger", "ironair_discharger"]
+    ldf = ldf.drop(index=[row for row in to_drop if row in ldf.index])
 
     # Drop rows with all values less than 0.1
     to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
