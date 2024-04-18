@@ -147,6 +147,10 @@ def ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order)
         axis="columns", level=[1, 0], ascending=[False, True]
     )
 
+    # treat 0% participation case (NaN and inf to 0.)
+    ldf = ldf.fillna(0)
+    ldf = ldf.replace([float("inf"), -float("inf")], 0)
+
     # Plotting
     fig, ax = plt.subplots(figsize=(8, 6))
     if not ldf.empty:
