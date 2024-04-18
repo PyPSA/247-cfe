@@ -1034,6 +1034,7 @@ def calculate_grid_cfe(n, name: str, node: str, config) -> pd.Series:
     # grid_cfe[grid_cfe > 1] = 1.
 
     import_cfe = clean_grid_resources / (clean_grid_resources + dirty_grid_resources)
+    import_cfe = np.nan_to_num(import_cfe, nan=0.0)  # Convert NaN to 0
 
     clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
     clean_country_ls = -n.links_t.p1[clean_country_links].sum(axis=1)
