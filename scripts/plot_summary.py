@@ -53,7 +53,7 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
     )
 
     # Drop dischargers for storage technologies with fixed P/E ratio
-    to_drop = ["battery_discharger", "ironair_discharger"]
+    to_drop = ["battery_charger", "ironair_charger"]
     ldf = ldf.drop(index=[row for row in to_drop if row in ldf.index])
 
     # Drop rows with all values less than 0.1
