@@ -364,7 +364,15 @@ def summarise_network(n, policy, tech_palette):
             clean_grid_resources + dirty_grid_resources
         )
 
+        if grid_emission_rate.isna().all():
+            grid_emission_rate.fillna(0, inplace=True)
+        elif grid_emission_rate.notna().any() and grid_emission_rate.isna().any():
+            raise ValueError("grid_emission_rate contains a mix of NaN and values")
+        else:
+            pass  # No action needed if no NaN values
+
         country_hourly_emissions = _calculate_emissions(n, dirty_country_links)
+
         grid_supply_emission_rate = (
             country_hourly_emissions + country_import * grid_emission_rate
         ) / (clean_country_resources + dirty_country_resources + country_import)
@@ -682,10 +690,10 @@ if __name__ == "__main__":
         snakemake = mock_snakemake(
             "summarise_network",
             year="2025",
-            zone="IE",
-            palette="p2",
-            policy="cfe100",
-            participation="25",
+            zone="DE",
+            palette="p1",
+            policy="ref",
+            participation="5",
         )
 
     # Wildcards & Settings
