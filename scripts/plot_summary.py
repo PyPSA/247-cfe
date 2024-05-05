@@ -24,6 +24,30 @@ def format_country_names(col_tuple):
     return f"{col_tuple[:2]}"
 
 
+def rename_scen(obj, level=0):
+    """
+    Automatically append a percent sign to numeric string column names if not already present and rename DataFrame columns.
+
+    Returns:
+    - None: Modifies the DataFrame in place.
+    """
+    if isinstance(obj, pd.DataFrame):
+        # Handle DataFrame: Modify column names
+        modified_dict = {
+            key: f"{key}%" if key.isdigit() and "%" not in key else key
+            for key in obj.columns.get_level_values(level)
+        }
+        obj.rename(columns=modified_dict, level=level, inplace=True)
+
+    elif isinstance(obj, pd.Series):
+        # Handle Series: Modify index labels
+        modified_dict = {
+            key: f"{key}%" if "%" not in key else key
+            for key in obj.index.get_level_values(level)
+        }
+        obj.rename(index=modified_dict, level=level, inplace=True)
+
+
 def prepare_data_frame(df, techs, rename_dict):
     return df.loc[["ci_cap_" + t.replace(" ", "_") for t in techs]].rename(
         {"ci_cap_" + t: t for t in techs}
@@ -36,7 +60,7 @@ def add_datacenter_lines(ax, num_columns, num_datacenters):
         ax.axvline(x=(space - 0.5) + space * l, color="gray", linestyle="--")
 
 
-def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_order):
+def ci_capacity(df, tech_colors, rename_ci_capacity, preferred_order):
     # Data Preparation
     ldf = pd.concat(
         [
@@ -52,7 +76,7 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
         ]
     )
 
-    # Drop dischargers for storage technologies with fixed P/E ratio
+    # Display discharger capacity for storage technologies with fixed P/E ratio
     to_drop = ["battery_charger", "ironair_charger"]
     ldf = ldf.drop(index=[row for row in to_drop if row in ldf.index])
 
@@ -61,7 +85,7 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
     ldf.drop(to_drop, inplace=True)
 
     # Rename columns and indices
-    ldf.rename(columns=rename_scen, level=0, inplace=True)
+    rename_scen(ldf, level=0)
     ldf.rename(index=rename_ci_capacity, level=0, inplace=True)
 
     # Reorder and sort the final DataFrame
@@ -111,7 +135,7 @@ def ci_capacity(df, tech_colors, rename_scen, rename_ci_capacity, preferred_orde
     fig.savefig(snakemake.output.plot, transparent=True, dpi=300)
 
 
-def ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order):
+def ci_costandrev(df, tech_colors, rename_ci_cost, preferred_order):
     techs = clean_techs + [
         "grid",
         "battery_storage",
@@ -136,7 +160,7 @@ def ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order)
     revenues = -df.loc[["ci_average_revenue"]].rename({"ci_average_revenue": "revenue"})
     ldf = pd.concat([costs, revenues])
 
-    ldf.rename(columns=rename_scen, level=0, inplace=True)
+    rename_scen(ldf, level=0)
     ldf = ldf.groupby(rename_ci_cost).sum()
 
     # Reorder and sort the DataFrame
@@ -212,7 +236,7 @@ def ci_costandrev(df, tech_colors, rename_scen, rename_ci_cost, preferred_order)
     )
 
 
-def ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_order):
+def ci_generation(df, tech_colors, rename_ci_capacity, preferred_order):
     # Generation and Discharge Calculation
     generation = (
         df.loc[["ci_generation_" + t.replace(" ", "_") for t in clean_techs]].rename(
@@ -232,7 +256,7 @@ def ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_or
     ldf.drop(ldf.index[(ldf < 0.1).all(axis=1)], inplace=True)
 
     # Rename and Reorder
-    ldf.rename(columns=rename_scen, level=0, inplace=True)
+    rename_scen(ldf, level=0)
     ldf.rename(index=rename_ci_capacity, level=0, inplace=True)
     new_index = preferred_order.intersection(ldf.index).append(
         ldf.index.difference(preferred_order)
@@ -305,14 +329,14 @@ def ci_generation(df, tech_colors, rename_scen, rename_ci_capacity, preferred_or
     )
 
 
-def ci_curtailment(df, rename_scen, ci_res):
+def ci_curtailment(df, ci_res):
     # Data for ci res curtailment across all locations
     ldf = df.loc[["ci_curtailment_" + t for t in ci_res]].rename(
         {"ci_curtailment_" + t: t for t in ci_res}
     )
 
     # Refine data
-    ldf.rename(columns=rename_scen, level=0, inplace=True)
+    rename_scen(ldf, level=0)
     ldf = pd.DataFrame(ldf.sum(axis=0), columns=["RES curtailment"]).unstack()
     ldf = ldf["RES curtailment"] / 1e3
     ldf.columns = [format_country_names(col) for col in ldf.columns.tolist()]
@@ -352,9 +376,10 @@ def ci_curtailment(df, rename_scen, ci_res):
     )
 
 
-def ci_emisrate(df, rename_scen):
+def ci_emisrate(df):
     ldf = df.loc["ci_emission_rate_true"] * 1e3  # convert to gCO2/kWh
-    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+    rename_scen(ldf)
+    ldf.index = ldf.index.droplevel(1)
 
     # Plotting
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -369,7 +394,7 @@ def ci_emisrate(df, rename_scen):
             linewidth=0.05,
         )
         ax.set_xticklabels(
-            [format_column_names(col) for col in ldf.index.tolist()],
+            [col for col in ldf.index.tolist()],
             rotation=0,
             fontsize=12,
         )
@@ -394,9 +419,10 @@ def ci_emisrate(df, rename_scen):
     )
 
 
-def zone_emissions(df, rename_scen):
+def zone_emissions(df):
     ldf = df.loc["emissions_zone"]
-    ldf.index = ldf.index.set_levels(ldf.index.levels[0].map(rename_scen), level=0)
+    rename_scen(ldf)
+    ldf.index = ldf.index.droplevel(1)
 
     # Plotting
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -411,7 +437,7 @@ def zone_emissions(df, rename_scen):
             linewidth=0.05,
         )
         ax.set_xticklabels(
-            [format_column_names(col) for col in ldf.index.tolist()],
+            [col for col in ldf.index.tolist()],
             rotation=0,
             fontsize=12,
         )
@@ -442,7 +468,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "plot_summary", year="2025", zone="IE", palette="p2", policy="cfe100"
+            "plot_summary", year="2025", zone="DE", palette="p4", policy="cfe100"
         )
 
     config = snakemake.config
@@ -522,15 +548,6 @@ if __name__ == "__main__":
         }
     )
 
-    rename_scen = {
-        "0": "0%",
-        "5": "5%",
-        "10": "10%",
-        "15": "15%",
-        "20": "20%",
-        "25": "25%",
-    }
-
     preferred_order = pd.Index(
         [
             "advanced dispatchable",
@@ -556,7 +573,6 @@ df = pd.read_csv(snakemake.input.summary, index_col=0, header=[0, 1])
 ci_capacity(
     df=df,
     tech_colors=tech_colors,
-    rename_scen=rename_scen,
     rename_ci_capacity=rename_ci_capacity,
     preferred_order=preferred_order,
 )
@@ -564,7 +580,6 @@ ci_capacity(
 ci_costandrev(
     df=df,
     tech_colors=tech_colors,
-    rename_scen=rename_scen,
     rename_ci_cost=rename_ci_cost,
     preferred_order=preferred_order,
 )
@@ -572,15 +587,14 @@ ci_costandrev(
 ci_generation(
     df=df,
     tech_colors=tech_colors,
-    rename_scen=rename_scen,
     rename_ci_capacity=rename_ci_capacity,
     preferred_order=preferred_order,
 )
 
 # ci_curtailment(
-#     df=df, rename_scen=rename_scen, ci_res=snakemake.config["ci"]["res_techs"]
+#     df=df, ci_res=snakemake.config["ci"]["res_techs"]
 # )
 
-ci_emisrate(df=df, rename_scen=rename_scen)
+ci_emisrate(df=df)
 
-zone_emissions(df=df, rename_scen=rename_scen)
+zone_emissions(df=df)
