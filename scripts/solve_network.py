@@ -1470,6 +1470,23 @@ def solve_network(
 
         n.model.add_constraints(expr, name="Ironair-duration")
 
+    def freeze_capacities(n):
+        """
+        Freeze capacities of expandable generators, links and storage units to their optimal values
+        """
+
+        for name, attr in [("generators", "p"), ("links", "p"), ("stores", "e")]:
+            df = getattr(n, name)
+            df[attr + "_nom_extendable"] = False
+            df[attr + "_nom"] = df[attr + "_nom_opt"]
+
+        # allow larger fossil fuel usage
+        gen_i = n.generators[n.generators.index.str.contains("EU")].index
+        n.generators.loc[gen_i, "p_nom_extendable"] = True
+
+        # allow more emissions
+        n.stores.at["co2 atmosphere", "e_nom"] *= 2
+
     def extra_functionality(n, snapshots):
         add_battery_constraints(n)
         add_ironair_inverter_fix(n)
@@ -1525,6 +1542,11 @@ def solve_network(
 
         extra_functionality(n, n.snapshots)
 
+        # if policy == "ref" and i > 0:
+        #     freeze_capacities(n)
+        #     for ct in [key[:2] for key in datacenters.keys()]:
+        #         n.model.constraints.remove(f"{ct}_res_constraint")
+
         n.optimize.solve_model(
             solver_name=solver_name, log_fn=snakemake.log.solver, **solver_options
         )
@@ -1546,9 +1568,9 @@ if __name__ == "__main__":
         snakemake = mock_snakemake(
             "solve_network",
             year="2025",
-            zone="IE",
-            palette="p2",
-            policy="cfe100",
+            zone="DE",
+            palette="p4",
+            policy="ref",
             participation="5",
         )
 
