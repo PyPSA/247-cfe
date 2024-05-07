@@ -461,6 +461,75 @@ def zone_emissions(df):
     )
 
 
+def system_capacity(df, tech_colors, rename_system_simple, preferred_order, year):
+    # Collect data
+    gens = df.loc[["system_inv_" + t.replace(" ", "_") for t in exp_generators]].rename(
+        {"system_inv_" + t.replace(" ", "_"): t for t in exp_generators}
+    )
+
+    links = df.loc[["system_inv_" + t.replace(" ", "_") for t in exp_links]].rename(
+        {"system_inv_" + t.replace(" ", "_"): t for t in exp_links}
+    )
+
+    dischargers = df.loc[
+        ["system_inv_" + t.replace(" ", "_") for t in exp_dischargers]
+    ].rename({"system_inv_" + t.replace(" ", "_"): t for t in exp_dischargers})
+
+    chargers = df.loc[
+        ["system_inv_" + t.replace(" ", "_") for t in exp_chargers]
+    ].rename({"system_inv_" + t.replace(" ", "_"): t for t in exp_chargers})
+
+    chargers = chargers.drop(["battery_charger-%s" % year])
+
+    # Combine all components into a unified DataFrame
+    ldf = pd.concat([gens, links, dischargers, chargers], axis=0)
+
+    # Drop rows where all values are below a certain threshold
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
+    # Rename scenario names and group by the simpler names
+    rename_scen(ldf, level=0)
+    ldf = ldf.groupby(rename_system_simple).sum()
+
+    # Reorder based on preferred order
+    new_index = preferred_order.intersection(ldf.index).append(
+        ldf.index.difference(preferred_order)
+    )
+    ldf = ldf.loc[new_index]
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+    (ldf / 1e3).T.plot(
+        kind="bar",
+        stacked=True,
+        ax=ax,
+        color=tech_colors,
+        width=0.65,
+        edgecolor="black",
+        linewidth=0.05,
+    )
+
+    # Formatting
+    ax.set_xticklabels(
+        [format_column_names(col) for col in ldf.columns.tolist()], fontsize=12
+    )
+    ax.grid(alpha=0.8, which="both", linestyle="--")
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="x", labelsize=12)
+    ax.tick_params(axis="y", labelsize=12)
+    ax.set_ylabel("System capacity investment [GW]", fontsize=14)
+    ax.set_title("System capacity investments", fontsize=16, weight="bold")
+    ax.legend(loc="upper left", ncol=2, prop={"size": 12})
+
+    fig.tight_layout()
+    fig.savefig(
+        snakemake.output.plot.replace("capacity.pdf", "system_capacity.pdf"),
+        transparent=True,
+        dpi=300,
+    )
+
+
 ####################################################################################################
 if __name__ == "__main__":
     # Detect running outside of snakemake and mock snakemake for testing
@@ -468,7 +537,7 @@ if __name__ == "__main__":
         from _helpers import mock_snakemake
 
         snakemake = mock_snakemake(
-            "plot_summary", year="2025", zone="DE", palette="p4", policy="cfe100"
+            "plot_summary", year="2030", zone="DE", palette="p4", policy="ref"
         )
 
     config = snakemake.config
@@ -548,6 +617,21 @@ if __name__ == "__main__":
         }
     )
 
+    system_techs = {
+        "offwind-ac": "wind",
+        "offwind-dc": "wind",
+        "onwind": "wind",
+        "solar": "solar PV",
+        "OCGT": "Gas OC",
+        "battery_discharger": "battery storage",
+        "H2_Fuel_Cell": "hydrogen fuel cell",
+        "H2_Electrolysis": "hydrogen electrolysis",
+    }
+
+    rename_system_simple = {
+        f"{key}-%s" % year: value for key, value in system_techs.items()
+    }
+
     preferred_order = pd.Index(
         [
             "advanced dispatchable",
@@ -555,9 +639,11 @@ if __name__ == "__main__":
             "Gas OC",
             "offshore wind",
             "onshore wind",
-            "solar",
+            "wind",
+            "solar PV",
             "battery",
-            "iron-air",
+            "battery storage",
+            "iron-air storage",
             "hydrogen storage",
             "hydrogen electrolysis",
             "hydrogen fuel cell",
@@ -598,3 +684,11 @@ ci_generation(
 ci_emisrate(df=df)
 
 zone_emissions(df=df)
+
+system_capacity(
+    df=df,
+    tech_colors=tech_colors,
+    rename_system_simple=rename_system_simple,
+    preferred_order=preferred_order,
+    year=year,
+)
