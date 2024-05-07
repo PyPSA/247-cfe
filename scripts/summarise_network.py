@@ -625,6 +625,61 @@ def summarise_network(n, policy, tech_palette):
                 for discharger in exp_dischargers
             }
         )
+
+        ## Retrieve installed capacity in the local zone
+
+        ### collect data
+        data = n.statistics.optimal_capacity(
+            bus_carrier="AC", groupby=n.statistics.groupers.get_bus_and_carrier
+        ).round(1)
+        data = data.droplevel(0)
+        df_reset = data.reset_index()
+
+        ### remove artificial carriers
+        query_expression = "~(carrier == 'AC')"
+        data = df_reset.query(query_expression).copy()
+
+        ### other data cleaning
+        data.set_index("bus", inplace=True)
+        data.columns = ["carrier", "p_nom_opt"]
+
+        # if there is offshore wind, aggregate it
+        if data["carrier"].str.contains("Offshore Wind").any():
+            mask_offshore = data["carrier"].str.contains(
+                "Offshore Wind|offwind", case=False
+            )
+            filtered_data = data[mask_offshore]
+            total = filtered_data["p_nom_opt"].sum()
+
+            data = data[~mask_offshore]
+            new_row = pd.DataFrame(
+                {"carrier": ["Offshore Wind"], "p_nom_opt": [total]},
+                index=[f"{location}"],
+            )
+            data = pd.concat([data, new_row])
+
+        # Convert "dischargers" to gross capacity
+        if f"{location} battery" in data.index:
+            data.loc[f"{location} battery", "p_nom_opt"] = n.links[
+                (n.links.carrier == "battery discharger")
+                & (n.links.bus1 == f"{location}")
+            ].p_nom_opt.values[0]
+            data.loc[f"{location} battery", "carrier"] = "battery"
+
+        if f"{location} ironair" in data.index:
+            data.loc[f"{location} ironair", "p_nom_opt"] = n.links[
+                (n.links.carrier == "ironair discharger")
+                & (n.links.bus1 == f"{location}")
+            ].p_nom_opt.values[0]
+            data.loc[f"{location} ironair", "carrier"] = "ironair"
+
+        # write to results
+        data.set_index("carrier", inplace=True)
+        for carrier in data.index:
+            results[location].update(
+                {f"zone_capacity_{carrier}": data.at[carrier, "p_nom_opt"]}
+            )
+
         # 6: Storing costs at CI node
         total_cost = 0.0
         for tech in clean_techs:
@@ -761,11 +816,11 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "summarise_network",
-            year="2025",
+            year="2030",
             zone="DE",
-            palette="p1",
+            palette="p4",
             policy="ref",
-            participation="5",
+            participation="0",
         )
 
     # Wildcards & Settings
