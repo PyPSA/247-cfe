@@ -300,6 +300,7 @@ def summarise_network(n, policy, tech_palette):
         hourly_emissions = (
             n.links_t.p0[fossil_links]
             .multiply(n.links.efficiency2[fossil_links], axis=1)
+            .multiply(weights, axis=0)
             .sum(axis=1)
         )
         load = n.loads_t.p[grid_loads].sum(axis=1)
