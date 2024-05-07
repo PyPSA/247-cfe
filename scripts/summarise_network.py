@@ -250,10 +250,12 @@ def summarise_network(n, policy, tech_palette):
         ]
         exp_links = [f"OCGT-{year}"]
         exp_chargers = [
-            f"{tech}-{year}" for tech in ["battery charger", "H2 Electrolysis"]
+            f"{tech}-{year}"
+            for tech in ["battery charger", "H2 Electrolysis", "ironair charger"]
         ]
         exp_dischargers = [
-            f"{tech}-{year}" for tech in ["battery discharger", "H2 Fuel Cell"]
+            f"{tech}-{year}"
+            for tech in ["battery discharger", "H2 Fuel Cell", "ironair discharger"]
         ]
 
         grid_cfe = grid_cfe_df.loc[:, (location, f"iteration {n_iterations-1}")]
@@ -487,6 +489,17 @@ def summarise_network(n, policy, tech_palette):
             }
         )
 
+        zone_gens = system_gens[system_gens.bus == f"{location}"]
+        results[location].update(
+            {
+                f"zone_inv_{gen.replace(' ', '_')}": (
+                    zone_gens.loc[zone_gens.index.str.contains(gen), "p_nom_opt"].sum()
+                    - zone_gens.loc[zone_gens.index.str.contains(gen), "p_nom"].sum()
+                )
+                for gen in exp_generators
+            }
+        )
+
         system_links = n.links[n.links.index.str.contains("|".join(exp_links))]
         results[location].update(
             {
@@ -505,19 +518,40 @@ def summarise_network(n, policy, tech_palette):
             }
         )
 
+        zone_links = system_links[system_links.bus1.str.contains(location)]
+        results[location].update(
+            {
+                f"zone_inv_{link}": (
+                    zone_links.loc[
+                        zone_links.index.str.contains(link), "p_nom_opt"
+                    ].sum()
+                    - zone_links.loc[zone_links.index.str.contains(link), "p_nom"].sum()
+                )
+                * zone_links.loc[
+                    zone_links.index.str.contains(link), "efficiency"
+                ].iloc[0]
+                for link in exp_links
+            }
+        )
+
         # Chargers & Dischargers
         HV_links = n.links.drop(
             n.links[n.links.index.str.contains("home battery")].index
         )
         system_chargers = HV_links[
             HV_links.index.str.contains(
-                f"battery charger-{year}|H2 Electrolysis-{year}"
+                f"battery charger-{year}|H2 Electrolysis-{year}|ironair charger"
             )
         ]
         system_dischargers = HV_links[
             HV_links.index.str.contains(
-                f"battery discharger-{year}|H2 Fuel Cell-{year}"
+                f"battery discharger-{year}|H2 Fuel Cell-{year}|ironair discharger"
             )
+        ]
+        # drop system_chargers and system_dischargers if bus1 is name
+        system_chargers = system_chargers[~system_chargers.bus1.str.contains(name)]
+        system_dischargers = system_dischargers[
+            ~system_dischargers.bus1.str.contains(name)
         ]
 
         results[location].update(
@@ -532,6 +566,24 @@ def summarise_network(n, policy, tech_palette):
                 )
                 * system_chargers.loc[
                     system_chargers.index.str.contains(charger), "efficiency"
+                ].iloc[0]
+                for charger in exp_chargers
+            }
+        )
+
+        zone_chargers = system_chargers[system_chargers.bus1.str.contains(location)]
+        results[location].update(
+            {
+                f"zone_inv_{charger.replace(' ', '_')}": (
+                    zone_chargers.loc[
+                        zone_chargers.index.str.contains(charger), "p_nom_opt"
+                    ].sum()
+                    - zone_chargers.loc[
+                        zone_chargers.index.str.contains(charger), "p_nom"
+                    ].sum()
+                )
+                * zone_chargers.loc[
+                    zone_chargers.index.str.contains(charger), "efficiency"
                 ].iloc[0]
                 for charger in exp_chargers
             }
@@ -554,6 +606,25 @@ def summarise_network(n, policy, tech_palette):
             }
         )
 
+        zone_dischargers = system_dischargers[
+            system_dischargers.bus1.str.contains(location)
+        ]
+        results[location].update(
+            {
+                f"zone_inv_{discharger.replace(' ', '_')}": (
+                    zone_dischargers.loc[
+                        zone_dischargers.index.str.contains(discharger), "p_nom_opt"
+                    ].sum()
+                    - zone_dischargers.loc[
+                        zone_dischargers.index.str.contains(discharger), "p_nom"
+                    ].sum()
+                )
+                * zone_dischargers.loc[
+                    zone_dischargers.index.str.contains(discharger), "efficiency"
+                ].iloc[0]
+                for discharger in exp_dischargers
+            }
+        )
         # 6: Storing costs at CI node
         total_cost = 0.0
         for tech in clean_techs:
