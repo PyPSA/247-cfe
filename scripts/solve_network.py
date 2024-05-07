@@ -1618,6 +1618,10 @@ if __name__ == "__main__":
         lifetime=config["costs"]["lifetime"],
     )
 
+    n_iterations = (
+        1 if policy == "ref" else config["solving"]["options"]["n_iterations"]
+    )
+
     # nhours = 240
     # n.set_snapshots(n.snapshots[:nhours])
     # n.snapshot_weightings[:] = 8760.0 / nhours
