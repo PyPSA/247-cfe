@@ -564,9 +564,6 @@ def summarise_network(n, policy, tech_palette):
                         system_chargers.index.str.contains(charger), "p_nom"
                     ].sum()
                 )
-                * system_chargers.loc[
-                    system_chargers.index.str.contains(charger), "efficiency"
-                ].iloc[0]
                 for charger in exp_chargers
             }
         )
@@ -582,9 +579,6 @@ def summarise_network(n, policy, tech_palette):
                         zone_chargers.index.str.contains(charger), "p_nom"
                     ].sum()
                 )
-                * zone_chargers.loc[
-                    zone_chargers.index.str.contains(charger), "efficiency"
-                ].iloc[0]
                 for charger in exp_chargers
             }
         )
@@ -599,9 +593,6 @@ def summarise_network(n, policy, tech_palette):
                         system_dischargers.index.str.contains(discharger), "p_nom"
                     ].sum()
                 )
-                * system_dischargers.loc[
-                    system_dischargers.index.str.contains(discharger), "efficiency"
-                ].iloc[0]
                 for discharger in exp_dischargers
             }
         )
@@ -619,9 +610,6 @@ def summarise_network(n, policy, tech_palette):
                         zone_dischargers.index.str.contains(discharger), "p_nom"
                     ].sum()
                 )
-                * zone_dischargers.loc[
-                    zone_dischargers.index.str.contains(discharger), "efficiency"
-                ].iloc[0]
                 for discharger in exp_dischargers
             }
         )
