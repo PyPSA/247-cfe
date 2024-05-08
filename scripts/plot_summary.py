@@ -461,7 +461,7 @@ def zone_emissions(df):
     )
 
 
-def system_capacity(df, tech_colors, rename_system_simple, preferred_order, year):
+def system_investment(df, tech_colors, rename_system_simple, preferred_order, year):
     # Collect data
     gens = df.loc[["system_inv_" + t.replace(" ", "_") for t in exp_generators]].rename(
         {"system_inv_" + t.replace(" ", "_"): t for t in exp_generators}
@@ -524,7 +524,59 @@ def system_capacity(df, tech_colors, rename_system_simple, preferred_order, year
 
     fig.tight_layout()
     fig.savefig(
-        snakemake.output.plot.replace("capacity.pdf", "system_capacity.pdf"),
+        snakemake.output.plot.replace("capacity.pdf", "system_investment.pdf"),
+        transparent=True,
+        dpi=300,
+    )
+
+
+def zone_capacity(df, tech_colors, preferred_order):
+
+    ldf = df.filter(regex="^zone_capacity_", axis=0)
+
+    ldf.index = [col.replace("zone_capacity_", "") for col in ldf.index]
+
+    # Drop rows where all values are below a certain threshold
+    to_drop = ldf.index[(ldf < 0.1).all(axis=1)]
+    ldf.drop(to_drop, inplace=True)
+
+    # Rename scenario names and group by the simpler names
+    rename_scen(ldf, level=0)
+    ldf = ldf.groupby(system_techs).sum()
+
+    # Reorder based on preferred order
+    new_index = preferred_order.intersection(ldf.index).append(
+        ldf.index.difference(preferred_order)
+    )
+    ldf = ldf.loc[new_index]
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+    (ldf / 1e3).T.plot(
+        kind="bar",
+        stacked=True,
+        ax=ax,
+        color=tech_colors,
+        width=0.65,
+        edgecolor="black",
+        linewidth=0.05,
+    )
+
+    # Formatting
+    ax.set_xticklabels(
+        [format_column_names(col) for col in ldf.columns.tolist()], fontsize=12
+    )
+    ax.grid(alpha=0.8, which="both", linestyle="--")
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="x", labelsize=12)
+    ax.tick_params(axis="y", labelsize=12)
+    ax.set_ylabel("Zone capacity mix [GW]", fontsize=14)
+    ax.set_title("Zone capacity mix ", fontsize=16, weight="bold")
+    ax.legend(loc="upper left", ncol=2, prop={"size": 12})
+
+    fig.tight_layout()
+    fig.savefig(
+        snakemake.output.plot.replace("capacity.pdf", "zone_capacity_mix.pdf"),
         transparent=True,
         dpi=300,
     )
@@ -575,8 +627,12 @@ if __name__ == "__main__":
     # expected technology names with year
     exp_generators = tech_names(["offwind-ac", "offwind-dc", "onwind", "solar"], year)
     exp_links = tech_names(["OCGT"], year)
-    exp_chargers = tech_names(["battery charger", "H2 Electrolysis"], year)
-    exp_dischargers = tech_names(["battery discharger", "H2 Fuel Cell"], year)
+    exp_chargers = tech_names(
+        ["battery charger", "H2 Electrolysis", "ironair discharger"], year
+    )
+    exp_dischargers = tech_names(
+        ["battery discharger", "H2 Fuel Cell", "ironair charger"], year
+    )
 
     # Assign colors
     tech_colors = snakemake.config["tech_colors"]
@@ -591,9 +647,9 @@ if __name__ == "__main__":
             "battery_storage": "battery",
             "battery_inverter": "battery",
             "battery_charger": "battery",
-            "ironair_storage": "iron-air",
-            "ironair_inverter": "iron-air",
-            "ironair_charger": "iron-air",
+            "ironair_storage": "ironair",
+            "ironair_inverter": "ironair",
+            "ironair_charger": "ironair",
             "hydrogen_storage": "hydrogen storage",
             "hydrogen_electrolysis": "hydrogen storage",
             "hydrogen_fuel_cell": "hydrogen storage",
@@ -608,8 +664,8 @@ if __name__ == "__main__":
             "solar": "solar",
             "battery_discharger": "battery",
             "battery_charger": "battery",
-            "ironair_discharger": "iron-air",
-            "ironair_charger": "iron-air",
+            "ironair_discharger": "ironair",
+            "ironair_charger": "ironair",
             "H2_Fuel_Cell": "hydrogen fuel cell",
             "H2_Electrolysis": "hydrogen electrolysis",
             "adv_geothermal": "advanced dispatchable",
@@ -620,12 +676,25 @@ if __name__ == "__main__":
     system_techs = {
         "offwind-ac": "wind",
         "offwind-dc": "wind",
+        "Offshore Wind": "wind",
         "onwind": "wind",
+        "Onshore Wind": "wind",
         "solar": "solar PV",
-        "OCGT": "Gas OC",
+        "Solar": "solar PV",
+        "OCGT": "gas OC",
+        "CCGT": "gas CC",
+        "coal": "hard coal",
+        "lignite": "lignite",
+        "oil": "oil",
+        "urban central solid biomass CHP": "biomass",
+        "Pumped Hydro Storage": "PHS",
+        "Reservoir & Dam": "hydro",
+        "battery": "battery storage",
         "battery_discharger": "battery storage",
         "H2_Fuel_Cell": "hydrogen fuel cell",
         "H2_Electrolysis": "hydrogen electrolysis",
+        "ironair_discharger": "ironair storage",
+        "ironair": "ironair storage",
     }
 
     rename_system_simple = {
@@ -636,14 +705,20 @@ if __name__ == "__main__":
         [
             "advanced dispatchable",
             "NG-Allam",
-            "Gas OC",
+            "biomass",
+            "hard coal",
+            "lignite",
+            "gas OC",
+            "gas CC",
+            "oil",
             "offshore wind",
             "onshore wind",
             "wind",
             "solar PV",
+            "PHS",
             "battery",
             "battery storage",
-            "iron-air storage",
+            "ironair storage",
             "hydrogen storage",
             "hydrogen electrolysis",
             "hydrogen fuel cell",
@@ -685,10 +760,12 @@ ci_emisrate(df=df)
 
 zone_emissions(df=df)
 
-system_capacity(
+system_investment(
     df=df,
     tech_colors=tech_colors,
     rename_system_simple=rename_system_simple,
     preferred_order=preferred_order,
     year=year,
 )
+
+zone_capacity(df=df, tech_colors=tech_colors, preferred_order=preferred_order)
