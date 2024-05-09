@@ -229,7 +229,10 @@ def load_profile(
         sys.exit()
 
     # CI consumer nominal load in MW
-    load = config["ci_load"][zone] * float(participation) / 100
+    if policy == "ref":
+        load = 0.0
+    else:
+        load = config["ci_load"][zone] * float(participation) / 100
 
     load_day = load * 24  # 24h
     load_profile_day = pd.Series(shape) * load_day
@@ -297,7 +300,7 @@ def prepare_costs(
     )
 
     # Add advanced technologies
-    # iron-air storage
+    # ironair storage
     data_ironair_storage = pd.Series(
         {
             "FOM": 0,
@@ -572,6 +575,55 @@ def co2_policy(n, year: str, config: Dict[str, Any]) -> None:
         for carrier in ["coal", "oil", "gas", "lignite"]:
             n.generators.at[f"EU {carrier}", "marginal_cost"] += (
                 co2_price * costs.at[carrier, "CO2 intensity"]
+            )
+
+
+def add_clean_techs(n: pypsa.Network, year: str, learning: float) -> None:
+
+    techs_to_add = ["ironair"]  # only ironair for now
+
+    for location in locations:
+        if "ironair" in techs_to_add:
+            n.add("Bus", f"{location} ironair", carrier="ironair bus")
+
+            n.add(
+                "Store",
+                f"{location} ironair storage-{year}",
+                bus=f"{location} ironair",
+                e_cyclic=True,
+                e_nom_extendable=True,
+                carrier="ironair storage",
+                capital_cost=costs.loc["ironair storage"]["fixed"]
+                * learning
+                * float(participation)
+                / 100,  # see config_ref.yaml comment
+                lifetime=costs.loc["ironair storage"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{location} ironair charger-{year}",
+                bus0=location,
+                bus1=f"{location} ironair",
+                carrier="ironair charger",
+                efficiency=costs.loc["ironair inverter"]["charge_efficiency"],
+                capital_cost=costs.loc["ironair inverter"]["fixed"]
+                * learning
+                * float(participation)
+                / 100,  # see config_ref.yaml comment,
+                p_nom_extendable=True,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{location} ironair discharger-{year}",
+                bus0=f"{location} ironair",
+                bus1=location,
+                carrier="ironair discharger",
+                efficiency=costs.loc["ironair inverter"]["discharge_efficiency"],
+                p_nom_extendable=True,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
             )
 
 
@@ -1492,7 +1544,11 @@ def solve_network(
         add_ironair_inverter_fix(n)
         add_ironair_duration_fix(n)
         # country_res_constraints(n)
-        system_res_constraints(n, year, config)
+        (
+            system_res_constraints(n, year, config)
+            if config["system_res_constraint"]
+            else None
+        )
 
         if policy == "ref":
             print("no target set")
@@ -1639,6 +1695,12 @@ if __name__ == "__main__":
         biomass_potential(n)
         co2_policy(n, year, config)
 
+        (
+            add_clean_techs(n, year, learning=config["learning_coef"])
+            if policy == "ref"
+            else None
+        )
+
         add_ci(n, year)
         add_vl(n) if config["ci"]["spatial_shifting"] else None
         add_dsm(n) if config["ci"]["temporal_shifting"] else None
@@ -1649,7 +1711,7 @@ if __name__ == "__main__":
             policy=policy,
             penetration=penetration,
             tech_palette=tech_palette,
-            n_iterations=config["solving"]["options"]["n_iterations"],
+            n_iterations=n_iterations,
             config=config,
         )
 
