@@ -624,7 +624,7 @@ def summarise_network(n, policy, tech_palette):
         df_reset = data.reset_index()
 
         ### remove artificial carriers
-        query_expression = "~(carrier == 'AC')"
+        query_expression = "~(carrier == 'AC'|bus == @name)"
         data = df_reset.query(query_expression).copy()
 
         ### other data cleaning
