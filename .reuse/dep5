@@ -7,6 +7,10 @@ Files: study/*
 Copyright: : 2022-2023 Iegor Riepin, Tom Brown
 License: CC-BY-4.0
 
+Files: manuscript/*
+Copyright: : 2022-2023 Iegor Riepin, Tom Brown
+License: CC-BY-4.0
+
 Files: Snakefile
 Copyright: : 2022-2023 Iegor Riepin, Tom Brown
 License: MIT
