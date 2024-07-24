@@ -1,0 +1,268 @@
+# SPDX-FileCopyrightText: 2023-2024 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: MIT
+
+###################
+# General settings
+
+logging_level: INFO
+solve_network: solve  #"solve" or "skip" to skip network optimization step
+results_dir: "results"
+
+###################
+# Data dependencies
+
+# Networks retrieved from ../pypsa-eur/results/<run>/prenetworks-brownfield
+n_2025_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2025.nc"
+n_2030_1H: "input/elec_s_37_lv1.0__1H-B-solar+p3_2030.nc"
+n_2025_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2025.nc"
+n_2030_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc"
+
+# Retrieve technology data <version> for <year>
+# Source https://github.com/PyPSA/technology-data
+retrieve_cost_data: True
+technology_data:
+  year: 2025
+  version: v0.6.2
+
+###################
+# Scenario controls
+
+run: manuscript-dashboard1
+
+#wildcards
+scenario:
+  policy:  ["ref", "cfe90", "cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
+  palette: [
+            "p1", # onwind + solar + battery
+            "p2", # onwind + solar + battery + LDES (here: iron-air battery)
+            #"p3", # onwind + solar + battery + Allam cycle turbine with CCS
+            "p4", # onwind + solar + battery + LDES + Allam cycle turbine with CCS
+            ]
+  zone: [
+        "DE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
+        ]
+  participation: [
+                '0',
+                '1',
+                '3',
+                '5',
+                '10',
+                # '15',
+                # '20',
+                # '25',
+                ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
+  year: [
+          "2025",
+          # "2030"
+         ] # controls both the brownfield fleet and tech costs projection
+
+# CI consumer settings
+ci:
+  datacenters: {"DE1 0": "Germany"} # {"PT1 0": "Portugal"}
+  profile_shape: "baseload" #"baseload", "datacenter", "industry"
+  #load: 100. # nominal load in MW -> now scaled to match participation share
+  res_techs: ["onwind","solar"]
+  excess_share: 0.  # share of excess CI generation that can be sold to the grid [percentage]
+  flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
+  spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
+
+# learning settings
+learning_coef: 1 # cost reduction coefficient for advanced tech in 2030
+system_res_constraint: True #turns on/off constraint on RES expansion following NECP targets with *equality* sign
+
+###################
+# Time-series management
+
+time_sampling: "3H" # one of ["1H", "3H"]
+plot_timeseries: False
+
+
+###################
+# Fixed settings
+
+node_suffixes_to_keep: ["H2","battery"] #"low voltage","home battery"]
+carrier_to_keep: [ #generators
+                  "offwind","offwind-ac","offwind-dc","solar", "onwind","ror", #"solar rooftop",
+                  #storage units
+                  "PHS","hydro",
+                  #lines, links
+                  "AC", "DC",
+                  #links
+                  "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
+                  "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
+                  "battery charger","battery discharger", #"home battery charger","home battery discharger",
+                  "urban central solid biomass CHP", #"electricity distribution grid",
+                  #Stores
+                  "H2 Store","co2","co2 stored","battery", "solid biomass", #"home battery"
+                  #Loads ("industry electricity" is included)
+                  "electricity"
+                    ]
+additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
+
+
+global:
+  policy_type: "co2 price" # one of ["co2 cap", "co2 price"]
+  co2_baseline: 1.2e+7  #MtCO2/a - rough "energy industries" emissions in 1990 and 2020 in IE: 1.2e7
+  co2_share: 0.5 #pu  - rough target for 2030
+  limit_res_exp_2025: 2 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
+  limit_res_exp_2030: 4 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
+  co2_price_2025: 80 #EUR/tCO2
+  co2_price_2030: 100 #EUR/tCO2
+  grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
+                    "hydro","urban central solid biomass CHP"] #"solar rooftop"
+  grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
+                    "hydro", "nuclear", "urban central solid biomass CHP"] #"solar rooftop"
+  emitters: ["CCGT", "OCGT", "coal", "lignite", "oil"]
+
+
+costs:
+  lifetime: 25 #default lifetime
+  discountrate: 0.07  # From a Lion Hirth paper, also reflects average of Noothout et al 2016
+  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
+  USD2021_to_EUR2021: 0.8460 # [EUR/USD] ECB
+  USD2023_to_EUR2023: 0.9248 # [EUR/USD] ECB
+  adv_nuclear_overnight: 7138 # 2021$/kW CAPEX https://www.eia.gov/outlooks/aeo/ 2022
+  price_green_hydrogen: 3 #EUR/kg
+  price_lignite: 6.5 # EUR/MWhth from TYNDP2020 -> default is 2.9
+  price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
+  price_gas: 35 # EUR/MWhth -> https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf
+  adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
+  adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
+  allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
+  allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
+  ironair_capacity_2025: 1700 # 2023$/kW CAPEX (+ 500 $/kW for energy part = 2200 $/kW)
+  ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
+  ironair_capacity_2030: 1700 # dummy -> value is endogenised via learning curve
+  ironair_energy_2030: 5 # dummy -> value is endogenised via learning curve
+  ironair_duration: 100 # P/E ratio of iron-air battery
+
+#~size of C&I electricity load per country https://ec.europa.eu/eurostat/cache/infographs/energy_balances/enbal.html
+ci_load:
+  IE: 2200.
+  DK: 2240.
+  DE: 38410.
+  NL: 8140.
+  PT: 3790.
+
+
+# nuclear phase-out policies (FR and BE shifted plan to 2035)
+# source:  https://world-nuclear.org/
+nuclear_phaseout: ["DE"]
+
+
+# coal phase-out policies
+# source: https://beyond-coal.eu/europes-coal-exit/
+coal_phaseout_2025: ["BE", "SE", "PT", "AT", "FR", "GB"]
+coal_phaseout_2030: ["BE", "SE", "PT", "AT", "FR", "GB", "IT", "IE", "HU", "MK", "DK", "GR", "NL", "FI", "RS", "ES", "SK"]
+
+# renewable target policies (RES share in electricity consumption)
+# source: https://ec.europa.eu/info/energy-climate-change-environment/implementation-eu-countries
+res_target_2025:
+  IE: 0.47
+  DK: 0.85  # p.3 https://ens.dk/sites/ens.dk/files/Basisfremskrivning/kf23_sektornotat_8b_forbrug_af_el.pdf
+  DE: 0.65   # actual realisation. Plan is lower https://www.diw.de/de/diw_01.c.841560.de/ampel-monitor_energiewende.html#ab_842744
+  NL: 0.49   # interpolated from 2020 wind+solar 19%, bioenergy 6% to 2030 target
+  AT: 0.90   # 79% overall renewables in 2020 -> target 100% 2030
+  BE: 0.323  # p.63 https://energy.ec.europa.eu/system/files/2020-09/be_final_necp_parta_en_0.pdf, 11.156 GWh = 32.3%
+  BG: 0.21   # p. 59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
+  CZ: 0.14   # 4% wind+solar 2020, 12% renewable overall (2020)
+  HR: 0.56   # interpolated Table 2-1 p.54 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
+  FR: 0.32   # 10% wind+solar 2020, 23% renewable overall
+  GB: 0.535  # interpolated from 2020: 29% wind + solar 2020, 42% renewable overall to 2030 target
+  PL: 0.245  # 11% wind + solar 2020, 17% renewable overall
+  ES: 0.588  # linear interpolated share 46.6% in 2021 targer 74% in 2030
+  PT: 0.69   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
+res_target_2030:
+  IE: 0.7
+  DK: 1.17  # https://ens.dk/sites/ens.dk/files/Basisfremskrivning/kf23_sektornotat_8b_forbrug_af_el.pdf
+  DE: 0.80  # https://www.bmwk.de/Redaktion/EN/Downloads/Energy/0406_ueberblickspapier_osterpaket_en.html
+  NL: 0.73  # https://energy.ec.europa.eu/system/files/2021-01/staff_working_document_assessment_necp_netherlands_en_0.pdf
+  AT: 1.0   # https://windeurope.org/newsroom/news/austria-aims-to-have-100-renewable-electricity-by-2030/
+  BE: 0.37  # https://energy.ec.europa.eu/system/files/2020-09/be_final_necp_parta_en_0.pdf
+  BG: 0.27  # p.59 Figure 10 https://energy.ec.europa.eu/system/files/2020-06/bg_final_necp_main_en_0.pdf
+  HR: 0.64  # p.54 Table 2-1 https://energy.ec.europa.eu/system/files/2020-01/hr_final_necp_main_en_0.pdf
+  CZ: 0.17
+  FR: 0.4
+  GB: 0.65  # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/938539/NIS_Report_Web_Accessible.pdf
+  PL: 0.32  # table 1.1 https://iea.blob.core.windows.net/assets/b9ea5a7d-3e41-4318-a69e-f7d456ebb118/Poland2022.pdf
+  ES: 0.74  # p.10 https://energy.ec.europa.eu/system/files/2021-01/staff_working_document_assessment_necp_spain_en_0.pdf
+  PT: 0.8   # p.41 Table 9 https://energy.ec.europa.eu/system/files/2020-06/pt_final_necp_main_en_0.pdf
+
+
+solving:
+
+  options:
+    n_iterations: 2  #iterations with CFE factor
+
+  solver:
+    name: gurobi
+    options: gurobi-default
+
+  solver_options:
+    gurobi-default:
+      threads: 4
+      method: 2         # barrier
+      crossover: 0
+      BarConvTol: 1.e-7
+      Seed: 123         # Consistent seed for all plattforms
+      AggFill: 0
+      PreDual: 0
+      GURO_PAR_BARDENSETHRESH: 200
+
+
+tech_colors:
+  #CI
+  "load": "#DADCE0"
+  "local": "#b474b4"
+  "PPA": "#b474b4"
+  "grid": "#9ccc65"
+  "grid imports": "#9ccc65"
+  "revenue": "g"
+  # RES
+  "wind": "#74c6f2"
+  "offshore wind": "#6895dd"
+  "onshore wind": "#74c6f2"
+  "solar": "#ffef60"
+  "solar PV": "#ffef60"
+  "solar rooftop": "#000000"
+  # Clean Dispatchable
+  "advanced nuclear": "#df3439"
+  "advanced geothermal": "#99582a"
+  "advanced dispatchable": "#99582a"
+  "clean dispatchable": "#99582a"
+  "NG-Allam": "#540b0e"
+  "hydroelectricity": "#298c81"
+  "hydro": "#298c81"
+  "nuclear": "#ff8c00"
+  # Storage
+  "battery": "#666666"
+  "battery inverter": "#444444"
+  "battery storage": "#666666"
+  "ironair": "#d26303"
+  "ironair inverter": "#d26303"
+  "ironair storage": "#d26303"
+  "hydrogen storage": "#990090"
+  "hydrogen fuel cell": "#990090"
+  "hydrogen electrolysis": "#550055"
+  "pumped hydro storage": "#51dbcc"
+  "PHS": "#51dbcc"
+  # Emitters
+  "OCGT": "#d35050"
+  "CCGT": "#b20101"
+  "gas OC": "#d35050"
+  "gas CC": "#b20101"
+  "hard coal": "#545454"
+  "lignite": "#826837"
+  "oil": "#808080"
+  # biomass
+  "solid biomass": "#baa741"
+  "biomass": "#baa741"
+  # power transmission
+  "lines": "#6c9459"
+  "transmission lines": "#6c9459"
+  "electricity distribution grid": "#97ad8c"
+  #virtual links
+  "spatial shift": "#ff8c00"
+  "temporal shift": "#d26303"
