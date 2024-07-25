@@ -123,12 +123,12 @@
 
 \author*[1]{\fnm{Iegor} \sur{Riepin}}\email{iegor.riepin@tu-berlin.de}
 \author[1]{\fnm{Tom} \sur{Brown}}\email{t.brown@tu-berlin.de}
-\author[2]{$<Princeton?>$}\email{$<Princeton?>$}
+\author[2]{$<Princeton-team?>$}\email{$<Princeton?>$}
 \author[3]{\fnm{Devon} \sur{Swezey}}\email{dswezey@google.com}
 
-\affil[1]{\orgdiv{Department of Digital Transformation in Energy Systems}, \orgname{TU Berlin}, \orgaddress{Berlin, Germany}}
+\affil[1]{\orgdiv{Department of Digital Transformation in Energy Systems}, \orgname{TU Berlin}, \orgaddress{Germany}}
 
-\affil[3]{\orgdiv{Global Energy and Climate}, \orgname{Google LLC}, \orgaddress{$<$city, country$>$}}
+\affil[3]{\orgdiv{Global Energy and Climate}, \orgname{Google LLC}}
 
 %%==================================%%
 %% Sample for unstructured abstract %%
@@ -136,9 +136,10 @@
 
 \abstract{
 
-The early commitments to 24/7 carbon-free energy matching create an early market for advanced clean energy technologies like long-duration energy storage and clean firm generators. Companies and governments optimizing their energy procurement and investment strategies to match own consumption with clean electricity round-the-clock can play a catalytic role in innovation, financeability, and widespread availability of technologies required for a wider societal transition to secure, reliable and clean energy systems.
-\\
-\comment{Abstract two sentences for Nature Energy Comment paper.}
+Commitments to 24/7 carbon-free energy matching by companies and governments create an early market for advanced energy technologies like long-duration energy storage and clean firm generators that fill the gaps between wind and solar generation.
+We argue that the commitment by a small number of companies to round-the-clock matching can spur substantial technological learning in advanced technologies, leading to cost reductions \comment{of up to 44\%}. 
+This makes 24/7 matching more attractive for other actors, leading to a virtuous circle that accelerates the point where the technologies become cost-competitive in the rest of the electricity market. 
+These indirect effects unlock greenhouse gas savings far beyond the direct avoidance of the initial investments.
 }
 
 % \keywords{keyword1, Keyword2, Keyword3, Keyword4}
@@ -149,121 +150,83 @@ The early commitments to 24/7 carbon-free energy matching create an early market
 
 \maketitle
 
-\comment{
-A Comment is a flexible format, focusing on the scientific, commercial, ethical, legal, societal, or political issues surrounding research, or on other matters of policy, science and society related to energy. Comment articles should be topical, readable, provocative and introduce new concepts/points of view, providing a personal perspective on a matter of public or scientific importance. The main criteria are that they should be of immediate interest to a broad readership and should be written in an accessible, non-technical style. \href{https://www.nature.com/nenergy/content}{https://www.nature.com/nenergy/content}\\}
-\comment{
-\noindent Length -- up to 2,000 words; There are no specific structural guidelines; Commentaries do not normally contain primary research data; References should be used sparingly --- up to 15 (IR: this one seems not to be too strict. we have a bit more.); Peer review is at the editors' discretion. \\
-IR: Nature Energy does paper formatting after reviews, here I use their default style.\\
-Length now: 1,760 words (NB last sections are not as a final text) \\
-I must rely on lengthy captions to fit the main text into the words limit and make it much less technical.
-}
-
-
 \subsection*{Big challenges ahead}\label{sec1}
 
-Humanity faces a major challenge in mitigating the adverse impacts of climate change and related losses and damages to nature and people.
-A pathway to prevent the worst climate damages requires \textit{\enquote{a rapid and deep and, in most cases, immediate greenhouse gas emissions reductions in all sectors this decade}} \cite{ipccAR6SynthesisReport2023}.
-Global net human-caused emissions of carbon dioxide (CO$_2$) has to reach net zero by 2050 to keep us consistent with efforts to limit the long-term increase in average global temperatures to 1.5 °C.
+Tackling climate change requires not only a massive scale-up of available energy technologies like wind, solar and batteries, but also an accelerated research, development, demonstration (RD\&D) and widespread deployment of advanced technologies that are not yet commercialised at scale \cite{sepulvedaRoleFirmLowCarbon2018, bistlineImpactCarbonDioxide2021, brownUltralongdurationEnergyStorage2023, ieaNetZero20502021}.
+Among them are clean firm generation technologies, such as next-generation geothermal power, advanced nuclear generators, Allam-cycle gas generators with carbon capture and storage (CCS), as well as long-duration energy storage (LDES) technologies, which can bridge gaps in clean power supply for a few days to weeks that cannot be filled by wind, solar photovoltaics (PV), or batteries.
 
-The energy sector—a major milestone, responsible for approximately three-quarters of global greenhouse gas emissions—playing a pivotal role \cite{ieaNetZero20502021}.
-A growing political consensus and national climate initiatives are calling for a complete transformation of how we produce, transport, and consume energy.
-To achieve this goal, a significant expansion of all available  clean energy and technologies is necessary.
-According to the International Energy Agency (IEA), net-zero pathway requires a rapid scale-up of solar and wind power within this decade, aiming for annual additions of 630~GW of solar photovoltaics (PV) and 390~GW of wind by 2030, which would quadruple the record levels established in 2020 \cite{ieaNetZero20502021}.
+\textbf{Barriers to commercialization---} Bringing new technologies to market on a large scale and in time, however, is fraught with big challenges.
+New technologies often face a \enquote{valley of death} on the path from the development stage to successful commercial deployment \cite{gatesFinancingCleanIndustrial2021, google-advancedtech}.
+Companies developing a new technology must first prove that it works safely and reliably at pilot scale.
+One major hurdle at this stage is the scarcity of financing. Early-stage investments typically comprise R\&D grants and venture capital, insufficient in both magnitude and duration to support new energy technologies. On the other hand, mature technologies such as wind and solar attract steady, de-risked capital from institutional investors \cite{google-advancedtech, khatcherianBarriersTimelyDeployment2022}.
 
-It is a broad scientific consensus that reaching net zero by 2050 requires not only a massive scale-up of available clean technologies, but also a rapid research and development (R\&D) and large-scale deployment of advanced technologies that are not on the market yet \cite{sepulvedaRoleFirmLowCarbon2018, bistlineImpactCarbonDioxide2021, brownUltralongdurationEnergyStorage2023, ieaNetZero20502021}.
-Among them are clean firm generation technologies such as geothermal power, advanced nuclear generators, Allam-cycle gas generators with carbon capture and storage (CCS), as well as long-duration energy storage (LDES) technologies based on thermal, electrochemical, or mechanical principles.
-To bring these new technologies to market on a large scale in time, major efforts will be needed over the next decade.
+After that, companies must construct larger plants at sufficient scale and manufacturing cost to achieve commercial viability. This requires overcoming financial, engineering, and supply chain issues that come with building a first-of-its-kind (FOAK) project, and afterward optimizing processes to gradually cut the costs. Technology innovators frequently lack the expertise to scale from small demonstration plants to commercial-scale projects. Often, moving through this milestone requires a consortium of stakeholders, increasing project complexity and risk, thereby complicating financing \cite{google-advancedtech}.
+Even when FOAK technologies are successfully demonstrated, scaling to subsequent projects remains difficult. New technologies must be repeatedly deployed to achieve economies of scale and reduce costs. However, procurement typically focuses on individual plants rather than larger portfolios, with many observers preferring to \enquote{wait and see} how the new generation of a technology performs before committing to an investment. Overall, the road from the first demonstration plant to commercial uptake can be complicated, risky, and expensive---and it is challenging to secure the capital to fund it.
 
+\textbf{Bridging the valley of death---} Consider how solar became global industry and a truly disruptive technology. Bell Labs developed the first silicon photovoltaic cell in 1954, which made modern solar power possible. After more than 20 years of further development, in 1975, the Levelised Cost of Electricity (LCOE) for solar PV was above \$10.000/MWh. A historical trajectory for solar development involves Japans's niche markets for consumer electronics in the 1980s, and Germany's feed-in tariff in 2004, which created a \enquote{demand pull} that significantly drove down costs through technological learning \cite{nemetHowSolarEnergy2019}. Fast forward to 2020s, for projects with low-cost financing that tap high-quality resources, solar PV is now \textit{the cheapest source of electricity in history}, with new utility-scale solar projects cost at \$30-60/MWh in Europe and the US and just \$20-40/MWh in China and India \cite{WorldEnergyOutlook2020}.
 
-\subsection*{The chasm of technology commercialization}\label{sec2}
+However, it took \textit{six decades} for solar to become economically viable. The urgency of the climate crisis demands that we accelerate this process for advanced clean electricity technologies. A crucial question here: Who will invest in these technologies when they are expensive at the beginning? Understanding the wider social benefit of such investments is another important aspect.  New technologies, such as Allam cycle generators and iron-air battery storage, have characteristics that make them suitable for following solar's path. They benefit from evolving R\&D process, learning by doing and iterative upscaling. In this way, even though initial investments come with a price premium and certain risks, they can result in cost reductions and an earlier rollout of advanced clean energy technologies. In turn, this produces indirect effects that unlock greenhouse gas savings far beyond the direct avoidance associated with the initial investments.
 
-Advanced clean electricity technologies face significant barriers to successful commercialization and widespread commercial deployment.
-Often, the space between the R\&D stage to large-scale market uptake is referred to as  \enquote{Valley of Death} \cite{gatesFinancingCleanIndustrial2021, google-advancedtech}.
+\subsection*{The significance of 24/7 CFE matching}\label{sec2}
 
-There is a rocky pathway through the Valley of Death for companies developing advanced clean electricity technologies.
-They must first prove that their technology is safe and reliable.
-After that, they have to demonstrate that it works---and is still totally safe and reliable---on a large scale.
-It means tackling all financial, engineering, and supply chain issues that come with building a first-of-its-kind project, and afterward optimizing processes by repeating them over and over again to gradually cut the costs.
+Many public and private energy buyers support the global effort to decarbonise electricity systems by purchasing clean energy.
+An increasing number of buyers are adopting the most ambitious approach to clean energy purchasing, aiming to eliminate \textit{all carbon emissions} associated with their electricity use.
+This approach is called the 24/7 Carbon-Free Energy (CFE) matching, i.e., aligning electricity demand with carbon-free energy energy supply on \textit{an hourly basis}.
+24/7 CFE commitments were announced by large technology companies such as Google, Microsoft and IronMountain \cite{google-247by2030, Microsoft-vision, IronMountainSustainability}, as well as by utilities \cite{peninsula-OurPathto247}, the US federal government \cite{thewhitehouseExecutiveOrderCatalyzing2021}, and some city governments \cite{iowaenvcouncil-247}.
+% In 2021, an international group of stakeholders launched the 24/7 Carbon-free Energy Compact \cite{gocarbonfree247}. With over 150 signatories, the group aims to develop and scale high-impact technologies, energy policies, procurement practices, and solutions to make 24/7 Carbon-Free Energy achievable for all.
 
-In their recent works, \citet{google-advancedtech} and \citet{khatcherianBarriersTimelyDeployment2022} systematized a number of barriers to commercialization of advanced clean electricity technologies. One major hurdle is the scarcity of financing for emerging clean energy technologies. Early-stage investments typically comprise R\&D grants and venture capital, insufficient in both magnitude and duration to support new technologies through to commercial viability. On the other hand, mature technologies such as wind and solar attract steady, de-risked capital from institutional investors, leaving a funding gap for new technologies.
-
-First-of-a-Kind (FOAK) projects exemplify these challenges. Technology innovators frequently lack the expertise to scale from small demonstration plants to commercial-scale projects. Often, moving through this milestone requires a consortium of stakeholders, increasing project complexity and risk, thereby complicating financing. Long-term offtake agreements are also difficult to secure, as FOAK projects generally enter the market at higher costs compared to established technologies, limiting their appeal to investors wary of \enquote{green premiums}.
-
-Even when FOAK technologies are successfully demonstrated, scaling to subsequent projects remains extremely challenging. New technologies must be repeatedly deployed to achieve economies of scale and reduce costs. However, procurement typically focuses on individual plants rather than larger portfolios, with many observers preferring to \enquote{wait and see} how the new generation of a technology performs before committing to an investment.
-
-Overall, taking the road from the first demonstration plant to commercial uptake can be complicated, risky, and expensive---and it can get very difficult to find capital to fund it.
-
-
-\subsection*{New trend: 24/7 CFE matching}\label{sec3}
-
-Many public and private energy buyers join the global effort to decarbonise electricity systems by purchasing clean energy.
-Some buyers adopt the strictest and the most ambitious approach, aiming to eliminate \textit{all carbon emissions} associated with their electricity use.
-This approach is called the 24/7 Carbon-Free Energy (CFE) procurement, i.e., matching electricity demand with clean energy supply on \textit{an hourly basis}.
-The 24/7 CFE commitments were announced by large technical companies such as Google and Microsoft for 2030 and IronMountain for 2040 \cite{google-247by2030, Microsoft-vision, IronMountainSustainability}, as well as well as by utilities \cite{peninsula-OurPathto247} and even city governments \cite{iowaenvcouncil-247}.
-In 2021, an international group of signatories launched the 24/7 Carbon-free Energy Compact \cite{gocarbonfree247}. With over 150 members, the group aims to develop and scale high-impact technologies, energy policies, procurement practices, and solutions to make 24/7 Carbon-Free Energy achievable for all.
-
-Motivated by these commitments, several quantitative studies have been conducted on the means, costs, and system-level impacts of hourly CFE matching \cite{xu-247CFE-report, ieaAdvancingDecarbonisationClean2022, riepin-zenodo-systemlevel247, riepinMeansCostsSystemlevel2023}. There were three key findings that emerged from these studies: \\
-
+Motivated by these commitments, several quantitative studies have been conducted on the means, costs, and system-level impacts of hourly CFE matching \cite{xu-247CFE-report, ieaAdvancingDecarbonisationClean2022, riepin-zenodo-systemlevel247, riepinMeansCostsSystemlevel2024}. There are three key findings that emerge from these studies:
 \begin{enumerate}
-    \item 24/7 CFE commitments reduce participating buyers' emissions as well as emissions in the electricity grids they operate.
+    \item 24/7 CFE commitments reduce participating buyers' emissions as well as emissions from the electricity grids where they operate.
     \item 24/7 CFE comes at a cost premium for participating consumers if only mature technologies, such as solar PV, wind, and battery storage, are used for CFE sourcing.
     \item The cost premium can be substantially reduced if participating buyers incorporate a broad range of advanced energy technologies into their procurement strategies, such as long-duration energy storage and clean firm generators.
 \end{enumerate}
 
-For illustrative purposes, we reproduce the three findings above in an example depicted in Fig. \ref{fig:dashboard}.
-This illustrative example displays a situation in which a fraction of electricity demand in a particular bidding zone (here---Germany) is voluntarily committed to matching their electricity demand with carbon-free electricity round-the-clock.
+\textbf{An illustrative example---} We reproduce the three findings above in an example depicted in Fig. \ref{fig:dashboard}.
+Here we display a situation in which a fraction of electricity demand in a particular bidding zone (here---Germany) voluntarily commits to matching their electricity demand with carbon-free electricity round-the-clock.
 Hereinafter, the participating demand is referred to as \enquote{participating consumers}.
-
-\textbf{Panel A} illustrates the intuition---once demand and supply are perfectly aligned on an hourly basis, participating consumers reach zero emission rate (gCO$_2$/kWh$^{-1}$) attributed to their electricity consumptuion. This goal requires a large portfolio of wind, solar PV, and batteries, as shown in \textbf{Panel B}. It is indeed difficult to match every kWh of electricity consumption with renewable electricity during times of dark wind lulls. As a result, achieving 24/7 CFE matching, including the most difficult 2\% of times, adds a high cost premium for consumers \textbf{Panel C}. Finding \#3 above is also clearly visible on Fig. \ref{fig:dashboard}: the power capacity required for 24/7 CFE matching is reduced and costs are substantially reduced when long-duration energy LDES (iron-air battery storage) or clean firm generation technologies (allam cycle generator with CCS) are added.
-
-The key observation from Fig. \ref{fig:dashboard} can be summarized as follows: \textit{24/7 CFE commitments create an early market and accelerate innovation by taking advantage of advanced clean electricity technologies.} If only 5\% of commercial and industrial consumers in Germany (ca. 1900~MW of load) follow 24/7 CFE matching, this would create a market for ca. 1500~MW of advanced clean firm generators and ca. 23~GWh of long-term energy storage (results for "p3-cfe100" scenario, right column).
-
-\noindent\comment{Here, I leave out a lot of details. Some details are in the caption of Fig.1, and others are referred to in our research items. Let me know if this works. An idea to drop this part faces the problem that there is no connection between motivation, participation and investment (MW), which is resolved with an \enquote{illustrative example}.}
+Panel A illustrates the intuition---once demand and supply are perfectly aligned on an hourly basis, participating consumers reach zero emission rate (gCO$_2$/kWh$^{-1}$) attributed to their electricity consumption. This goal requires a large portfolio of wind, solar PV, and batteries, as shown in Panel B. It is indeed difficult to match every kWh of electricity consumption with renewable electricity during times of dark wind lulls. As a result, achieving 24/7 CFE matching, including the most difficult 2\% of times, adds a high cost premium for consumers in part due the need to overbuild capacity relative to the demand of participating buyers (\enquote{p1-cfe100}). Finding \#3 above is also clearly visible in Panel C: the power capacity required for 24/7 CFE matching and associated costs are substantially reduced when LDES technology (iron-air battery storage) or clean firm generation technologies (Allam cycle generator with CCS) are added.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{images/dashboard_1.pdf}
-    \captionsetup{width=0.85\textwidth}
+    \includegraphics[width=\textwidth]{images/dashboard_1.pdf}
+    \captionsetup{width=\textwidth}
     \caption{Illustrative modelling of 24/7 CFE matching.
-    \textbf{Panel (a)} Average emissions rate of participating consumers,
-    \textbf{panel (b)} portfolio capacity procured by participating consumers,
-    \textbf{panel (c)} cost breakdown of a procurement policy.\\
+    \textbf{Panel a}: Average emissions rate of participating consumers,
+    \textbf{panel b}: portfolio capacity procured by participating consumers,
+    \textbf{panel c}: procurement cost by scenario.
     Here we assume Germany 2025 as an example location and participation rate of C\&I consumers in 24/7 CFE matching strategy at 5\% (ca. 1900~MW load).
     CFE scores 90\%, 98\% and 100\% correspond to the share of time when the electricity consumed by the participating consumers is carbon-free.
     P1: palette of technologies that are commercially available today: onshore wind, utility scale solar PV, and battery storage; P2: all above plus iron-air battery storage; P3: all above plus an Allam cycle generator. The 24/7 CFE procurement framework is based on the methodologies paper by \citet{google-methodologies}. Simulations were carried out using the 24/7 CFE model by \citet{riepin-zenodo-systemlevel247}. Technology assumptions are provided in Table \ref{tab:tech_costs}.\\
     }\label{fig:dashboard}
 \end{figure}
 
+The key observation from Fig. \ref{fig:dashboard} can be summarized as follows: \textit{24/7 CFE commitments create an early market for advanced clean electricity technologies, which reduce the costs of hourly CFE matching}. If only 5\% of commercial and industrial (C\&I) consumers in Germany---representing approximately 1900~MW of load---adopt 24/7 CFE matching strategy, this would create a market for approximately 1500~MW of advanced clean firm generators and about 23~GWh of long-duration energy storage (\enquote{p3-cfe100}, Fig. \ref{fig:dashboard}). In similar vein how feed-in tariffs and renewable portfolio standards created a \enquote{demand pull} for wind and solar technologies in the past, 24/7 CFE commitments can drive the deployment and accelerate innovation of advanced clean electricity technologies.
 
+\FloatBarrier
 \subsection*{Technology learning}\label{sec3}
 
-\comment{Here story goes as follows}
+The early deployment of advanced clean electricity technologies can help them drive down along the \enquote{experience curve} -- a concept encapsulating a set of mechanisms by which technology specific costs decline as cumulative capacity is developed: evolving R\&D process, learning-by-doing, incremental upscaling, economies of scale, financial innovation and experience, for example.
 
-\noindent\textbf{our question} The early deployment of advanced clean electricity technologies will drive their costs down. By how much? let's do back-of-the-envelope calculation! \\
-
-\noindent\textbf{what's learning?} The concept of learning is based on empirical evidence in which the speciﬁc investment costs $C$ of a technology decrease by a constant factor with each doubling of experience $E$ \cite{wayEmpiricallyGroundedTechnology2022a}. The functional dependency is given by:
+In this section, we analyse the expected technological learning for two advanced technologies that were developed as a result of 24/7 CFE commitments: the Allam cycle generator and the iron-air battery storage system. The mathematical model of learning is based on empirical evidence in which the speciﬁc investment costs $C$ of a technology decrease by a constant factor with each doubling of experience $E$ \cite{wayEmpiricallyGroundedTechnology2022a}. The functional dependency is given by:
 
 \begin{equation}
   \begin{aligned}
     \color{violet}C(E)\color{black} &= \color{blue}\overline{C_0}\color{black}  \cdot \left( \frac{\color{red}E}{\color{blue}\overline{E_0}\color{black}} \right)^{-\color{black}\alpha} \text{ where } \color{black}\alpha = \color{black}\log_2 \left( \frac{1}{1 - \color{blue}LR\color{black}} \right)
+    \label{eq:learning_curve}
   \end{aligned}
 \end{equation}
 
-\noindent-- The constants $\color{blue}\overline{C_0}$ and $\color{blue}\overline{E_0}$ are fixed starting points. \\
--- $\color{blue}LR$ is the so-called Learning Rate. If $\color{blue}LR=20\%$, the costs are reduced by 20\% for each doubling of cumulative experience. Typically learning rates range between 5\%--25\% \cite{waySuppplementaryMaterialsEmpirically2022}.\\
--- Cumulative capacity $\color{red}E$ is used as a proxy for experience. \\
--- $\color{violet}C(E)\color{black}$ represents the resulting investment costs [\officialeuro/kW]. \\
+\noindent where the constants $\color{blue}\overline{C_0}$ [\officialeuro/kW] and $\color{blue}\overline{E_0}$ [MW] are fixed starting points representing the initial costs and experience levels, respectively. The learning rate $\color{blue}LR$ [\%] is a parameter that determines the rate at which costs decrease with experience. If $\color{blue}LR=20\%$, the costs are reduced by 20\% for each doubling of cumulative experience. Typically learning rates range between 5\%--25\% \cite{waySuppplementaryMaterialsEmpirically2022}. Here we use cumulative capacity $\color{red}E$ [MW] of a technology as a proxy for experience, which is calculated as the sum of the installed capacities of all projects that have been completed by a certain point in time. We collect information on existing and planned project for each technology, and use this as a starting point for the experience of the technology. 24/7 CFE matching contributes to the technology's experience the additional capacity procured by participating consumers, which is proportional to the participation rate (i.e., the share of electricity demand that is matched with carbon-free electricity on an hourly basis).
+
+The resulting investment costs $\color{violet}C(E)\color{black}$ [\officialeuro/kW] are shown in Fig. \ref{fig:panels} for Allam cycle technology (top panel) and iron-air battery storage (bottom panel).
+The first 1\% of participation (around 380~MW load in the German market) reduces costs for Allam cycle generators by 9\% and iron-air storage by 16\%. The technology learning scales significantly from there: at 10\% participation, Allam cycle generators and iron-air storage cost are reduced by 35\% and 45\%, respectively. The learning effect has a diminishing return, due to the logarithmic term $\color{black}\alpha$ in Eq. \ref{eq:learning_curve}. In other words, the first projects have the most significant impact on technology learning, and the effect diminishes as technology experience grows. \\
+
 
 \noindent\textbf{on signal-to-noise} there is much uncertainty behind this back-of-the-envelope calculation. Assumptions on the initial capacity, costs and Learning Rate drive the results. We'll capture and visualise the parametric uncertainty as follows by running monte carlo analysis on initial experience/costs ($\color{blue}\overline{E_0}\color{black}$/$\color{blue}\overline{C_0}\color{black}$) and assuming a broad range of learning rates 15$\pm$5\%. \\
 
-\noindent\textbf{results} Fig. \ref{fig:panels} shows the result for Allam cycle technology (\textbf{top panel}) and battery storage (\textbf{bottom panel}). \\
-The first 1\% of participation (ca. 380 MW load) drives costs down by 9\% for Allam cycle generator and 16\% for iron-air storage. \\
-The learning scales massively: technology learning goes up to 34\%/44\% for Allam cycle and  iron-air, respectively.\\
-Parametric uncertainty has an impact on the results. We capture the effects -- see shaded area and MC simulation panel. The main take is not affected by the uncertainty.\\
 
-\noindent\textbf{main take} Voluntary commitments to the hourly matching accelerate electricity system transformation through an early deployment of advanced energy technologies. \\
-
-\comment{I think math is not a thing in comment papers, but the concept of learning seems to be a pillar for this text piece. I can drop the formula (leave the verbal description), or eventually let editors to decide.}
+Parametric uncertainty has an impact on the results, which we capture in the Monte Carlo simulation panel. The key outcome is robust to uncertainty: Voluntary commitments to the hourly matching accelerate electricity system transformation through an early deployment of advanced energy technologies. \\
 
 
 \begin{figure}[htbp]
@@ -271,8 +234,8 @@ Parametric uncertainty has an impact on the results. We capture the effects -- s
     \includegraphics[width=\textwidth]{images/e_curve_NG-Allam.pdf}
     \includegraphics[width=\textwidth]{images/e_curve_iron-air.pdf}
     \caption{Technology learning curves for the NG-Allam cycle (\textbf{top panel}) and iron-air battery storage (\textbf{bottom panel}).
-    The learning curves are based on the experience model with the technology investments based on 24/7 CFE model with varying C\&I participation level $[0\%..10\%]$ and learning rates of 15$\pm$5\%. \\
-    For the Monte Carlo analysis calibration, the initial costs ($C0$) are sampled from a normal distribution with a mean based on our 2025 technology cost assumption and a standard deviation of 50~EUR/kW. Initial experience levels ($E0$) are sampled from a uniform distribution, with bounds derived from public information on projects planned to operate by 2025. In NG-Allam's model, initial experience lies between cases when one of three planned projects planned by 2025 is completed, and when all three projects are completed \cite{BroadwingEnergyProject, CoyoteCleanPower, FrogLakeProject}. In iron-air storage model, the distribution bounds are formed by assuming that 50\% to 100\% of the projects announced to operate by 2025 are realized on time \cite{FormEnergyLatest2024}.
+    The learning curves are based on the experience model with the technology investments based on 24/7 CFE model with varying C\&I participation level $[0\%..10\%]$ and learning rates of 15$\pm$5\%.
+    For the Monte Carlo analysis calibration, the initial costs (C0) are sampled from a normal distribution with a mean based on technology cost assumptions for 2025 and a standard deviation of 50~EUR/kW. Initial experience levels (E0) are sampled from a uniform distribution, with bounds derived from public information about planned projects. In NG-Allam's model, initial experience lies between cases when one of three planned projects planned by 2025 is completed, and when all three projects are completed \cite{BroadwingEnergyProject, CoyoteCleanPower, FrogLakeProject}. In iron-air storage model, the distribution bounds are formed by assuming that 50\% to 100\% of the projects announced to operate by 2025 are realized on time \cite{FormEnergyLatest2024}.
     }
     \label{fig:panels}
 \end{figure}
@@ -299,13 +262,12 @@ Third, at some point, advanced technologies break even economically in the backg
     \item This learning can be reached if C\&I consumers with aggregated demand of ca. 1200MW join 24/7 CFE movement -- that is 3\% of C\&I in DE sector. NB! That learning effect can be reached with even lower participation, if C\&I consumers focus their investment strategies on LDES (iron-air).
 \end{itemize}
 
-\begin{SCfigure}[][htbp]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.65\textwidth]{images/dashboard_3.pdf}
-    \caption{Power capacity investments and emissions in German 2030 electricity system as a function of CAPEX for iron-air storage. \\
-    Iron-air storage has a fixed duration of 100 hours \cite{FormEnergyLatest2024}. Price for EU ETS allowances is 100 EUR/tCO$_2$. Technology costs are based on DEA \cite{DEA-technologydata}. Other background system assumptions are aligned with \citet{riepin-zenodo-systemlevel247}.}\label{fig:impact}
+    \includegraphics[width=0.8\textwidth]{images/dashboard_3.pdf}
+    \caption{Power capacity investments and emissions in German 2030 electricity system as a function of CAPEX for iron-air storage. Here iron-air storage has a fixed duration of 100 hours \cite{FormEnergyLatest2024}. Price for EU ETS allowances is 100 EUR/tCO$_2$. Technology costs are based on DEA \cite{DEA-technologydata}. Other background system assumptions are aligned with \citet{riepin-zenodo-systemlevel247}.}\label{fig:impact}
     \captionsetup{width=0.3\textwidth}  % Adjust according to your needs
-\end{SCfigure}
+\end{figure}
 
 
 \subsection*{A broad perspective}\label{sec4}
@@ -316,8 +278,8 @@ Reduced costs of advanced clean electricity technologies benefits all: \\
 -- lower costs for 24/7 CFE matching for followers \\
 -- makes deep decarbonization more affordable and enables more ambitious climate goals \\
 -- facilitates energy security and resilience \\
--- reduce curtailment, and the need for transmission and distribution infrastructure \\
-
+-- reduce curtailment, and the need for transmission and distribution infrastructure 
+Companies and governments optimizing their energy procurement and investment strategies to match own consumption with clean electricity round-the-clock can play a catalytic role in innovation, financeability, and widespread availability of technologies required for a wider societal transition to secure, reliable and clean energy systems.
 
 % We find that 24/7 matching is a viable and effective strategy for electricity buyers aiming to eliminate their own carbon footprint and contribute to wider system decarbonisation.
 % Voluntary commitments to the hourly matching strategy have a further transformative effect on electricity systems through accelerated innovation and early deployment of advanced energy technologies
@@ -346,11 +308,10 @@ Reduced costs of advanced clean electricity technologies benefits all: \\
 %%\input sn-article.bbl
 
 \FloatBarrier
+\newpage 
 
 \subsection*{Technology assumptions for the illustrative example of 24/7 CFE matching}
 \label{sec:annex}
-
-\comment{Annexes are not included in Nature Comments (comments usually do not display primary research data).  Leaving this out, however, would not be scientifically rigorous, especially given the context of the comment. We can figure out some online clickable workaround if the editorial board does not like it, I'd need a quiet hour for that.}
 
 Cost and other assumptions for energy technologies available for 24/7 CFE participating consumers are collected from the Danish Energy Agency \cite{DEA-technologydata}.
 Data for advanced clean firm technologies is less reliable due to technological uncertainty and lack of commercial experience; therefore, we use publicly available information and own estimates.
