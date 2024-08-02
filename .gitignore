@@ -58,3 +58,8 @@ gurobi.log
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+## Style auxiliary files:
+*.bst
+*.clo
+*.cls

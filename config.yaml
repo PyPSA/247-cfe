@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Iegor Riepin, Tom Brown
+# SPDX-FileCopyrightText: 2023-2024 Iegor Riepin, Tom Brown
 #
 # SPDX-License-Identifier: MIT
 
@@ -22,49 +22,55 @@ n_2030_3H: "input/elec_s_37_lv1.0__3H-B-solar+p3_2030.nc"
 # Source https://github.com/PyPSA/technology-data
 retrieve_cost_data: True
 technology_data:
-  year: 2030
+  year: 2025
   version: v0.6.2
 
 ###################
 # Scenario controls
 
-run: test
+run: tests
 
 #wildcards
 scenario:
-  policy:  ["cfe100"] # "ref", "res100", "cfe..", "cfe100"
+  policy:  ["ref", "cfe90", "cfe98", "cfe100"] # "ref", "res100", "cfe..", "cfe100"
   palette: [
-            # "p1", # onwind + solar + battery
-            #"p2", # onwind + solar + battery + LDES (here: iron-air battery)
+            "p1", # onwind + solar + battery
+            "p2", # onwind + solar + battery + LDES (here: iron-air battery)
             #"p3", # onwind + solar + battery + Allam cycle turbine with CCS
             "p4", # onwind + solar + battery + LDES + Allam cycle turbine with CCS
             ]
   zone: [
-        "IE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
+        "DE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
         ]
   participation: [
                 '0',
+                '1',
+                '3',
+                '5',
                 '10',
-                '15',
-                '20',
-                '25',
+                # '15',
+                # '20',
+                # '25',
                 ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
   year: [
-          # "2025",
-          "2030"
+          "2025",
+          # "2030"
          ] # controls both the brownfield fleet and tech costs projection
 
 # CI consumer settings
 ci:
-  datacenters: {"IE5 0": "ireland"}
+  datacenters: {"DE1 0": "Germany"} # {"PT1 0": "Portugal"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   #load: 100. # nominal load in MW -> now scaled to match participation share
   res_techs: ["onwind","solar"]
-  excess_share: 0.2
+  excess_share: 0.  # share of excess CI generation that can be sold to the grid [percentage]
   flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
   spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
   temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
 
+# learning settings
+learning_coef: 1 # cost reduction coefficient for advanced tech in 2030
+system_res_constraint: True #turns on/off constraint on RES expansion following NECP targets with *equality* sign
 
 ###################
 # Time-series management
@@ -103,7 +109,7 @@ global:
   limit_res_exp_2025: 2 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
   limit_res_exp_2030: 4 #max ratio (to 2021 basis) of renewable tech expantion per zone and technology
   co2_price_2025: 80 #EUR/tCO2
-  co2_price_2030: 130 #EUR/tCO2
+  co2_price_2030: 100 #EUR/tCO2
   grid_res_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
                     "hydro","urban central solid biomass CHP"] #"solar rooftop"
   grid_clean_techs: ["offwind","offwind-ac","offwind-dc","onwind", "ror", "solar",
@@ -126,16 +132,19 @@ costs:
   adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
   allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
   allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
-  ironair_capacity_2025: 1900 # 2023$/kW CAPEX
+  ironair_capacity_2025: 1700 # 2023$/kW CAPEX (+ 500 $/kW for energy part = 2200 $/kW)
   ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
+  ironair_capacity_2030: 1700 # dummy -> value is endogenised via learning curve
+  ironair_energy_2030: 5 # dummy -> value is endogenised via learning curve
   ironair_duration: 100 # P/E ratio of iron-air battery
 
-#~size of C&I electricity load per country https://ec.europa.eu/eurostat/databrowser/view/ten00129/default/table?lang=en
+#~size of C&I electricity load per country https://ec.europa.eu/eurostat/cache/infographs/energy_balances/enbal.html
 ci_load:
   IE: 2200.
   DK: 2240.
   DE: 38410.
   NL: 8140.
+  PT: 3790.
 
 
 # nuclear phase-out policies (FR and BE shifted plan to 2035)
@@ -153,7 +162,7 @@ coal_phaseout_2030: ["BE", "SE", "PT", "AT", "FR", "GB", "IT", "IE", "HU", "MK",
 res_target_2025:
   IE: 0.47
   DK: 0.85  # p.3 https://ens.dk/sites/ens.dk/files/Basisfremskrivning/kf23_sektornotat_8b_forbrug_af_el.pdf
-  DE: 0.55
+  DE: 0.65   # actual realisation. Plan is lower https://www.diw.de/de/diw_01.c.841560.de/ampel-monitor_energiewende.html#ab_842744
   NL: 0.49   # interpolated from 2020 wind+solar 19%, bioenergy 6% to 2030 target
   AT: 0.90   # 79% overall renewables in 2020 -> target 100% 2030
   BE: 0.323  # p.63 https://energy.ec.europa.eu/system/files/2020-09/be_final_necp_parta_en_0.pdf, 11.156 GWh = 32.3%

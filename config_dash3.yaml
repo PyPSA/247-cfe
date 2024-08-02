@@ -84,3 +84,25 @@ carrier_to_keep: [ #generators
                   "electricity"
                     ]
 additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
+
+
+costs:
+  lifetime: 25 #default lifetime
+  discountrate: 0.07  # From a Lion Hirth paper, also reflects average of Noothout et al 2016
+  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
+  USD2021_to_EUR2021: 0.8460 # [EUR/USD] ECB
+  USD2023_to_EUR2023: 0.9248 # [EUR/USD] ECB
+  adv_nuclear_overnight: 7138 # 2021$/kW CAPEX https://www.eia.gov/outlooks/aeo/ 2022
+  price_green_hydrogen: 3 #EUR/kg
+  price_lignite: 6.5 # EUR/MWhth from TYNDP2020 -> default is 2.9
+  price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
+  price_gas: 35 # EUR/MWhth -> https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf
+  adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
+  adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
+  allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
+  allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
+  ironair_capacity_2025: 1700 # 2023$/kW CAPEX (+ 500 $/kW for energy part = 2200 $/kW)
+  ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
+  ironair_capacity_2030: 1700 # dummy -> value is endogenised via learning curve
+  ironair_energy_2030: 5 # dummy -> value is endogenised via learning curve
+  ironair_duration: 100 # P/E ratio of iron-air battery

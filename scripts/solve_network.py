@@ -104,19 +104,19 @@ def geoscope(zone: str):
     IRELAND = ["IE5 0", "GB0 0", "GB5 0"]
     GERMANY = [
         "DE1 0",
-        "BE1 0",
-        "NO2 0",
-        "DK1 0",
-        "DK2 0",
-        "SE2 0",
-        "GB0 0",
-        "FR1 0",
-        "LU1 0",
-        "NL1 0",
-        "PL1 0",
-        "AT1 0",
-        "CH1 0",
-        "CZ1 0",
+        # "BE1 0",
+        # "NO2 0",
+        # "DK1 0",
+        # "DK2 0",
+        # "SE2 0",
+        # "GB0 0",
+        # "FR1 0",
+        # "LU1 0",
+        # "NL1 0",
+        # "PL1 0",
+        # "AT1 0",
+        # "CH1 0",
+        # "CZ1 0",
     ]
     DKDE = ["DE1 0", "DK1 0", "DK2 0", "PL1 0"]
     IEDK = (
@@ -1623,11 +1623,11 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         snakemake = mock_snakemake(
             "solve_network",
-            year="2025",
+            year="2030",
             zone="DE",
             palette="p4",
             policy="ref",
-            participation="5",
+            participation="7",
         )
 
     logging.basicConfig(
@@ -1723,3 +1723,7 @@ if __name__ == "__main__":
 # n.stores.filter(like=f'{names[0]}', axis=0).T
 # n.links.filter(like=f'{names[0]}', axis=0).T
 # costs.filter(like='ironair', axis=0).round(2).T
+
+# n.stores.T.filter(like="ironair")
+# n.links.p_nom_opt.filter(like="ironair")
+# n.generators.T.filter(like='allam')
