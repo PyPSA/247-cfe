@@ -114,6 +114,13 @@ def _calculate_storage_costs(storage_techs, name, network):
         "ci_cost_battery_inverter": 0.0,
     }
 
+    ironair_costs = {
+        "ci_capital_cost_ironair_storage": 0.0,
+        "ci_cost_ironair_storage": 0.0,
+        "ci_capital_cost_ironair_inverter": 0.0,
+        "ci_cost_ironair_inverter": 0.0,
+    }
+
     hydrogen_costs = {
         "ci_capital_cost_hydrogen_storage": 0.0,
         "ci_cost_hydrogen_storage": 0.0,
@@ -138,6 +145,23 @@ def _calculate_storage_costs(storage_techs, name, network):
         )
         battery_costs["ci_cost_battery_inverter"] = battery_costs[
             "ci_capital_cost_battery_inverter"
+        ]
+
+    if "ironair" in storage_techs:
+        ironair_costs["ci_capital_cost_ironair_storage"] = (
+            network.stores.at[f"{name} ironair", "e_nom_opt"]
+            * network.stores.at[f"{name} ironair", "capital_cost"]
+        )
+        ironair_costs["ci_cost_ironair_storage"] = ironair_costs[
+            "ci_capital_cost_ironair_storage"
+        ]
+
+        ironair_costs["ci_capital_cost_ironair_inverter"] = (
+            network.links.at[f"{name} ironair charger", "p_nom_opt"]
+            * network.links.at[f"{name} ironair charger", "capital_cost"]
+        )
+        ironair_costs["ci_cost_ironair_inverter"] = ironair_costs[
+            "ci_capital_cost_ironair_inverter"
         ]
 
     if "hydrogen" in storage_techs:
@@ -165,7 +189,7 @@ def _calculate_storage_costs(storage_techs, name, network):
             "ci_capital_cost_hydrogen_fuel_cell"
         ]
 
-    return battery_costs, hydrogen_costs
+    return battery_costs, ironair_costs, hydrogen_costs
 
 
 def _calculate_curtailment(network, tech, buses, weights):
@@ -226,10 +250,12 @@ def summarise_network(n, policy, tech_palette):
         ]
         exp_links = [f"OCGT-{year}"]
         exp_chargers = [
-            f"{tech}-{year}" for tech in ["battery charger", "H2 Electrolysis"]
+            f"{tech}-{year}"
+            for tech in ["battery charger", "H2 Electrolysis", "ironair charger"]
         ]
         exp_dischargers = [
-            f"{tech}-{year}" for tech in ["battery discharger", "H2 Fuel Cell"]
+            f"{tech}-{year}"
+            for tech in ["battery discharger", "H2 Fuel Cell", "ironair discharger"]
         ]
 
         grid_cfe = grid_cfe_df.loc[:, (location, f"iteration {n_iterations-1}")]
@@ -269,347 +295,501 @@ def summarise_network(n, policy, tech_palette):
             }
         )
 
-    # 2: Compute grid average emission rate
-    emitters = snakemake.config["global"]["emitters"]
+        # 2: Compute grid average emission rate
+        emitters = snakemake.config["global"]["emitters"]
 
-    fossil_links = n.links.index[n.links.carrier.isin(emitters)]
-    hourly_emissions = (
-        n.links_t.p0[fossil_links]
-        .multiply(n.links.efficiency2[fossil_links], axis=1)
-        .sum(axis=1)
-    )
-    load = n.loads_t.p[grid_loads].sum(axis=1)
-
-    results[location].update(
-        {
-            "system_emissions": hourly_emissions.sum(),
-            "system_emission_rate": hourly_emissions.sum() / load.sum(),
-        }
-    )
-
-    # 3: Compute emissions & emission rates
-    grid_clean_techs = snakemake.config["global"]["grid_clean_techs"]
-
-    # clean_techs (at C&I node) != grid_clean_techs (rest of system)
-    # 3.1: ci_emission_rate based on Princeton (considering network congestions)
-
-    rest_system_buses = n.buses.index[
-        ~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(location)
-    ]
-    country_buses = n.buses.index[n.buses.index.str.contains(location)]
-
-    (
-        clean_grid_generators,
-        clean_grid_links,
-        clean_grid_storage_units,
-        dirty_grid_links,
-    ) = _aggregate_resources(n, rest_system_buses, grid_clean_techs, emitters)
-
-    (
-        clean_country_generators,
-        clean_country_links,
-        clean_country_storage_units,
-        dirty_country_links,
-    ) = _aggregate_resources(n, country_buses, grid_clean_techs, emitters)
-
-    country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
-
-    clean_grid_gens = n.generators_t.p[clean_grid_generators.index].sum(axis=1)
-    clean_grid_ls = -n.links_t.p1[clean_grid_links.index].sum(axis=1)
-    clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units.index].sum(axis=1)
-    clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
-    dirty_grid_resources = -n.links_t.p1[dirty_grid_links.index].sum(axis=1)
-
-    clean_country_gens = n.generators_t.p[clean_country_generators.index].sum(axis=1)
-    clean_country_ls = -n.links_t.p1[clean_country_links.index].sum(axis=1)
-    clean_country_sus = n.storage_units_t.p[clean_country_storage_units.index].sum(
-        axis=1
-    )
-    clean_country_resources = clean_country_gens + clean_country_ls + clean_country_sus
-    dirty_country_resources = -n.links_t.p1[dirty_country_links.index].sum(axis=1)
-
-    country_import = _calculate_imports(n, location, name)
-
-    grid_hourly_emissions = _calculate_emissions(n, dirty_grid_links)
-
-    grid_emission_rate = grid_hourly_emissions / (
-        clean_grid_resources + dirty_grid_resources
-    )
-
-    country_hourly_emissions = _calculate_emissions(n, dirty_country_links)
-    grid_supply_emission_rate = (
-        country_hourly_emissions + country_import * grid_emission_rate
-    ) / (clean_country_resources + dirty_country_resources + country_import)
-
-    ci_emissions_t = n.links_t.p0[f"{name} import"] * grid_supply_emission_rate
-
-    # Compute CI emission rates: true, local (local bidding zone), myopic (ignoring network congestions)
-    ci_load = n.loads_t.p[f"{name} load"].sum()
-    country_load = n.loads_t.p[country_loads].sum(axis=1)
-
-    ci_emission_rate_true = ci_emissions_t.sum() / ci_load
-    ci_emission_rate_local = (
-        n.links_t.p0[f"{name} import"] * (country_hourly_emissions / country_load)
-    ).sum() / ci_load
-    ci_emission_rate_myopic = (
-        n.links_t.p0[f"{name} import"] * (hourly_emissions / load)
-    ).sum() / ci_load
-
-    # Compute total CO2 emissions
-    ci_emissions = (ci_emissions_t * weights).sum()
-    emissions_zone = (country_hourly_emissions * weights).sum() / 1e6
-
-    # Update results dictionary
-    results[location].update(
-        {
-            "ci_emission_rate_true": ci_emission_rate_true,
-            "ci_emission_rate_local": ci_emission_rate_local,
-            "ci_emission_rate_myopic": ci_emission_rate_myopic,
-            "ci_emissions": ci_emissions,
-            "emissions_zone": emissions_zone,
-        }
-    )
-
-    # 4: Storing invested capacities at CI node
-    results[location].update(
-        {
-            f"ci_cap_{tech}": n.generators.at[name + " " + tech, "p_nom_opt"]
-            for tech in clean_techs
-        }
-    )
-
-    results[location].update(
-        {
-            f"ci_cap_{charger.replace(' ', '_')}": (
-                n.links.at[name + " " + charger, "p_nom_opt"]
-                * n.links.loc[n.links.index.str.contains(charger), "efficiency"].iloc[0]
-                if name + " " + charger in n.links.index
-                else 0.0
-            )
-            for charger in storage_charge_techs
-        }
-    )
-
-    results[location].update(
-        {
-            f"ci_cap_{discharger.replace(' ', '_')}": (
-                n.links.at[name + " " + discharger, "p_nom_opt"]
-                * n.links.loc[
-                    n.links.index.str.contains(discharger), "efficiency"
-                ].iloc[0]
-                if name + " " + discharger in n.links.index
-                else 0.0
-            )
-            for discharger in storage_discharge_techs
-        }
-    )
-
-    # Storing generation at CI node
-    results[location].update(
-        {
-            f"ci_generation_{tech}": n.generators_t.p[name + " " + tech]
+        fossil_links = n.links.index[n.links.carrier.isin(emitters)]
+        hourly_emissions = (
+            n.links_t.p0[fossil_links]
+            .multiply(n.links.efficiency2[fossil_links], axis=1)
             .multiply(weights, axis=0)
-            .sum()
-            for tech in clean_techs
-        }
-    )
+            .sum(axis=1)
+        )
+        load = n.loads_t.p[grid_loads].sum(axis=1)
 
-    results[location].update(
-        {
-            f"ci_generation_{discharger.replace(' ', '_')}": (
-                -n.links_t.p1[name + " " + discharger].multiply(weights, axis=0).sum()
-                if name + " " + discharger in n.links.index
-                else 0.0
+        results[location].update(
+            {
+                "system_emissions": hourly_emissions.sum(),
+                "system_emission_rate": hourly_emissions.sum() / load.sum(),
+            }
+        )
+
+        # 3: Compute emissions & emission rates
+        grid_clean_techs = snakemake.config["global"]["grid_clean_techs"]
+
+        # clean_techs (at C&I node) != grid_clean_techs (rest of system)
+        # 3.1: ci_emission_rate based on Princeton (considering network congestions)
+
+        rest_system_buses = n.buses.index[
+            ~n.buses.index.str.contains(name) & ~n.buses.index.str.contains(location)
+        ]
+        country_buses = n.buses.index[n.buses.index.str.contains(location)]
+
+        (
+            clean_grid_generators,
+            clean_grid_links,
+            clean_grid_storage_units,
+            dirty_grid_links,
+        ) = _aggregate_resources(n, rest_system_buses, grid_clean_techs, emitters)
+
+        (
+            clean_country_generators,
+            clean_country_links,
+            clean_country_storage_units,
+            dirty_country_links,
+        ) = _aggregate_resources(n, country_buses, grid_clean_techs, emitters)
+
+        country_loads = n.loads.index[n.loads.bus.isin(country_buses)]
+
+        clean_grid_gens = n.generators_t.p[clean_grid_generators.index].sum(axis=1)
+        clean_grid_ls = -n.links_t.p1[clean_grid_links.index].sum(axis=1)
+        clean_grid_sus = n.storage_units_t.p[clean_grid_storage_units.index].sum(axis=1)
+        clean_grid_resources = clean_grid_gens + clean_grid_ls + clean_grid_sus
+        dirty_grid_resources = -n.links_t.p1[dirty_grid_links.index].sum(axis=1)
+
+        clean_country_gens = n.generators_t.p[clean_country_generators.index].sum(
+            axis=1
+        )
+        clean_country_ls = -n.links_t.p1[clean_country_links.index].sum(axis=1)
+        clean_country_sus = n.storage_units_t.p[clean_country_storage_units.index].sum(
+            axis=1
+        )
+        clean_country_resources = (
+            clean_country_gens + clean_country_ls + clean_country_sus
+        )
+        dirty_country_resources = -n.links_t.p1[dirty_country_links.index].sum(axis=1)
+
+        country_import = _calculate_imports(n, location, name)
+
+        grid_hourly_emissions = _calculate_emissions(n, dirty_grid_links)
+
+        grid_emission_rate = grid_hourly_emissions / (
+            clean_grid_resources + dirty_grid_resources
+        )
+
+        if grid_emission_rate.isna().all():
+            grid_emission_rate.fillna(0, inplace=True)
+        elif grid_emission_rate.notna().any() and grid_emission_rate.isna().any():
+            raise ValueError("grid_emission_rate contains a mix of NaN and values")
+        else:
+            pass  # No action needed if no NaN values
+
+        country_hourly_emissions = _calculate_emissions(n, dirty_country_links)
+
+        grid_supply_emission_rate = (
+            country_hourly_emissions + country_import * grid_emission_rate
+        ) / (clean_country_resources + dirty_country_resources + country_import)
+
+        ci_emissions_t = n.links_t.p0[f"{name} import"] * grid_supply_emission_rate
+
+        # Compute CI emission rates: true, local (local bidding zone), myopic (ignoring network congestions)
+        ci_load = n.loads_t.p[f"{name} load"].sum()
+        country_load = n.loads_t.p[country_loads].sum(axis=1)
+
+        ci_emission_rate_true = ci_emissions_t.sum() / ci_load
+        ci_emission_rate_local = (
+            n.links_t.p0[f"{name} import"] * (country_hourly_emissions / country_load)
+        ).sum() / ci_load
+        ci_emission_rate_myopic = (
+            n.links_t.p0[f"{name} import"] * (hourly_emissions / load)
+        ).sum() / ci_load
+
+        # Compute total CO2 emissions
+        ci_emissions = (ci_emissions_t * weights).sum()
+        emissions_zone = (country_hourly_emissions * weights).sum() / 1e6
+
+        # Update results dictionary
+        results[location].update(
+            {
+                "ci_emission_rate_true": ci_emission_rate_true,
+                "ci_emission_rate_local": ci_emission_rate_local,
+                "ci_emission_rate_myopic": ci_emission_rate_myopic,
+                "ci_emissions": ci_emissions,
+                "emissions_zone": emissions_zone,
+            }
+        )
+
+        # 4: Storing invested capacities at CI node
+        results[location].update(
+            {
+                f"ci_cap_{tech}": n.generators.at[name + " " + tech, "p_nom_opt"]
+                for tech in clean_techs
+            }
+        )
+
+        results[location].update(
+            {
+                f"ci_cap_{charger.replace(' ', '_')}": (
+                    n.links.at[name + " " + charger, "p_nom_opt"]
+                    * n.links.loc[
+                        n.links.index.str.contains(charger), "efficiency"
+                    ].iloc[0]
+                    if name + " " + charger in n.links.index
+                    else 0.0
+                )
+                for charger in storage_charge_techs
+            }
+        )
+
+        results[location].update(
+            {
+                f"ci_cap_{discharger.replace(' ', '_')}": (
+                    n.links.at[name + " " + discharger, "p_nom_opt"]
+                    * n.links.loc[
+                        n.links.index.str.contains(discharger), "efficiency"
+                    ].iloc[0]
+                    if name + " " + discharger in n.links.index
+                    else 0.0
+                )
+                for discharger in storage_discharge_techs
+            }
+        )
+
+        # Storing generation at CI node
+        results[location].update(
+            {
+                f"ci_generation_{tech}": n.generators_t.p[name + " " + tech]
+                .multiply(weights, axis=0)
+                .sum()
+                for tech in clean_techs
+            }
+        )
+
+        results[location].update(
+            {
+                f"ci_generation_{discharger.replace(' ', '_')}": (
+                    -n.links_t.p1[name + " " + discharger]
+                    .multiply(weights, axis=0)
+                    .sum()
+                    if name + " " + discharger in n.links.index
+                    else 0.0
+                )
+                for discharger in storage_discharge_techs
+            }
+        )
+
+        # 5: Storing invested capacities in the rest of energy system
+        gen_expandable = n.generators[n.generators.p_nom_extendable == True]
+        gen_expandable = gen_expandable.drop(
+            labels=snakemake.config["additional_nodes"], errors="ignore"
+        )
+        system_gens = gen_expandable[~gen_expandable.index.str.contains(name)]
+
+        results[location].update(
+            {
+                f"system_inv_{gen.replace(' ', '_')}": (
+                    system_gens.loc[
+                        system_gens.index.str.contains(gen), "p_nom_opt"
+                    ].sum()
+                    - system_gens.loc[
+                        system_gens.index.str.contains(gen), "p_nom"
+                    ].sum()
+                )
+                for gen in exp_generators
+            }
+        )
+
+        zone_gens = system_gens[system_gens.bus == f"{location}"]
+        results[location].update(
+            {
+                f"zone_inv_{gen.replace(' ', '_')}": (
+                    zone_gens.loc[zone_gens.index.str.contains(gen), "p_nom_opt"].sum()
+                    - zone_gens.loc[zone_gens.index.str.contains(gen), "p_nom"].sum()
+                )
+                for gen in exp_generators
+            }
+        )
+
+        system_links = n.links[n.links.index.str.contains("|".join(exp_links))]
+        results[location].update(
+            {
+                f"system_inv_{link}": (
+                    system_links.loc[
+                        system_links.index.str.contains(link), "p_nom_opt"
+                    ].sum()
+                    - system_links.loc[
+                        system_links.index.str.contains(link), "p_nom"
+                    ].sum()
+                )
+                * system_links.loc[
+                    system_links.index.str.contains(link), "efficiency"
+                ].iloc[0]
+                for link in exp_links
+            }
+        )
+
+        zone_links = system_links[system_links.bus1.str.contains(location)]
+        results[location].update(
+            {
+                f"zone_inv_{link}": (
+                    zone_links.loc[
+                        zone_links.index.str.contains(link), "p_nom_opt"
+                    ].sum()
+                    - zone_links.loc[zone_links.index.str.contains(link), "p_nom"].sum()
+                )
+                * zone_links.loc[
+                    zone_links.index.str.contains(link), "efficiency"
+                ].iloc[0]
+                for link in exp_links
+            }
+        )
+
+        # Chargers & Dischargers
+        HV_links = n.links.drop(
+            n.links[n.links.index.str.contains("home battery")].index
+        )
+        system_chargers = HV_links[
+            HV_links.index.str.contains(
+                f"battery charger-{year}|H2 Electrolysis-{year}|ironair charger"
             )
-            for discharger in storage_discharge_techs
-        }
-    )
-
-    # 5: Storing invested capacities in the rest of energy system
-    gen_expandable = n.generators[n.generators.p_nom_extendable == True]
-    gen_expandable = gen_expandable.drop(
-        labels=snakemake.config["additional_nodes"], errors="ignore"
-    )
-    system_gens = gen_expandable[~gen_expandable.index.str.contains(name)]
-
-    results[location].update(
-        {
-            f"system_inv_{gen.replace(' ', '_')}": (
-                system_gens.loc[system_gens.index.str.contains(gen), "p_nom_opt"].sum()
-                - system_gens.loc[system_gens.index.str.contains(gen), "p_nom"].sum()
+        ]
+        system_dischargers = HV_links[
+            HV_links.index.str.contains(
+                f"battery discharger-{year}|H2 Fuel Cell-{year}|ironair discharger"
             )
-            for gen in exp_generators
-        }
-    )
+        ]
+        # drop system_chargers and system_dischargers if bus1 is name
+        system_chargers = system_chargers[~system_chargers.bus1.str.contains(name)]
+        system_dischargers = system_dischargers[
+            ~system_dischargers.bus1.str.contains(name)
+        ]
 
-    system_links = n.links[n.links.index.str.contains("|".join(exp_links))]
-    results[location].update(
-        {
-            f"system_inv_{link}": (
-                system_links.loc[
-                    system_links.index.str.contains(link), "p_nom_opt"
-                ].sum()
-                - system_links.loc[system_links.index.str.contains(link), "p_nom"].sum()
+        results[location].update(
+            {
+                f"system_inv_{charger.replace(' ', '_')}": (
+                    system_chargers.loc[
+                        system_chargers.index.str.contains(charger), "p_nom_opt"
+                    ].sum()
+                    - system_chargers.loc[
+                        system_chargers.index.str.contains(charger), "p_nom"
+                    ].sum()
+                )
+                for charger in exp_chargers
+            }
+        )
+
+        zone_chargers = system_chargers[system_chargers.bus1.str.contains(location)]
+        results[location].update(
+            {
+                f"zone_inv_{charger.replace(' ', '_')}": (
+                    zone_chargers.loc[
+                        zone_chargers.index.str.contains(charger), "p_nom_opt"
+                    ].sum()
+                    - zone_chargers.loc[
+                        zone_chargers.index.str.contains(charger), "p_nom"
+                    ].sum()
+                )
+                for charger in exp_chargers
+            }
+        )
+
+        results[location].update(
+            {
+                f"system_inv_{discharger.replace(' ', '_')}": (
+                    system_dischargers.loc[
+                        system_dischargers.index.str.contains(discharger), "p_nom_opt"
+                    ].sum()
+                    - system_dischargers.loc[
+                        system_dischargers.index.str.contains(discharger), "p_nom"
+                    ].sum()
+                )
+                for discharger in exp_dischargers
+            }
+        )
+
+        zone_dischargers = system_dischargers[
+            system_dischargers.bus1.str.contains(location)
+        ]
+        results[location].update(
+            {
+                f"zone_inv_{discharger.replace(' ', '_')}": (
+                    zone_dischargers.loc[
+                        zone_dischargers.index.str.contains(discharger), "p_nom_opt"
+                    ].sum()
+                    - zone_dischargers.loc[
+                        zone_dischargers.index.str.contains(discharger), "p_nom"
+                    ].sum()
+                )
+                for discharger in exp_dischargers
+            }
+        )
+
+        ## Retrieve installed capacity in the local zone
+
+        ### collect data
+        data = n.statistics.optimal_capacity(
+            bus_carrier="AC", groupby=n.statistics.groupers.get_bus_and_carrier
+        ).round(1)
+        data = data.droplevel(0)
+        df_reset = data.reset_index()
+
+        ### remove artificial carriers
+        query_expression = "~(carrier == 'AC'|bus == @name)"
+        data = df_reset.query(query_expression).copy()
+
+        ### other data cleaning
+        data.set_index("bus", inplace=True)
+        data.columns = ["carrier", "p_nom_opt"]
+
+        # if there is offshore wind, aggregate it
+        if data["carrier"].str.contains("Offshore Wind").any():
+            mask_offshore = data["carrier"].str.contains(
+                "Offshore Wind|offwind", case=False
             )
-            * system_links.loc[
-                system_links.index.str.contains(link), "efficiency"
-            ].iloc[0]
-            for link in exp_links
-        }
-    )
+            filtered_data = data[mask_offshore]
+            total = filtered_data["p_nom_opt"].sum()
 
-    # Chargers & Dischargers
-    HV_links = n.links.drop(n.links[n.links.index.str.contains("home battery")].index)
-    system_chargers = HV_links[
-        HV_links.index.str.contains(f"battery charger-{year}|H2 Electrolysis-{year}")
-    ]
-    system_dischargers = HV_links[
-        HV_links.index.str.contains(f"battery discharger-{year}|H2 Fuel Cell-{year}")
-    ]
-
-    results[location].update(
-        {
-            f"system_inv_{charger.replace(' ', '_')}": (
-                system_chargers.loc[
-                    system_chargers.index.str.contains(charger), "p_nom_opt"
-                ].sum()
-                - system_chargers.loc[
-                    system_chargers.index.str.contains(charger), "p_nom"
-                ].sum()
+            data = data[~mask_offshore]
+            new_row = pd.DataFrame(
+                {"carrier": ["Offshore Wind"], "p_nom_opt": [total]},
+                index=[f"{location}"],
             )
-            * system_chargers.loc[
-                system_chargers.index.str.contains(charger), "efficiency"
-            ].iloc[0]
-            for charger in exp_chargers
-        }
-    )
+            data = pd.concat([data, new_row])
 
-    results[location].update(
-        {
-            f"system_inv_{discharger.replace(' ', '_')}": (
-                system_dischargers.loc[
-                    system_dischargers.index.str.contains(discharger), "p_nom_opt"
-                ].sum()
-                - system_dischargers.loc[
-                    system_dischargers.index.str.contains(discharger), "p_nom"
-                ].sum()
+        # Convert "dischargers" to gross capacity
+        if f"{location} battery" in data.index:
+            data.loc[f"{location} battery", "p_nom_opt"] = n.links[
+                (n.links.carrier == "battery discharger")
+                & (n.links.bus1 == f"{location}")
+            ].p_nom_opt.values[0]
+            data.loc[f"{location} battery", "carrier"] = "battery"
+
+        if f"{location} ironair" in data.index:
+            data.loc[f"{location} ironair", "p_nom_opt"] = n.links[
+                (n.links.carrier == "ironair discharger")
+                & (n.links.bus1 == f"{location}")
+            ].p_nom_opt.values[0]
+            data.loc[f"{location} ironair", "carrier"] = "ironair"
+
+        # write to results
+        data.set_index("carrier", inplace=True)
+        for carrier in data.index:
+            results[location].update(
+                {f"zone_capacity_{carrier}": data.at[carrier, "p_nom_opt"]}
             )
-            * system_dischargers.loc[
-                system_dischargers.index.str.contains(discharger), "efficiency"
-            ].iloc[0]
-            for discharger in exp_dischargers
+
+        # 6: Storing costs at CI node
+        total_cost = 0.0
+        for tech in clean_techs:
+            tech_costs = _calculate_tech_cost(tech, location, name, n, results)
+            results[location].update(tech_costs)
+            total_cost += tech_costs[f"ci_cost_{tech}"]
+
+        results[location].update(
+            {
+                "ci_capital_cost_grid": 0,
+                "ci_marginal_cost_grid": (
+                    n.links_t.p0[name + " import"]
+                    * weights
+                    * n.buses_t.marginal_price[location]
+                ).sum(),
+            }
+        )
+
+        results[location].update(
+            {
+                "ci_cost_grid": (
+                    results[location]["ci_capital_cost_grid"]
+                    + results[location]["ci_marginal_cost_grid"]
+                )
+            }
+        )
+
+        total_cost += results[location]["ci_cost_grid"]
+
+        ci_revenue_grid = (
+            n.links_t.p0[name + " export"]
+            * weights
+            * n.buses_t.marginal_price[location]
+        ).sum()
+
+        results[location].update(
+            {
+                "ci_revenue_grid": ci_revenue_grid,
+                "ci_average_revenue": ci_revenue_grid
+                / results[location]["ci_demand_total"],
+            }
+        )
+
+        battery_costs, ironair_costs, hydrogen_costs = _calculate_storage_costs(
+            storage_techs, name, n
+        )
+        results[location].update(battery_costs)
+        results[location].update(ironair_costs)
+        results[location].update(hydrogen_costs)
+        # Only add capital costs (or operational costs, as per your model's requirement) to the total_cost
+        total_cost += (
+            battery_costs["ci_cost_battery_storage"]
+            + battery_costs["ci_cost_battery_inverter"]
+        )
+        total_cost += (
+            ironair_costs["ci_cost_ironair_storage"]
+            + ironair_costs["ci_cost_ironair_inverter"]
+        )
+        total_cost += (
+            hydrogen_costs["ci_cost_hydrogen_storage"]
+            + hydrogen_costs["ci_cost_hydrogen_electrolysis"]
+            + hydrogen_costs["ci_cost_hydrogen_fuel_cell"]
+        )
+
+        results[location]["ci_total_cost"] = total_cost
+        results[location]["ci_average_cost"] = (
+            total_cost / results[location]["ci_demand_total"]
+        )
+
+        # 7: Other calculations
+        results[location].update(
+            {
+                "zone_average_marginal_price": n.buses_t.marginal_price[location].sum()
+                / len(n.snapshots),
+                "emissions": n.stores_t.e["co2 atmosphere"][-1],
+                "system_grid_cfe_wavg": weighted_avg(
+                    grid_cfe, n.loads_t.p[grid_loads].sum(axis=1)
+                ),
+            }
+        )
+
+        # 8: Store RES curtailment
+        system_res = n.generators[
+            ~n.generators.index.str.contains("EU")
+            & ~n.generators.carrier.str.contains("gas")
+        ].carrier.unique()
+        ci_res = snakemake.config["ci"]["res_techs"]
+
+        pattern = "|".join(names)
+        system_buses = n.buses.index[~n.buses.index.str.contains(pattern)]
+        ci_buses = n.buses.index[n.buses.index.str.contains(pattern)]
+        ci_bus = n.buses.index[n.buses.index.str.contains(name)]
+
+        results[location].update(
+            {
+                f"system_curtailment_{tech}": _calculate_curtailment(
+                    n, tech, system_buses, weights
+                )
+                for tech in system_res
+            }
+        )
+
+        results[location].update(
+            {
+                f"ci_curtailment_{tech}": _calculate_curtailment(
+                    n, tech, ci_bus, weights
+                )
+                for tech in ci_res
+            }
+        )
+
+        policy_type = snakemake.config["global"]["policy_type"]
+        results[location]["co2_price"] = (
+            n.global_constraints.at["CO2Limit", "mu"]
+            if policy_type == "co2 cap"
+            else snakemake.config["global"][f"co2_price_{year}"]
+        )
+
+        # Convert all results to float and round to 2 decimal places
+        results[location] = {
+            k: round(float(v), 3) for k, v in results[location].items()
         }
-    )
-
-    # 6: Storing costs at CI node
-    total_cost = 0.0
-    for tech in clean_techs:
-        tech_costs = _calculate_tech_cost(tech, location, name, n, results)
-        results[location].update(tech_costs)
-        total_cost += tech_costs[f"ci_cost_{tech}"]
-
-    results[location].update(
-        {
-            "ci_capital_cost_grid": 0,
-            "ci_marginal_cost_grid": (
-                n.links_t.p0[name + " import"]
-                * weights
-                * n.buses_t.marginal_price[location]
-            ).sum(),
-        }
-    )
-
-    results[location].update(
-        {
-            "ci_cost_grid": (
-                results[location]["ci_capital_cost_grid"]
-                + results[location]["ci_marginal_cost_grid"]
-            )
-        }
-    )
-
-    total_cost += results[location]["ci_cost_grid"]
-
-    ci_revenue_grid = (
-        n.links_t.p0[name + " export"] * weights * n.buses_t.marginal_price[location]
-    ).sum()
-
-    results[location].update(
-        {
-            "ci_revenue_grid": ci_revenue_grid,
-            "ci_average_revenue": ci_revenue_grid
-            / results[location]["ci_demand_total"],
-        }
-    )
-
-    battery_costs, hydrogen_costs = _calculate_storage_costs(storage_techs, name, n)
-    results[location].update(battery_costs)
-    results[location].update(hydrogen_costs)
-    # Only add capital costs (or operational costs, as per your model's requirement) to the total_cost
-    total_cost += (
-        battery_costs["ci_cost_battery_storage"]
-        + battery_costs["ci_cost_battery_inverter"]
-    )
-    total_cost += (
-        hydrogen_costs["ci_cost_hydrogen_storage"]
-        + hydrogen_costs["ci_cost_hydrogen_electrolysis"]
-        + hydrogen_costs["ci_cost_hydrogen_fuel_cell"]
-    )
-
-    results[location]["ci_total_cost"] = total_cost
-    results[location]["ci_average_cost"] = (
-        total_cost / results[location]["ci_demand_total"]
-    )
-
-    # 7: Other calculations
-    results[location].update(
-        {
-            "zone_average_marginal_price": n.buses_t.marginal_price[location].sum()
-            / len(n.snapshots),
-            "emissions": n.stores_t.e["co2 atmosphere"][-1],
-            "system_grid_cfe_wavg": weighted_avg(
-                grid_cfe, n.loads_t.p[grid_loads].sum(axis=1)
-            ),
-        }
-    )
-
-    # 8: Store RES curtailment
-    system_res = n.generators[
-        ~n.generators.index.str.contains("EU")
-        & ~n.generators.carrier.str.contains("gas")
-    ].carrier.unique()
-    ci_res = snakemake.config["ci"]["res_techs"]
-
-    pattern = "|".join(names)
-    system_buses = n.buses.index[~n.buses.index.str.contains(pattern)]
-    ci_buses = n.buses.index[n.buses.index.str.contains(pattern)]
-    ci_bus = n.buses.index[n.buses.index.str.contains(name)]
-
-    results[location].update(
-        {
-            f"system_curtailment_{tech}": _calculate_curtailment(
-                n, tech, system_buses, weights
-            )
-            for tech in system_res
-        }
-    )
-
-    results[location].update(
-        {
-            f"ci_curtailment_{tech}": _calculate_curtailment(n, tech, ci_bus, weights)
-            for tech in ci_res
-        }
-    )
-
-    policy_type = snakemake.config["global"]["policy_type"]
-    results[location]["co2_price"] = (
-        n.global_constraints.at["CO2Limit", "mu"]
-        if policy_type == "co2 cap"
-        else snakemake.config["global"][f"co2_price_{year}"]
-    )
-
-    # Convert all results to float and round to 2 decimal places
-    results[location] = {k: round(float(v), 2) for k, v in results[location].items()}
 
     # Saving resutls as ../summaries/{}.yaml
     print(f"Summary for is completed! Saving to \n {snakemake.output.yaml}")
@@ -625,10 +805,10 @@ if __name__ == "__main__":
         snakemake = mock_snakemake(
             "summarise_network",
             year="2030",
-            zone="IE",
-            palette="p3",
-            policy="cfe100",
-            participation="10",
+            zone="DE",
+            palette="p4",
+            policy="ref",
+            participation="0",
         )
 
     # Wildcards & Settings

@@ -39,9 +39,15 @@ def palette(tech_palette: str) -> tuple:
         },
         "p2": {
             "clean_techs": ["onwind", "solar"],
-            "storage_techs": ["battery", "hydrogen"],
-            "storage_chargers": ["battery charger", "H2 Electrolysis"],
-            "storage_dischargers": ["battery discharger", "H2 Fuel Cell"],
+            "storage_techs": ["battery", "ironair"],  # "hydrogen"
+            "storage_chargers": [
+                "battery charger",
+                "ironair charger",
+            ],  # "H2 Electrolysis"
+            "storage_dischargers": [
+                "battery discharger",
+                "ironair discharger",
+            ],  # "H2 Fuel Cell"
         },
         "p3": {
             "clean_techs": ["onwind", "solar", "allam_ccs"],
@@ -49,11 +55,23 @@ def palette(tech_palette: str) -> tuple:
             "storage_chargers": ["battery charger"],
             "storage_dischargers": ["battery discharger"],
         },
+        "p4": {
+            "clean_techs": ["onwind", "solar", "allam_ccs"],
+            "storage_techs": ["battery", "ironair"],  # "hydrogen"
+            "storage_chargers": [
+                "battery charger",
+                "ironair charger",
+            ],  # "H2 Electrolysis"
+            "storage_dischargers": [
+                "battery discharger",
+                "ironair discharger",
+            ],  # "H2 Fuel Cell"
+        },
     }
 
     if tech_palette not in palettes:
         print(
-            f"'palette' wildcard must be one of 'p1', 'p2' or 'p3'. Now is {tech_palette}."
+            f"'palette' wildcard must be one of 'p1', 'p2', 'p3' or 'p4'. Now is {tech_palette}."
         )
         sys.exit()
 
@@ -86,19 +104,19 @@ def geoscope(zone: str):
     IRELAND = ["IE5 0", "GB0 0", "GB5 0"]
     GERMANY = [
         "DE1 0",
-        "BE1 0",
-        "NO2 0",
-        "DK1 0",
-        "DK2 0",
-        "SE2 0",
-        "GB0 0",
-        "FR1 0",
-        "LU1 0",
-        "NL1 0",
-        "PL1 0",
-        "AT1 0",
-        "CH1 0",
-        "CZ1 0",
+        # "BE1 0",
+        # "NO2 0",
+        # "DK1 0",
+        # "DK2 0",
+        # "SE2 0",
+        # "GB0 0",
+        # "FR1 0",
+        # "LU1 0",
+        # "NL1 0",
+        # "PL1 0",
+        # "AT1 0",
+        # "CH1 0",
+        # "CZ1 0",
     ]
     DKDE = ["DE1 0", "DK1 0", "DK2 0", "PL1 0"]
     IEDK = (
@@ -211,7 +229,10 @@ def load_profile(
         sys.exit()
 
     # CI consumer nominal load in MW
-    load = config["ci_load"][zone] * float(participation) / 100
+    if policy == "ref":
+        load = 0.0
+    else:
+        load = config["ci_load"][zone] * float(participation) / 100
 
     load_day = load * 24  # 24h
     load_profile_day = pd.Series(shape) * load_day
@@ -278,6 +299,36 @@ def prepare_costs(
         )
     )
 
+    # Add advanced technologies
+    # ironair storage
+    data_ironair_storage = pd.Series(
+        {
+            "FOM": 0,
+            "VOM": 0,
+            "discount rate": discount_rate,
+            "investment": config["costs"][f"ironair_energy_{year}"]
+            * 1e3
+            * config["costs"]["USD2023_to_EUR2023"],
+            "lifetime": 15.0,
+        },
+        name="ironair storage",
+    )
+
+    data_ironair_inverter = pd.Series(
+        {
+            "FOM": 1,  # %/year
+            "VOM": 0,
+            "discount rate": discount_rate,
+            "investment": config["costs"][f"ironair_capacity_{year}"]
+            * 1e3
+            * config["costs"]["USD2023_to_EUR2023"],
+            "discharge_efficiency": 0.60,
+            "charge_efficiency": 0.71,
+            "lifetime": 15.0,
+        },
+        name="ironair inverter",
+    )
+
     # Advanced nuclear
     data_nuc = pd.Series(
         {
@@ -329,7 +380,13 @@ def prepare_costs(
         name="allam_ccs",
     )
 
-    tech_list = [data_nuc, data_geo, data_allam]
+    tech_list = [
+        data_ironair_storage,
+        data_ironair_inverter,
+        data_nuc,
+        data_geo,
+        data_allam,
+    ]
     for tech in tech_list:
         costs = pd.concat([costs, tech.to_frame().transpose()], ignore_index=False)
 
@@ -521,6 +578,55 @@ def co2_policy(n, year: str, config: Dict[str, Any]) -> None:
             )
 
 
+def add_clean_techs(n: pypsa.Network, year: str, learning: float) -> None:
+
+    techs_to_add = ["ironair"]  # only ironair for now
+
+    for location in locations:
+        if "ironair" in techs_to_add:
+            n.add("Bus", f"{location} ironair", carrier="ironair bus")
+
+            n.add(
+                "Store",
+                f"{location} ironair storage-{year}",
+                bus=f"{location} ironair",
+                e_cyclic=True,
+                e_nom_extendable=True,
+                carrier="ironair storage",
+                capital_cost=costs.loc["ironair storage"]["fixed"]
+                * learning
+                * float(participation)
+                / 100,  # see config_ref.yaml comment
+                lifetime=costs.loc["ironair storage"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{location} ironair charger-{year}",
+                bus0=location,
+                bus1=f"{location} ironair",
+                carrier="ironair charger",
+                efficiency=costs.loc["ironair inverter"]["charge_efficiency"],
+                capital_cost=costs.loc["ironair inverter"]["fixed"]
+                * learning
+                * float(participation)
+                / 100,  # see config_ref.yaml comment,
+                p_nom_extendable=True,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{location} ironair discharger-{year}",
+                bus0=f"{location} ironair",
+                bus1=location,
+                carrier="ironair discharger",
+                efficiency=costs.loc["ironair inverter"]["discharge_efficiency"],
+                p_nom_extendable=True,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
+            )
+
+
 def add_ci(n: pypsa.Network, year: str) -> None:
     """
     Add C&I buyer(s) to the network.
@@ -700,6 +806,57 @@ def add_ci(n: pypsa.Network, year: str) -> None:
                     f"{location} battery discharger" + "-{}".format(year), "lifetime"
                 ],
             )
+
+        if "ironair" in storage_techs:
+            n.add("Bus", f"{name} ironair", carrier="pure_magic")
+
+            n.add(
+                "Store",
+                f"{name} ironair",
+                bus=f"{name} ironair",
+                e_cyclic=True,
+                e_nom_extendable=True if policy == "cfe" else False,
+                carrier="pure_magic",
+                capital_cost=costs.loc["ironair storage"]["fixed"],
+                lifetime=costs.loc["ironair storage"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{name} ironair charger",
+                bus0=name,
+                bus1=f"{name} ironair",
+                carrier="pure_magic",
+                efficiency=costs.loc["ironair inverter"]["charge_efficiency"],
+                capital_cost=costs.loc["ironair inverter"]["fixed"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
+            )
+
+            n.add(
+                "Link",
+                f"{name} ironair discharger",
+                bus0=f"{name} ironair",
+                bus1=name,
+                carrier="pure_magic",
+                efficiency=costs.loc["ironair inverter"]["discharge_efficiency"],
+                p_nom_extendable=True if policy == "cfe" else False,
+                lifetime=costs.loc["ironair inverter"]["lifetime"],
+            )
+
+            # n.add(
+            #     "StorageUnit",
+            #     f"{name} ironair",
+            #     bus=name,
+            #     carrier="pure_magic",
+            #     max_hours=100,
+            #     capital_cost=costs.loc["ironair"]["fixed"],
+            #     efficiency_store=1,
+            #     efficiency_dispatch=costs.loc["ironair"]["efficiency"],
+            #     p_nom_extendable=True if policy == "cfe" else False,
+            #     cyclic_state_of_charge=True,
+            #     lifetime=costs.loc["ironair"]["lifetime"],
+            # )
 
         if "hydrogen" in storage_techs:
             n.add("Bus", f"{name} H2", carrier="H2")
@@ -929,6 +1086,7 @@ def calculate_grid_cfe(n, name: str, node: str, config) -> pd.Series:
     # grid_cfe[grid_cfe > 1] = 1.
 
     import_cfe = clean_grid_resources / (clean_grid_resources + dirty_grid_resources)
+    import_cfe = np.nan_to_num(import_cfe, nan=0.0)  # Convert NaN to 0
 
     clean_country_gens = n.generators_t.p[clean_country_generators].sum(axis=1)
     clean_country_ls = -n.links_t.p1[clean_country_links].sum(axis=1)
@@ -1326,10 +1484,71 @@ def solve_network(
 
         n.model.add_constraints(lhs == 0, name="Link-charger_ratio")
 
+    def add_ironair_inverter_fix(n):
+        """
+        Add constraint ensuring that charger = discharger for ironair battery:
+        """
+        discharger_bool = n.links.index.str.contains("ironair discharger")
+        charger_bool = n.links.index.str.contains("ironair charger")
+
+        dischargers_ext = n.links[discharger_bool].query("p_nom_extendable").index
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        eff = n.links.efficiency[dischargers_ext].values
+        lhs = (
+            n.model["Link-p_nom"].loc[chargers_ext]
+            - n.model["Link-p_nom"].loc[dischargers_ext] * eff
+        )
+
+        n.model.add_constraints(lhs == 0, name="Ironair-inverter_ratio")
+
+    def add_ironair_duration_fix(n):
+        """
+        Add constraint ensuring that P/E ratio for ironair battery is 100 hours
+        (the only commercial ironair battery product has fixed duration)
+        """
+
+        energy_bool = n.stores.index.str.contains("ironair")
+        energy_ext = n.stores[energy_bool].query("e_nom_extendable").index
+
+        charger_bool = n.links.index.str.contains("ironair charger")
+        chargers_ext = n.links[charger_bool].query("p_nom_extendable").index
+
+        expr = (
+            n.model["Store-e_nom"].loc[energy_ext]
+            == n.model["Link-p_nom"].loc[chargers_ext]
+            * snakemake.config["costs"]["ironair_duration"]
+        )
+
+        n.model.add_constraints(expr, name="Ironair-duration")
+
+    def freeze_capacities(n):
+        """
+        Freeze capacities of expandable generators, links and storage units to their optimal values
+        """
+
+        for name, attr in [("generators", "p"), ("links", "p"), ("stores", "e")]:
+            df = getattr(n, name)
+            df[attr + "_nom_extendable"] = False
+            df[attr + "_nom"] = df[attr + "_nom_opt"]
+
+        # allow larger fossil fuel usage
+        gen_i = n.generators[n.generators.index.str.contains("EU")].index
+        n.generators.loc[gen_i, "p_nom_extendable"] = True
+
+        # allow more emissions
+        n.stores.at["co2 atmosphere", "e_nom"] *= 2
+
     def extra_functionality(n, snapshots):
         add_battery_constraints(n)
+        add_ironair_inverter_fix(n)
+        add_ironair_duration_fix(n)
         # country_res_constraints(n)
-        system_res_constraints(n, year, config)
+        (
+            system_res_constraints(n, year, config)
+            if config["system_res_constraint"]
+            else None
+        )
 
         if policy == "ref":
             print("no target set")
@@ -1379,14 +1598,19 @@ def solve_network(
 
         extra_functionality(n, n.snapshots)
 
+        # if policy == "ref" and i > 0:
+        #     freeze_capacities(n)
+        #     for ct in [key[:2] for key in datacenters.keys()]:
+        #         n.model.constraints.remove(f"{ct}_res_constraint")
+
         n.optimize.solve_model(
             solver_name=solver_name, log_fn=snakemake.log.solver, **solver_options
         )
 
         for location, name in zip(locations, names):
-            grid_cfe_df.loc[
-                :, (f"{location}", f"iteration {i+1}")
-            ] = calculate_grid_cfe(n, name=name, node=location, config=config)
+            grid_cfe_df.loc[:, (f"{location}", f"iteration {i+1}")] = (
+                calculate_grid_cfe(n, name=name, node=location, config=config)
+            )
 
     grid_cfe_df.to_csv(snakemake.output.grid_cfe)
 
@@ -1400,10 +1624,10 @@ if __name__ == "__main__":
         snakemake = mock_snakemake(
             "solve_network",
             year="2030",
-            zone="IE",
-            palette="p3",
-            policy="cfe100",
-            participation="10",
+            zone="DE",
+            palette="p4",
+            policy="ref",
+            participation="7",
         )
 
     logging.basicConfig(
@@ -1450,6 +1674,10 @@ if __name__ == "__main__":
         lifetime=config["costs"]["lifetime"],
     )
 
+    n_iterations = (
+        1 if policy == "ref" else config["solving"]["options"]["n_iterations"]
+    )
+
     # nhours = 240
     # n.set_snapshots(n.snapshots[:nhours])
     # n.snapshot_weightings[:] = 8760.0 / nhours
@@ -1467,20 +1695,35 @@ if __name__ == "__main__":
         biomass_potential(n)
         co2_policy(n, year, config)
 
+        (
+            add_clean_techs(n, year, learning=config["learning_coef"])
+            if policy == "ref"
+            else None
+        )
+
         add_ci(n, year)
         add_vl(n) if config["ci"]["spatial_shifting"] else None
-        revert_links(n) if config["ci"]["spatial_shifting"] else None
         add_dsm(n) if config["ci"]["temporal_shifting"] else None
+        revert_links(n)
 
         solve_network(
             n=n,
             policy=policy,
             penetration=penetration,
             tech_palette=tech_palette,
-            n_iterations=config["solving"]["options"]["n_iterations"],
+            n_iterations=n_iterations,
             config=config,
         )
 
         n.export_to_netcdf(snakemake.output.network)
 
     logger.info(f"Maximum memory usage: {mem.mem_usage}")
+
+
+# n.stores.filter(like=f'{names[0]}', axis=0).T
+# n.links.filter(like=f'{names[0]}', axis=0).T
+# costs.filter(like='ironair', axis=0).round(2).T
+
+# n.stores.T.filter(like="ironair")
+# n.links.p_nom_opt.filter(like="ironair")
+# n.generators.T.filter(like='allam')

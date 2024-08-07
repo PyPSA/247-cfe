@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: 2023-2024 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: MIT
+
+# Retrieve technology data <version> for <year>
+# Source https://github.com/PyPSA/technology-data
+retrieve_cost_data: True
+technology_data:
+  year: 2030
+  version: v0.6.2
+
+###################
+# Scenario controls
+
+run: manuscript-dashboard3
+
+#wildcards
+scenario:
+  policy:  ["ref"] # "ref", "res100", "cfe90", "cfe95", "cfe98",
+  palette: [
+            # "p1", # onwind + solar + battery
+            # "p2", # onwind + solar + battery + LDES (here: iron-air battery)
+            # "p3", # onwind + solar + battery + Allam cycle turbine with CCS
+            "p4", # onwind + solar + battery + LDES + Allam cycle turbine with CCS
+            ]
+  zone: [
+        "DE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
+        ]
+  participation: [
+                '100',
+                '75',
+                '50',
+                '25',
+                ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
+  year: [
+          #"2025",
+           "2030"
+         ] # controls both the brownfield fleet and tech costs projection
+
+# CI consumer settings
+ci:
+  datacenters: {"DE1 0": "Germany"} # {"PT1 0": "Portugal"}
+  profile_shape: "baseload" #"baseload", "datacenter", "industry"
+  #load: 100. # nominal load in MW -> now scaled to match participation share
+  res_techs: ["onwind","solar"]
+  excess_share: 0.  # share of excess CI generation that can be sold to the grid [percentage]
+  flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
+  spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
+
+# learning settings
+### a workaround to keep same wildcards in all the scenarios
+### if policy == "ref", CI node is not added, so we can use <participation>*10 as reduction steps of the learning coefficient
+learning_coef: 1 # cost reduction coefficient for advanced tech in 2030
+system_res_constraint: False #turns on/off constraint on RES expansion following NECP targets with *equality* sign
+
+
+###################
+# Time-series management
+
+time_sampling: "3H" # one of ["1H", "3H"]
+plot_timeseries: False
+
+
+###################
+# Fixed settings
+
+node_suffixes_to_keep: ["H2","battery"] #"low voltage","home battery"]
+carrier_to_keep: [ #generators
+                  "offwind","offwind-ac","offwind-dc","solar", "onwind","ror", #"solar rooftop",
+                  #storage units
+                  "PHS","hydro",
+                  #lines, links
+                  "AC", "DC",
+                  #links
+                  "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
+                  # "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
+                  "battery charger","battery discharger", #"home battery charger","home battery discharger",
+                  "urban central solid biomass CHP", #"electricity distribution grid",
+                  #Stores
+                  # "H2 Store",
+                  "co2","co2 stored","battery", "solid biomass", #"home battery"
+                  #Loads ("industry electricity" is included)
+                  "electricity"
+                    ]
+additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
+
+
+costs:
+  lifetime: 25 #default lifetime
+  discountrate: 0.07  # From a Lion Hirth paper, also reflects average of Noothout et al 2016
+  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html # noqa: E501
+  USD2021_to_EUR2021: 0.8460 # [EUR/USD] ECB
+  USD2023_to_EUR2023: 0.9248 # [EUR/USD] ECB
+  adv_nuclear_overnight: 7138 # 2021$/kW CAPEX https://www.eia.gov/outlooks/aeo/ 2022
+  price_green_hydrogen: 3 #EUR/kg
+  price_lignite: 6.5 # EUR/MWhth from TYNDP2020 -> default is 2.9
+  price_coal: 8.9 # EUR/MWhth from TYNDP2020 -> default is 8.15
+  price_gas: 35 # EUR/MWhth -> https://energy.ec.europa.eu/system/files/2022-05/SWD_2022_230_1_EN_autre_document_travail_service_part1_v3.pdf
+  adv_geo_overnight_2025: 10000 # 2022$/kW CAPEX
+  adv_geo_overnight_2030: 10000  # 2022$/kW CAPEX
+  allam_ccs_overnight_2025: 2760 # 2022$/kW CAPEX, 2300*1.2
+  allam_ccs_overnight_2030: 2600 # 2022$/kW CAPEX, 2300*1.2 (!)
+  ironair_capacity_2025: 1700 # 2023$/kW CAPEX (+ 500 $/kW for energy part = 2200 $/kW)
+  ironair_energy_2025: 5 # 2023$/kWh energy (5 $/kWh * 100h = 500 $/kW)
+  ironair_capacity_2030: 1700 # dummy -> value is endogenised via learning curve
+  ironair_energy_2030: 5 # dummy -> value is endogenised via learning curve
+  ironair_duration: 100 # P/E ratio of iron-air battery
