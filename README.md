@@ -9,6 +9,8 @@ SPDX-License-Identifier: CC0-1.0
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg?style=flat-square)](LICENSES/CC-BY-4.0.txt)
 [![Zenodo Study1](https://zenodo.org/badge/DOI/10.5281/zenodo.7180097.svg)](https://zenodo.org/record/7180097)
 [![Zenodo Stidy2](https://zenodo.org/badge/DOI/10.5281/zenodo.8185849.svg)](https://zenodo.org/record/8185849)
+[![Zenodo Paper1](https://zenodo.org/badge/DOI/10.5281/zenodo.12819516.svg)](https://zenodo.org/records/12819516)
+[![Zenodo Paper2](https://zenodo.org/badge/DOI/10.5281/zenodo.10869650.svg)](https://zenodo.org/records/10869650)
 
 
 # PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
@@ -50,7 +52,7 @@ In the third study, we argue that the commitment by a small number of companies 
 
 - [preliminary results](https://iriepin.com/uploads/247Hubtalk_20240521.pdf)
 
-## Research papers with workflows in own GitHub repositories
+## Research papers
 
 ### On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement (Energy Strategy Reviews, 2024)
 
