@@ -15,19 +15,17 @@ SPDX-License-Identifier: CC0-1.0
 
 ## Project webpage
 
-Visit our [webpage](https://irieo.github.io/247cfe.github.io/) for detailed insights about our research.
+You are welcome to visit a [project webpage](https://irieo.github.io/247cfe.github.io/) for detailed information about our research.
 
 ## Getting started
 
 This project explores the means, costs and impacts of 24/7 Carbon-Free Energy procurement in Europe.
 
-Three invididual studies are planned as deliverables of this research project. The three studies will be linked to GitHub releases and individual Zenodo repositories. All studies are focused on the topic of 24/7 Carbon-Free Energy procurement in Europe; however, studies will differ in terms of their focuses, model formulations, scenarios, etc.
-
-We aim to make the scientific workflow and results for each study to be fully reproducible. To access code for published studies, clone a corresponding GitHub release, see sections [Study 1](#study-1) and [Study 2](#study-2). More information is in [Requirements](#requirements) and [Software](#software).
+There are five individual studies planned as deliverables for this research project. Ultimately, we want the entire scientific workflow, from raw data to final charts, to be fully reproducible for each study. This repository will include code for three studies linked to GitHub releases. Additional research papers are hosted in dedicated GitHub repositories with own reproducible workflows. The five studies are all concerned with 24/7 Carbon-Free Energy procurement in Europe, but they differ in their focuses, model formulations, scenarios, etc.
 
 This research is supported by a grant from Google LLC.
 
-### Study 1:
+### Study 1: System-level impacts of 24/7 carbon-free electricity procurement in Europe (Zenodo, October 2022)
 
 In this study, we investigate both the means and costs of pursuing different clean electricity procurement strategies for companies in a selection of European countries. We also explore how the 24/7 clean energy procurement affects the rest of the European electricity system.
 
@@ -35,26 +33,35 @@ In this study, we investigate both the means and costs of pursuing different cle
 - [Twitter thread](https://twitter.com/nworbmot/status/1579810935702982656)
 - [Blog post](https://blog.google/around-the-globe/google-europe/how-carbon-free-energy-around-the-clock-can-work/)
 - [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.1)
-- [Code is also at Zenodo](https://zenodo.org/record/7181236)
 
-NB The Study 1 is now also available with [Linopy](https://github.com/pypsa/linopy) integration under the tag [v0.2](https://github.com/PyPSA/247-cfe/releases/tag/v0.2). Linopy is an open-source python package for linear or mixed-integer optimization.
+Study 1 is now also available with [Linopy](https://github.com/pypsa/linopy) integration under the tag [v0.2](https://github.com/PyPSA/247-cfe/releases/tag/v0.2). Linopy is an open-source python package for linear or mixed-integer optimization.
 
-### Study 2:
+### Study 2: The value of space-time load-shifting flexibility for 24/7 carbon-free electricity procurement (Zenodo, July 2023)
 
 In this study, we explore how and why space-time load-shifting flexibility can be used to meet high 24/7 carbon-free energy targets, as well as what potential benefits it may offer to 24/7 participants and to the rest of the energy system. To answer these questions, we expand the mathematical model of 24/7 CFE procurement developed in the previous work by incorporating spatial and temporal demand flexibility provided by electricity consumers that follow 24/7 carbon-free energy goals.
 
 - [Complete study](https://zenodo.org/record/8185850)
 - [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.3)
 
-### Study 3:
+### Study 3: (*work in progress*) On the role of 24/7 carbon-free energy matching in accelerating advanced clean energy technologies
 
-On the role of 24/7 CFE in accelerating advanced clean energy technologies
-*(work in progress).*
+In the third study, we argue that the commitment by a small number of companies to round-the-clock matching can create an early market and spur substantial learning of the advanced electricity technologies. We demonstrate these effects for two technologies: long-duration energy storage and clean firm generation. Cost reductions make 24/7 matching more attractive for other actors, leading to a virtuous circle that accelerates the time when the technologies become cost-competitive in the rest of the electricity market. These indirect effects unlock greenhouse gas savings far beyond the direct emission reduction of initial investments.
 
-### Research papers related to this project:
 
-- [On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement](https://zenodo.org/records/10407830)
-- [Spatio-temporal load shifting for truly clean computing](https://zenodo.org/records/10869649)
+- [preliminary results](https://iriepin.com/uploads/247Hubtalk_20240521.pdf)
+
+## Research papers with workflows in own GitHub repositories
+
+### On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement (Energy Strategy Reviews, 2024)
+
+- [DOI](https://www.sciencedirect.com/science/article/pii/S2211467X24001950)
+- preprint at [arXiv](https://arxiv.org/abs/2403.07876)
+- [Code](https://github.com/Irieo/247-procurement-paper)
+
+### Spatio-temporal load shifting for truly clean computing (in review)
+
+- preprint at [arXiv](https://arxiv.org/abs/2405.00036)
+- [Code](https://github.com/Irieo/space-time-optimization)
 
 
 ## How to reproduce results of a study?
