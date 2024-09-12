@@ -1,0 +1,89 @@
+\documentclass[pdflatex,sn-basic, Numbered]{sn-jnl}
+
+%%%% Standard Packages
+%%<additional latex packages if required can be included here>
+
+\usepackage{graphicx}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+\usepackage{multicol}
+
+% additional packages
+\usepackage{caption}
+\usepackage{placeins}
+\usepackage{lipsum}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{sidecap}
+\usepackage{xurl}                     % fix URL wrap
+\usepackage{booktabs}                % Improves the quality of tables in LaTeX
+\usepackage{tabularx}                % Enhances the standard LaTeX tables
+\usepackage{subcaption}              % Provides support for subfigures and subtables
+\usepackage{longtable}               % Allows the creation of multi-page tables
+\usepackage{multirow}                % Enables cells spanning multiple rows in tables
+\usepackage{threeparttable}          % Provides additional functionality for tables
+\usepackage{array}
+\usepackage{eurosym}
+
+\usepackage{bibunits}
+
+\begin{document}
+
+\title{24/7 carbon-free electricity matching accelerates adoption of advanced clean energy technologies: Supplementary Information}
+\author{Iegor Riepin, Jesse D. Jenkins, Devon Swezey, Tom Brown}
+\maketitle
+
+Cost and other assumptions for energy technologies available for 24/7 CFE participating consumers are collected from the Danish Energy Agency \cite{DEA-technologydata}.
+Data for advanced clean firm technologies is less reliable due to technological uncertainty and lack of commercial experience; therefore, we use publicly available information and own estimates.
+A full list of technology assumptions, including the data for energy technologies in the background energy system, is available via the reproducible scientific workflow in the GitHub repository \cite{code247CFE}.
+
+\begin{table*}[h]
+    \centering
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{lccccccc}
+            \hline\hline
+            \textbf{Technology} &
+            \textbf{Year} &
+            \textbf{\begin{tabular}[c]{@{}c@{}}CAPEX\\ (overnight cost)\end{tabular}} &
+            \textbf{\begin{tabular}[c]{@{}c@{}}FOM\\ {[}\%/year{]}\end{tabular}} &
+            \textbf{\begin{tabular}[c]{@{}c@{}}VOM\\ {[}Eur/MWh{]}\end{tabular}} &
+            \textbf{\begin{tabular}[c]{@{}c@{}}Efficiency\\ {[}per unit{]}\end{tabular}} &
+            \textbf{\begin{tabular}[c]{@{}c@{}}Lifetime\\ {[}years{]}\end{tabular}} &
+            \textbf{Source} \\ \hline\hline
+            Utility solar PV & 2025 & 612 \officialeuro/kW & 1.7 & 0.01 & - & 37.5 & \cite{DEA-technologydata} \\
+            Onshore wind & 2025 & 1077 \officialeuro/kW & 1.2 & 0.015 & - & 28.5 & \cite{DEA-technologydata} \\
+            Battery storage & 2025 & 187 \officialeuro/kWh & - & - & - & 22.5 & \cite{DEA-technologydata} \\
+            Battery inverter & 2025 & 215 \officialeuro/kW & 0.3 & - & 0.96 & 10 & \cite{DEA-technologydata} \\
+            Iron-air storage & 2025 & 2034 \officialeuro/kW$^1$ & 1 & - & 0.43$^2$ & 15 & \cite{FormEnergyLatest2024} \\
+            Allam cycle generator & 2025 & 2760 \officialeuro/kW$^3$ & 14.8 & 3.2 & 0.54 & 30 & \cite{navigant-report, NetZeroAmerica-report} \\
+            \hline \hline
+        \end{tabular}%
+    }
+\begin{tablenotes}
+    {\small
+    \item[] Notes: $^1$iron-air storage has a fixed duration of 100h, costs comprise both power and energy components; $^2$cycle efficiency, the model factors in efficiency factor of 0.71 for charge process and 0.60 for discharge; $^3$costs also include estimate of 40 \officialeuro/tCO$_2$ for carbon transport and sequestration; all costs are in 2023 euros; CAPEX = capital expenditure; FOM = fixed operations and maintenance costs; VOM = variable operations and maintenance costs.
+    }
+\end{tablenotes}
+    \vspace{0.2cm}
+    \caption{Technology assumptions.}
+    \label{tab:tech_costs}
+\end{table*}
+
+% 1 One of the first projects of its kind in the world, Broadwing would represent more than a half-billion-dollar investment into Central Illinois, building on the existing carbon storage facility at Decatur. It will generate 280 MW of clean power and it has been agreed in principle to be located next to ADM’s processing complex. Similarly to 8 Rivers other power projects, it will utilise NET Power’s system design.
+
+There are three first-of-its-kind projects are under development to demonstrate the natural gas Allam cycle generation technology with carbon capture and storage:  280 MW Broadwing Energy Project in Illinois \cite{BroadwingEnergyProject}, 280 MW Coyote Clean Power in California \cite{CoyoteCleanPower}, and 300 MW Frog Lake First Nation NET power station project in Alberta, Canada \cite{FrogLakeProject}.
+
+
+\bibliography{sn-bibliography}%
+\end{document}
