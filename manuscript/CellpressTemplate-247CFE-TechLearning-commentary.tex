@@ -1,0 +1,456 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%  Welcome to the Cell Press LaTeX template,
+%%%  version 1.10. This is a minimalist template
+%%%  to help you organize your article for
+%%%  publication at Cell Press. PLEASE NOTE:
+
+%%%  (1) If you submit your final manuscript materials
+%%%  in LaTeX format, our typesetters will prepare
+%%%  a Word file for use in production. This conversion
+%%%  process allows us to copyedit your paper, fix
+%%%  any typos, and add formatting and tagging. The
+%%%  conversion process will add approximately 3
+%%%  business days to the production timeline.
+%%%  Authors using LaTeX should keep this in mind
+%%%  when considering deadlines.
+
+%%%  (2) Keep your LaTeX files as simple as possible.
+%%%  Avoid the use of elaborate local macros and/or
+%%%  customized external style files. If you need
+%%%  additional macros, please keep them simple and
+%%%  include them in the actual .tex document preamble.
+%%%  Source code should be set up so that all .sty
+%%%  and .bst files called by the main .tex file are
+%%%  in the same directory as the main .tex file.
+
+%%%  (3) Cell Press publishes more than 40 journals,
+%%%  some of which may have different or additional
+%%%  formatting requirements not specified in this
+%%%  template. When revising your paper before
+%%%  acceptance, please review the formatting
+%%%  guidelines, including the Final Files Requirements,
+%%%  for the journal you are publishing with.
+
+%%%  Please send feedback on this template to lshipp@cell.com.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt,letterpaper]{article}
+\usepackage[a4paper, total={7in, 10in}]{geometry}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{graphicx}
+\usepackage{helvet}
+\usepackage{authblk}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{orcidlink}
+\usepackage{csquotes}
+\usepackage{eurosym}
+\usepackage[super,comma,sort&compress]
+   {natbib}\bibliographystyle{numbered}
+\usepackage[right]{lineno} \linenumbers
+
+
+\makeatletter
+\renewcommand{\maketitle}{\bgroup\setlength{\parindent}{0pt}
+\begin{flushleft}
+  \textbf{\@title}
+
+  \@author
+\end{flushleft}\egroup}
+\makeatother
+
+%%%  Insert title below; leave date empty.
+
+\title{24/7 carbon-free electricity matching accelerates adoption of advanced clean energy technologies}
+\date{}
+
+%%%  Author first and last names should be spelled
+%%%  out in their entirety (do not abbreviate "J.H.
+%%%  Watson" unless this is how the author's name
+%%%  always appears). Middle initials are OK. Do
+%%%  not include titles, positions, or degrees.
+
+%%%  Use numbered footnotes to indicate institutional
+%%%  affiliations. Authors may have multiple
+%%%  institutional affiliations, and affiliations
+%%%  may be shared among multiple authors.
+
+%%%  After the institutional affiliations, numbered
+%%%  footnotes may be used to indicate an author's
+%%%  present address, equal contribution status,
+%%%  and/or senior author status. Corresponding
+%%%  authors may additionally include Twitter (X)
+%%%  handles as a means of contact.
+
+%%%  The final numbered footnote should indicate
+%%%  which author is the lead contact (required).
+%%%  One author must be designated as the lead contact.
+%%%  There can be no more than one lead contact.
+
+%%%  Corresponding authors should be indicated with
+%%%  asterisks (*). Use 2 asterisks (**) for the
+%%%  second-listed corresponding author, 3 (***) for
+%%%  the third-listed, and so on. The lead contact
+%%%  must be a corresponding author. Additional
+%%%  authors may also serve as corresponding authors.
+
+\author[1,4,*,\orcidlink{0000-0001-6378-4904}]{Iegor Riepin}
+\author[2,**,\orcidlink{0000-0002-9670-7793}]{Jesse D. Jenkins}
+\author[3,***]{Devon Swezey}
+\author[1,****, \orcidlink{0000-0001-5898-1911}]{Tom Brown}
+
+
+%%%  Institutional affiliations should contain the
+%%%  following information at minimum: department(s)/
+%%%  subunit(s), institution, city, state/region (if
+%%%  applicable), and country.
+
+\affil[1]{Department of Digital Transformation in Energy Systems, TU Berlin, Berlin, Germany}
+\affil[2]{Mechanical \& Aerospace Engineering and Andlinger Center for Energy, Princeton University, Princeton, NJ, USA}
+\affil[3]{Global Energy and Climate, Google LLC}
+\affil[4]{Lead contact}
+
+%%%  List only one email address per corresponding author.
+
+\affil[*]{Correspondence: iegor.riepin@tu-berlin.de}
+\affil[**]{Correspondence: jessejenkins@princeton.edu}
+\affil[***]{Correspondence: dswezey@google.com}
+\affil[****]{Correspondence: t.brown@tu-berlin.de}
+
+
+\begin{document}
+
+\maketitle
+
+\section*{SUMMARY}
+
+Commitments to 24/7 carbon-free energy matching by companies and governments create an early market for technologies that can bridge the gaps between wind and solar generation.
+We argue that the commitment by a small number of companies to round-the-clock matching can spur substantial learning in these advanced technologies.
+We demonstrate these benefits for two technologies: long-duration energy storage and clean firm generation.
+The reduced costs from learning make 24/7 matching more attractive for other actors, leading to a virtuous circle that accelerates the time when the technologies become cost-competitive in the rest of the electricity market.
+These indirect effects unlock greenhouse gas savings far beyond the direct emission reductions from initial investments, illustrating how proactive contributions from the private sector can complement governmental support for advanced energy technologies, reduce pressure on tight fiscal budgets, and accelerate decarbonization of electricity systems.
+
+\section*{Graphical abstract} Graphical abstract is provided as a separate file, also in \enquote{Figures} section below.
+
+\section*{Highlights}
+
+\begin{itemize}
+  \item 24/7 CFE matching creates an early market for advanced energy technologies
+  \item Early deployment of advanced technologies spurs substantial learning effects
+  \item Self-reinforcing system dynamics accelerate widespread adoption of advanced technologies
+  \item These indirect effects yield greenhouse gas savings far beyond the impact of initial investments
+  \item Corporate deployment via 24/7 is a viable channel for new technologies if government budgets are constrained
+\end{itemize}
+
+\section*{Keywords}
+
+%%%  Include up to 10 keywords, separated by commas.
+%%%  Keywords entered in EM are not carried over; only
+%%%  keywords included in the main text will be used
+%%%  in the final article metadata. Please note that
+%%%  for some journals, keywords are chosen by the editors.
+
+24/7 Carbon Free Energy, Advanced Energy Technologies, Decarbonization, Energy Storage, Renewable Energy, Technology Learning
+
+\section*{Big challenges ahead}\label{sec1}
+
+Tackling climate change requires not only a massive scale-up of available energy technologies like wind, solar and batteries, but also an accelerated research, development, demonstration and widespread deployment of advanced technologies that are not yet commercialised at scale \cite{sepulvedaRoleFirmLowCarbon2018, brownUltralongdurationEnergyStorage2023}.
+Among them are clean firm generation technologies, such as next-generation geothermal power, advanced nuclear generators, Allam-cycle gas generators with carbon capture and storage (CCS), as well as long-duration energy storage (LDES) technologies, which can bridge multi-day gaps in clean power supply that cannot be filled by wind, solar photovoltaics (PV), or batteries.
+
+\section*{Barriers to commercialization}
+
+Bringing new technologies to market on a large scale and in time, however, is fraught with challenges.
+New technologies often face a \enquote{valley of death} on the path to successful commercial deployment.
+Early-stage investments typically comprise governmental R\&D grants and venture capital, insufficient in both magnitude and duration to support new energy technologies \cite{khatcherianBarriersTimelyDeployment2022}. On the other hand, mature technologies such as wind and solar attract steady, de-risked capital from institutional investors.
+Achieving commercial viability requires companies to construct larger plants at scale and reduce manufacturing costs, which involves overcoming financial, engineering, and supply chain issues unique to first-of-a-kind (FOAK) projects. Technology innovators often lack the resources to scale from demonstration plants to commercial-scale projects, frequently requiring a consortium of stakeholders that adds complexity and risk, complicating financing \cite{khatcherianBarriersTimelyDeployment2022}.
+Even after FOAK projects succeed, scaling further remains challenging, as repeated deployments are essential for achieving economies of scale. However, investors often hesitate until proven success is seen across multiple projects. Government support can be critical here, though it can also be temporary and even unpredictable, as when Germany ended subsidies for electric cars abruptly in 2023; or in Spain, where the withdrawal of renewable energy support led numerous investors to initiate successful international arbitration proceedings against the state \cite{gurtlerDismantlingRenewableEnergy2019}. Tight public budgets can also be a limiting factor. For example, in the EU, new fiscal rules may limit member states' capacity to invest in green technologies \cite{darvasImplicationsEuropeanUnions2024}.
+
+Overall, the road from the first demonstration plant to commercial uptake can be complicated, risky, and expensive---and it is challenging to secure the capital to fund it.
+
+\section*{Bridging the valley of death}
+
+Consider how solar became a global industry and a truly disruptive technology. Bell Labs developed the first silicon photovoltaic cell in 1954, which made modern solar power possible. After more than 20 years of further development, in 1975, the levelised cost of electricity for solar PV was above \$10,000/MWh in today's money. A historical trajectory for solar development involved Japan's niche markets for consumer electronics in the 1980s, and Germany's feed-in tariff in 2004, which created a \enquote{demand pull} leading to massive industrialization of solar PV manufacturing in China and rapid cost reduction through technological learning \cite{nemetHowSolarEnergy2019}. If we fast-forward to the 2020s, for projects with low-cost financing that tap high-quality resources, solar PV has now the cheapest levelised cost of electricity in history, with new utility-scale solar projects costing \$30-55/MWh in Europe, the US, and China \cite{ieaWorldEnergyOutlook2024}.
+
+However, it took six decades for solar to become economically viable. The urgency of climate change mitigation demands that we accelerate this process for advanced clean energy technologies. A crucial question here: Who will invest in these technologies when they are expensive at the beginning? These investments can bring wider social benefits. New technologies, such as Allam cycle generators and iron-air battery storage, are also likely to experience cost reductions through evolving R\&D processes, learning by doing, and iterative upscaling. In this way, even though initial investments come with a price premium and certain risks, they can result in cost reductions and an earlier rollout of advanced clean energy technologies. This produces indirect effects that result in greenhouse gas savings beyond the direct reductions associated with initial investments. The key is initial investments to start this process.
+
+In this perspective, we illustrate in the following sections how initial commitments to 24/7 Carbon-Free Energy (CFE) matching can unlock these effects.
+
+\subsection*{The significance of 24/7 CFE matching}\label{sec2}
+
+Many public and private energy buyers support the global effort to decarbonise electricity systems by purchasing clean energy.
+Traditionally this support has consisted of buying certificates or signing power purchase agreements for renewable energy that is matched to consumption on an annual basis. 24/7 CFE is a new approach that aims to eliminate all carbon emissions by aligning electricity demand with carbon-free energy supply on \textit{an hourly basis} and on the same local grid where demand occurs.
+24/7~CFE commitments were announced by large technology companies such as Google, Microsoft and Iron Mountain, as well as by utilities, and the US federal government \cite{gocarbonfree247}. The Climate Group has recently launched the 24/7 Carbon-free Coalition to encourage companies to move toward 24/7 CFE, initially comprising six companies from diverse industries---including information technology, pharmaceuticals, telecommunications, and cement---and spanning multiple geographic regions \cite{climategroup247CarbonFree2024}.
+
+Motivated by these commitments, several quantitative studies have been conducted on the means, costs, and system-level impacts of hourly CFE matching \cite{xu-247CFE-report, riepinMeansCostsSystemlevel2024}. There are three key findings that emerge from these studies:
+\begin{enumerate}
+    \item 24/7 CFE commitments reduce participating buyers' emissions as well as emissions from the electricity grids where they operate.
+    \item 24/7 CFE comes at a cost premium for participating consumers if only mature technologies, such as solar PV, wind, and battery storage, are used for CFE sourcing.
+    \item The cost premium can be substantially reduced if participating buyers incorporate a broad range of advanced energy technologies into their procurement strategies, such as long-duration energy storage and clean firm generators.
+\end{enumerate}
+
+\textbf{An illustrative example---} We demonstrate the three findings above in an example depicted in Figure 1. %\ref{fig:figure-1}.
+Here we display a situation in which a fraction of electricity demand in Germany voluntarily commits to matching their electricity demand with carbon-free electricity round-the-clock.
+\textbf{Panel a} illustrates how, as the CFE target is tightened, participating consumers reduce the emission rate (gCO$_2$/kWh$^{-1}$) attributed to their electricity consumption. Once demand and supply are perfectly aligned on an hourly basis, i.e. 100\% 24/7 CFE matching is achieved, participating consumers reach emission rate of zero. This goal requires a large portfolio of wind, solar PV, and batteries, as shown in \textbf{panel b}. It is indeed difficult to match every kWh of electricity consumption with renewable electricity during times of dark wind lulls. As a result, achieving 24/7 CFE matching, including the most difficult 2\% of times, adds a high cost premium for consumers in part due to the need to build large capacities relative to the demand of participating buyers (\enquote{Tech-1, CFE 100\%}). Finding \#3 above is also clearly visible in \textbf{panel c}: the power capacity required for 24/7 CFE matching and associated costs are substantially reduced when LDES technology or clean firm generation technologies are added.
+
+The main takeaway from this illustrative example is that 24/7 CFE matching creates an economic incentive to incorporate advanced energy technologies into procurement strategies and reduce the cost premium associated with 24/7 CFE matching. This, in turn, creates an early market for new technologies. For example, if 5\% of commercial and industrial (C\&I) consumers in Germany---representing approximately 1900~MW of load---adopt 24/7 CFE matching strategy, this would create a market for approximately 1500~MW of advanced clean firm generators and about 23~GWh of LDES (assuming all technology options are deployed, \enquote{Tech-3, CFE 100\%}).
+In a similar vein to how feed-in tariffs and renewable portfolio standards created a \enquote{demand pull} for wind and solar technologies in the past, 24/7 CFE commitments can drive the deployment and accelerate innovation of advanced clean energy technologies.
+
+\section*{Technology learning}\label{sec3}
+
+The early deployment of advanced energy technologies can help them drive down along the \enquote{experience curve} -- a concept encapsulating a set of mechanisms by which technology costs decline as cumulative capacity is deployed: evolving R\&D process, learning-by-doing, incremental upscaling, economies of scale, financial innovation and experience, for example.
+
+In this section, we analyse the expected technological learning for the two energy technologies selected as stand-ins for advanced clean firm generators and LDES: the Allam cycle generator with CCS and iron-air battery storage, respectively. The Allam cycle generator is a novel Allam-Fetvedt Cycle that uses the oxy-combustion of carbonaceous fuels and a high-pressure supercritical CO$_2$ working fluid in a recuperated cycle that by design captures nearly all emissions. The iron-air battery is a multi-day energy storage technology that uses a principle of reversible rusting to store and release energy. In practice, a wider range of long-duration storage and clean firm generation are being commercialized and are candidates for procurement under 24/7 CFE matching, including advanced nuclear fission, enhanced and closed loop geothermal energy, bioenergy with CCS, and combustion of carbon-free fuels like hydrogen, and a range of potentially low-cost electrochemical, chemical, thermal, and mechanical storage technologies.
+
+The mathematical model of learning is based on empirical evidence in which the speciﬁc investment costs $C$ of a technology decrease by a constant factor with each doubling of experience $E$. The functional dependency is given by:
+
+\begin{equation}
+  \begin{aligned}
+    \color{violet}C(E)\color{black} &= \color{blue}\overline{C_0}\color{black}  \cdot \left( \frac{\color{red}E}{\color{blue}\overline{E_0}\color{black}} \right)^{-\color{black}\alpha} \text{ where } \color{black}\alpha = \color{black}\log_2 \left( \frac{1}{1 - \color{blue}LR\color{black}} \right)
+    \label{eq:learning_curve}
+  \end{aligned}
+\end{equation}
+
+\noindent where the constants $\color{blue}\overline{C_0}$ [\officialeuro/kW] and $\color{blue}\overline{E_0}$ [MW] are fixed starting points representing the initial costs and experience levels, respectively. The learning rate $\color{blue}LR$ [\%] is a parameter that determines the rate at which costs decrease with experience.
+If $\color{blue}LR=20\%$, the costs are reduced by 20\% for each doubling of cumulative experience.
+The observed learning rates for energy technologies range from near zero (nuclear, hydropower) to 21\% (lithium-ion batteries) \cite{waySuppplementaryMaterialsEmpirically2022}; it has been shown that small, modular energy technologies have higher learning rates \cite{wilsonGranularTechnologiesAccelerate2020}.
+Here we use cumulative capacity $\color{red}E$ [MW] of a technology as a proxy for experience, which is calculated as the sum of the installed capacities of all projects that have been completed by a certain point in time.
+We collect information on existing and planned projects for each technology, and use this as a starting point for the experience of the technology. 24/7 CFE matching contributes to the technology's experience the additional capacity procured by participating consumers, which is proportional to the participation rate (i.e., the share of C\&I electricity demand that is matched with carbon-free electricity on an hourly basis).
+
+The resulting investment costs $\color{violet}C(E)\color{black}$ [\officialeuro/kW] are shown in Figure 2 for Allam cycle technology (top panel) and iron-air battery storage (bottom panel). %\ref{fig:figure-2}
+The first 1\% of participation (around 380~MW load in the German market) reduces costs for Allam cycle generators by 12\% and iron-air storage by 16\%. The technology learning scales significantly from there: at 10\% participation, Allam cycle generators and iron-air storage costs are reduced by 38\% and 44\%, respectively. The learning effect has a diminishing return, due to the logarithmic term $\color{black}\alpha$ in Eq. \ref{eq:learning_curve}. In other words, the first projects have the most significant impact on technology learning, and the effect diminishes as technology experience grows.
+
+The learning model is subject to uncertainty in the initial costs and experience levels, as well as the learning rate. Our Monte Carlo simulation captures this uncertainty by sampling the initial costs and experience levels based on probability distributions derived from public information about planned projects. Figure 2 displays the Monte Carlo simulation results as violin plots. %\ref{fig:figure-2}
+Even though both technologies have a wide range of cost outcomes, the main observation is robust to uncertainty: the early deployment of advanced clean energy technologies due to 24/7 CFE commitments substantially reduces technology costs, making them more attractive for other actors and accelerating the point where the technologies become cost-competitive in the rest of the electricity system.
+
+
+\section*{Beyond directly reduced emissions}\label{sec4}
+
+An illustration of the broader system impact is shown in Figure 3, where we model the German electricity system in 2030 from a system planner's perspective. %\ref{figure-3}
+Here, we minimize the total system costs, including investment costs and operational costs of power generation and storage assets, while adhering to a set of operational constraints. For this case, we assume no voluntary commitments to CFE matching, meaning that power capacity investments are made solely on the basis of economic considerations. The four scenarios represent different levels of CAPEX for iron-air battery storage, starting from the baseline scenario with 2034 \officialeuro/kW, and reducing the cost by 25\% in each step. While we use a toy model representation of the German electricity system as an example, the system dynamics observed in simulations are generalizable to other markets and technologies. The same principles applied in multiple markets would indeed allow a wider palette of advanced technologies to be supported.
+
+The results indicate that iron-air batteries need to cost around 1525 \officialeuro/kW to become economically competitive in the broader electricity system, which represents a 25\% reduction from the baseline. The learning model for iron-air storage shows that this level would require a quadrupling of iron-air capacity expected by 2025 (with a conservative assumption of LR$\sim$12\%, see Figure 2). In other words, assuming that the first movers do not benefit from the learning effect, an investment of approx. \officialeuro340 million (168 [MW] $\cdot$ 2034 [\officialeuro/kW] $\cdot$ 1$^3$ [MW/kW]) can bring iron-air battery storage to the point of economic break-even by 2030, unlocking a wide range of societal benefits. To put this number in perspective, Germany paid approximately \officialeuro 1 billion for redispatch measures in 2023; the  costs of the Nord Stream 2 project is estimated at \officialeuro 9.5 billion. The unlocked benefits include reduced system emissions---as shown in Figure 3, iron-air storage substitutes fossil peakers (gas open-cycle generators) reducing emissions in the electricity system by 3~MtCO$_2$ annually, already for a 25\% reduction in iron-air storage costs. There are other advantages of long-duration storage technology deployment beyond the focus of this analysis, such as reduced curtailment of wind and solar generation, reduced need for additional transmission infrastructure, and increased energy security.
+
+Such learning effects can be achieved if a handful of companies and governments (an aggregate electricity demand of approx. 1200 MW---only 3\% of German C\&I electricity demand) target 24/7 CFE procurement and include advanced energy technologies in their portfolios (see Figure 2). The required investment can be distributed among a wide range of actors since companies from various sectors and regions can join the movement and contribute to technology learning. Early adoption of advanced technologies will also lead to technology learning and cost reductions for other actors. It spins a \enquote{virtuous circle of innovation}, as we describe next.
+
+Note that this section presented a toy model exercise in the spirit of \enquote{modeling for insight} instead of \enquote{modeling for numbers} \cite{huntingtonModelingInsightsNot1982}. The back-of-the-envelope nature of this calculation does not aim at quantifying the learning effects of advanced energy technologies and their economical break-even points precisely.
+It is rather a model experiment to illustrate that a relatively small number of electricity buyers who commit to 24/7 CFE can create a demand pull for advanced technologies, that is sufficient to kickstart learning effects and make new technologies more accessible and affordable for everyone.
+
+\section*{A virtuous circle of innovation}\label{sec5}
+
+24/7 CFE matching accelerates electricity system decarbonization through three channels: (1) directly reducing emissions during hours when procured CFE is matched with electricity consumption, (2) inducing learning effects that make 24/7 matching more attractive for other companies, and (3) enabling advanced energy technologies to become cost-competitive and widely adopted across the broader electricity system:
+
+\begin{enumerate}
+    \item The first channel comprises two mechanisms for directly reduced emissions. First, \enquote{profile} mechanism refers to participating buyers procuring CFE resources that match their demand patterns. When some consumers align their demand with CFE supply on an hourly basis, the rest of the electricity system requires less dispatchable generation to firm intermittent renewable supply. The utilisation of fossil-based generators, such as gas-fired power plants, is therefore reduced since participating consumers rely on procured CFE resources to cover their demand at all times. This reduces emissions associated with electricity consumption of participating buyers, as shown in Figure 1.
+    Second, a \enquote{volume} mechanism relates to the impact of excess CFE, i.e., clean electricity generated by 24/7 CFE portfolio that exceeds demand in a given hour can be sold to the grid to replace emitting grid generators. Both mechanisms are explained in detail by \citet{xu-247CFE-report} and \citet{riepinMeansCostsSystemlevel2024}.
+    \item A second, indirect channel is the learning caused by early commitments to 24/7 CFE that facilitate innovation and create the early market for advanced technologies, as shown in Figure 2.
+    This reduces the price premium for 24/7 CFE procurement goals, encouraging more companies to work towards them. This in turn further lowers system emissions via the two mechanisms in \#1.
+    \item Finally, as advanced technologies are deployed repeatedly, they become economically competitive and are adopted more rapidly across the broader electricity system, thereby unlocking greenhouse gas savings beyond the directly reduced emissions associated the corporate portfolios in \#1 and \#2, as shown in Figure 3. This channel is significant as the benefits extend beyond voluntary commitments to clean energy matching, affecting numerous actors in various regions and jurisdictions.
+\end{enumerate}
+
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.9\textwidth]{images/virtuous_dynamics.pdf}
+%     \caption{System dynamics of 24/7 CFE matching}\label{fig:dynamics}
+% \end{figure}
+
+A graphical abstract illustrates the nature of the system dynamics that result from initial commitments to 24/7 CFE. It is a self-reinforcing cycle where early commitments create a market for advanced clean energy technologies, thereby reducing the costs of hourly CFE matching and making it more attractive for other companies to join the movement. A second self-reinforcing cycle emerges when new technologies are adopted early in the electricity system, which further reduces system-level emissions and drives down costs for all actors in the system. The result is a \enquote{virtuous circle} that spurs innovation, financeability, and widespread availability of advanced energy technologies, thereby accelerating decarbonization of electricity systems.
+
+This virtuous circle of innovation can be activated by a handful of companies and governments committed to timely action. The early-movers might be motivated to participate in 24/7 CFE through several incentives. First, corporate leadership campaigns can create strong incentives for action. Just as the RE100 campaign focused companies on 100\% annual matching and celebrated them for working towards it \cite{re100RE1002023Annual2024}, the 24/7 Carbon-free Coalition can increase commitments in the 24/7 CFE space. Additionally, companies may be motivated by the research-based evidence of the positive impacts of 24/7 CFE procurement on electricity decarbonization, including through spillover effects of advanced technology commercialization. Finally, increasing public and regulatory scrutiny on corporate sustainability claims and a trend toward greater accuracy in electricity carbon accounting---such as potential updates of the Greenhouse Gas Protocol Scope 2 Guidance to require more granular accounting---may encourage companies to move towards 24/7 CFE matching.
+
+\section*{Takeaways}\label{sec6}
+
+Early markets for advanced clean energy technologies can spur substantial technological learning, leading to cost reductions and unlocking greenhouse gas savings far beyond the reduction of emissions directly associated with initial investments.
+Similarly to the feed-in tariffs and renewable portfolio standards that created a \enquote{demand pull} for wind and solar PV in the past, commitments to 24/7 CFE matching and other advance market commitments \cite{GoogleMicrosoftNucor} by private sector stakeholders can accelerate the development of first-of-a-kind and early commercial projects of innovative energy technologies.
+A proactive private sector contribution can complement governmental support and reduce pressure on tight fiscal budgets.
+The virtuous system dynamics we describe can be activated by a handful of companies and governments committed to timely action, thereby fostering rapid innovation and making climate solutions more accessible and affordable for everyone.
+
+\newpage
+
+%%%  The following components should appear after the
+%%%  experimental procedures (also known as methods).
+%%%  For journals using STAR Methods, these components
+%%%  should appear immediately after the discussion
+%%%  (after any "limitations" or "conclusions" subsection
+%%%  within the discussion).
+
+\section*{RESOURCE AVAILABILITY}
+
+%%%  The resource availability section is required
+%%%  for all research articles. This component
+%%%  has 3 subsections: "lead contact," "materials
+%%%  availability," and "data and code availability."
+%%%  All 3 subsections must be included, even if no
+%%%  unique materials were generated in the study.
+%%%  Do not edit or change the names of the subheadings.
+%%%  No other subheadings or text are allowed in the
+%%%  resource availability section.
+
+\subsection*{Lead contact}
+
+%%%  Authors are required to designate a lead contact,
+%%%  who will be responsible for communication with
+%%%  the journal before and after publication and is
+%%%  the arbiter of disputes, including concerns
+%%%  related to reagents or resource sharing. Only
+%%%  one author can be named the lead contact, and
+%%%  only the lead contact’s information may be
+%%%  provided in this section.
+
+Requests for further information and resources should be directed to and will be fulfilled by the lead contact, Iegor Riepin (iegor.riepin@tu-berlin.de).
+
+\subsection*{Data and code availability}
+
+The code to reproduce the illustrative experiments is available at GitHub under open licenses \cite{code247CFE}.
+
+\section*{ACKNOWLEDGMENTS}
+
+%%%  Use this section to acknowledge contributions
+%%%  from non-authors and list funding sources,
+%%%  including grant numbers.
+
+We thank the following people for insights and fruitful discussions: Elisabeth Zeyen, Wilson Ricks, Adam Forni, Brian Denvir, Killian Daly, and the participants of the 24/7 CFE Hub Meeting in May 2024. I.R. and J.D.J. acknowledge a research grant from Google LLC.
+
+\section*{AUTHOR CONTRIBUTIONS}
+
+%%%  This component is required for most research papers.
+%%%  Mention each individual author with a statement
+%%%  outlining the contribution of each author to the work.
+
+\textbf{I.R.}: Conceptualization, Methodology, Formal analysis, Writing - Original Draft, Visualization;
+\textbf{J.D.J.}: Conceptualization, Writing - Reviewing and Editing;
+\textbf{D.S.}: Conceptualization, Writing - Reviewing and Editing;
+\textbf{T.B.}: Conceptualization, Validation, Supervision, Writing - Reviewing and Editing.
+
+\section*{DECLARATION OF INTERESTS}
+
+%%%  This component is required for all articles, even
+%%%  if the authors have no competing interests; if
+%%%  this is the case, insert "The authors declare no
+%%%  competing interests." Please refer to the
+%%%  declaration of interests policy:
+%%%  https://www.cell.com/declaration-of-interests
+
+I.R. and T.B. declare no competing interest.
+D.S. is Senior Manager of Global Energy and Climate at Google LLC. Google has a goal to run on 24/7 carbon-free energy on every grid where they operate by 2030.
+J.D.J. is part owner of DeSolve, LLC, which provides techno-economic analysis and decision support for clean energy technology ventures and investors. Clients within the last 12 months include Cloverleaf Infrastructure Partners and a list of previous clients is available at https://www.linkedin.com/in/jessedjenkins. J.D.J. serves on the advisory boards of Eavor Technologies Inc., a closed-loop geothermal technology company, Rondo Energy, a provider of high-temperature thermal energy storage and industrial decarbonization solutions, and Dig Energy, a developer of low-cost drilling solutions for ground-source heat pumps and has an equity interest in each company. J.D.J. also serves as a technical advisor to MUUS Climate Partners and Energy Impact Partners, both investors in early-stage climate technology companies.
+
+
+\section*{DECLARATION OF GENERATIVE AI AND AI-ASSISTED TECHNOLOGIES}
+
+%%%  If generative AI and AI-assisted technologies
+%%%  were used in the writing process, this must
+%%%  be disclosed in the paper. This declaration
+%%%  does not apply to the use of basic tools for
+%%%  checking grammar, spelling, references, etc.
+%%%  If you have nothing to disclose, please do not
+%%%  include this component.
+
+During the preparation of this work, I.R. utilized ChatGPT-4 for minor improvements in visualizations (specifically, for matplotlib code). After using this tool, I.R. reviewed and edited the content as necessary and takes full responsibility for its final version. No text in the manuscript was generated using AI-assisted technologies.
+
+\section*{SUPPLEMENTAL INFORMATION INDEX}
+
+%%%  Supplemental information must be uploaded as
+%%%  separate files. In the main text, please list the
+%%%  files to be included in a brief index. For details,
+%%%  please review the supplemental information guidelines:
+
+%%%  Journals with general "methods" or "experimental
+%%%  "procedures:
+%%%  http://www.cell.com/supplemental-information
+
+%%%  Journals with STAR Methods:
+%%%  https://www.cell.com/STAR-supplemental-information
+
+
+Document S1. Table S1: Technology assumptions. Supplementary references.
+
+
+\section*{MAIN FIGURE TITLES AND LEGENDS}
+
+%%%  At final submission, figure files MUST be
+%%%  provided separately as high-resolution image
+%%%  files. All of the panels for a figure should
+%%%  be in the same file. Figures should have
+%%%  clear labels/file names (Figure 1, Figure 2,
+%%%  etc.).
+
+%%%  Figure titles and legends should be placed
+%%%  at the end of the main text. You do not
+%%%  need to place the figures, nor their titles
+%%%  and legends, within the main text. While
+%%%  typesetting your article, our team will
+%%%  place each figure in the best location
+%%%  based on the final layout and on your
+%%%  figure citations, e.g., (Figures 1A and 1B).
+
+%%%  Please review the figure guidelines before
+%%%  submitting your final materials:
+%%%  https://www.cell.com/figureguidelines.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/figure_1.pdf}
+\end{figure}
+
+\subsection*{Figure 1. Illustrative modelling of 24/7 CFE matching}
+
+\textbf{Panel a}: Average emissions rate of participating consumers,
+\textbf{panel b}: portfolio capacity procured by participating consumers,
+\textbf{panel c}: procurement cost by scenario.
+Here we assume Germany in 2025 as an example location and a participation rate of C\&I consumers in 24/7 CFE matching strategy at 5\% (ca. 1900~MW load).
+CFE scores of 90\%, 98\% and 100\% correspond to the share of time when the electricity consumed by the participating consumers is carbon-free.
+Technology palette 1 (\enquote{Tech-1}) comprises technologies commercially available today: onshore wind, utility scale solar PV, and battery storage; \enquote{Tech-2} includes all above plus long-duration energy storage (here: the iron-air battery as a stand-in technology); \enquote{Tech-3} includes all above plus a clean firm generator (here: the Allam cycle generator with CCS as a stand-in technology). The 24/7 CFE procurement framework is based on a methodologies paper by \citet{google-methodologies}. Simulations were carried out using the 24/7 CFE model by \citet{riepinMeansCostsSystemlevel2024}. Technology assumptions are provided in the Supplementary Information.\\
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/figure_2_top.pdf}
+    \includegraphics[width=\textwidth]{images/figure_2_bottom.pdf}
+\end{figure}
+
+\subsection*{Figure 2. Technology learning curves for the NG-Allam cycle (\textbf{top panel}) and iron-air battery storage (\textbf{bottom panel})}
+
+The learning curves are based on the experience model with the technology investments based on 24/7 CFE model with varying C\&I participation level $[0\%..10\%]$ and learning rates of 15$\pm$5\% resembling a wide range of possible outcomes for modular energy technologies \cite{waySuppplementaryMaterialsEmpirically2022}. For the Monte Carlo analysis calibration, the initial costs (C0) are sampled from a normal distribution with a mean based on technology cost assumptions for 2025 and a standard deviation of 100~\officialeuro/kW. Initial experience levels (E0) are sampled from a uniform distribution, with bounds derived from public information about planned projects. For the NG-Allam case, initial experience lies between cases when one of two projects planned by 2025 is completed, and when both projects are completed; for the iron-air case, the distribution bounds are formed by assuming that 50\% to 100\% of the projects announced to operate by 2025 are realized on time (more information about these projects is provided in Supplementary Information).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/figure_3.pdf}
+\end{figure}
+
+\subsection*{Figure 3. Power capacity investments and emissions in a toy model representation of German 2030 electricity system as a function of CAPEX for iron-air storage.}
+
+Technology assumptions are provided in Supplementary Information. Price for EU ETS allowances is assumed to be 100 \officialeuro/tCO$_2$. The configuration file in a public GitHub repository lists other background system assumptions \cite{code247CFE}.
+
+\begin{center}
+  \includegraphics[width=1\textwidth]{images/graphical_abstract.pdf}
+\end{center}
+
+\subsection*{Graphical abstract}
+
+
+%%%  REFERENCES: As of 2023, all Cell Press journals
+%%%  use Numbered (AMA) style. We recommend placing
+%%%  your references in the included "references.bib"
+%%%  file.
+
+\bibliography{references}
+
+%%%  In your References, please include only articles
+%%%  that are published (online publication and
+%%%  preprint servers are OK). Unpublished data,
+%%%  submitted and/or accepted manuscripts, abstracts,
+%%%  and personal communications should be cited within
+%%%  the text only ("unpublished data," "data not
+%%%  shown," "Alice Smith, personal communication")
+%%%  and not included in the references list. Personal
+%%%  communication should be documented by a letter
+%%%  of permission. Whenever possible, please make
+%%%  sure your .bib file has the complete author lists
+%%%  for each item (at minimum, the first 11 authors
+%%%  listed).
+
+\end{document}
