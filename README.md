@@ -13,62 +13,54 @@ SPDX-License-Identifier: CC0-1.0
 [![Zenodo Paper2](https://zenodo.org/badge/DOI/10.5281/zenodo.10869650.svg)](https://zenodo.org/records/10869650)
 
 
-# PyPSA code for exploring the 24/7 Carbon-Free Energy procurement in Europe
+# PyPSA code for exploring the 24/7 Carbon-Free Energy procurement
 
-## Project webpage
-
-You are welcome to visit a [project webpage](https://irieo.github.io/247cfe.github.io/) for detailed information about our research.
+You are welcome to visit a [project webpage](https://irieo.github.io/247cfe.github.io/) for a project overview, publications, media coverage, and more.
 
 ## Getting started
 
-This project explores the means, costs and impacts of 24/7 Carbon-Free Energy procurement in Europe.
+Welcome! This project explores the mechanisms, costs, and system-level impacts of 24/7 Carbon-Free Energy (CFE) procurement.
 
-There are five individual studies planned as deliverables for this research project. Ultimately, we want the entire scientific workflow, from raw data to final charts, to be fully reproducible for each study. This repository will include code for three studies linked to GitHub releases. Additional research papers are hosted in dedicated GitHub repositories with own reproducible workflows. The five studies are all concerned with 24/7 Carbon-Free Energy procurement in Europe, but they differ in their focuses, model formulations, scenarios, etc.
+The project comprises five distinct studies, each examining unique aspects of 24/7 CFE. The studies vary in their focus, model formulations, scenarios, and more. Ultimately, we aim to make the entire scientific workflow, from data to final charts, fully reproducible for each study. This repository will include code for three research items linked to GitHub releases. Two other research papers are hosted in dedicated GitHub repositories with their reproducible workflows.
 
-This research is supported by a grant from Google LLC.
+### 1. System-level impacts of 24/7 carbon-free electricity procurement in Europe
+*A study published on Zenodo, October 2022*
 
-### Study 1: System-level impacts of 24/7 carbon-free electricity procurement in Europe (Zenodo, October 2022)
+- [Study](https://zenodo.org/record/7180097)
+- [Code (GitHub release)](https://github.com/PyPSA/247-cfe/tree/v0.1)
+- [Code (Github release, math module written in Linopy)](https://github.com/PyPSA/247-cfe/releases/tag/v0.2)
 
-In this study, we investigate both the means and costs of pursuing different clean electricity procurement strategies for companies in a selection of European countries. We also explore how the 24/7 clean energy procurement affects the rest of the European electricity system.
-
-- [Complete study](https://zenodo.org/record/7180097)
-- [Twitter thread](https://twitter.com/nworbmot/status/1579810935702982656)
-- [Blog post](https://blog.google/around-the-globe/google-europe/how-carbon-free-energy-around-the-clock-can-work/)
-- [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.1)
-
-Study 1 is now also available with [Linopy](https://github.com/pypsa/linopy) integration under the tag [v0.2](https://github.com/PyPSA/247-cfe/releases/tag/v0.2). Linopy is an open-source python package for linear or mixed-integer optimization.
-
-### Study 2: The value of space-time load-shifting flexibility for 24/7 carbon-free electricity procurement (Zenodo, July 2023)
-
-In this study, we explore how and why space-time load-shifting flexibility can be used to meet high 24/7 carbon-free energy targets, as well as what potential benefits it may offer to 24/7 participants and to the rest of the energy system. To answer these questions, we expand the mathematical model of 24/7 CFE procurement developed in the previous work by incorporating spatial and temporal demand flexibility provided by electricity consumers that follow 24/7 carbon-free energy goals.
-
-- [Complete study](https://zenodo.org/record/8185850)
-- [GitHub release](https://github.com/PyPSA/247-cfe/tree/v0.3)
-
-### Study 3: (*work in progress*) On the role of 24/7 carbon-free energy matching in accelerating advanced clean energy technologies
-
-In the third study, we argue that the commitment by a small number of companies to round-the-clock matching can create an early market and spur substantial learning of the advanced electricity technologies. We demonstrate these effects for two technologies: long-duration energy storage and clean firm generation. Cost reductions make 24/7 matching more attractive for other actors, leading to a virtuous circle that accelerates the time when the technologies become cost-competitive in the rest of the electricity market. These indirect effects unlock greenhouse gas savings far beyond the direct emission reduction of initial investments.
-
-
-- [preliminary results](https://iriepin.com/uploads/247Hubtalk_20240521.pdf)
-
-## Research papers
-
-### On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement (Energy Strategy Reviews, 2024)
+### 2. On the means, costs, and system-level impacts of 24/7 carbon-free energy procurement
+*A research paper published in Energy Strategy Reviews, 2024*
 
 - [DOI](https://www.sciencedirect.com/science/article/pii/S2211467X24001950)
-- preprint at [arXiv](https://arxiv.org/abs/2403.07876)
-- [Code](https://github.com/Irieo/247-procurement-paper)
-
-### Spatio-temporal load shifting for truly clean computing (in review)
-
-- preprint at [arXiv](https://arxiv.org/abs/2405.00036)
-- [Code](https://github.com/Irieo/space-time-optimization)
+- [Code (dedicated GitHub repository)](https://github.com/Irieo/247-procurement-paper)
 
 
-## How to reproduce results of a study?
+### 3. The value of space-time load-shifting flexibility for 24/7 carbon-free electricity procurement
+*Published on Zenodo, July 2023*
 
-First, clone the repository:
+- [Complete study](https://zenodo.org/record/8185850)
+- [Code (GitHub release)](https://github.com/PyPSA/247-cfe/tree/v0.3)
+
+
+### 4. Spatio-temporal load shifting for truly clean computing
+*A research paper published in Advances in Applied Energy, 2025*
+
+- [DOI](https://doi.org/10.1016/j.adapen.2024.100202)
+- [Code (dedicated GitHub repository)](https://github.com/Irieo/space-time-optimization)
+
+
+### 5. 24/7 carbon-free electricity matching accelerates adoption of advanced clean energy technologies
+
+- [DOI](https://doi.org/10.1016/j.joule.2024.101808)
+- Code (`main` branch)
+
+## How to reproduce results of a specific study?
+
+### Studies #1 and #3
+
+First, clone this repository:
 
 ```
 git clone https://github.com/PyPSA/247-cfe --branch <tag_name> --single-branch
@@ -86,48 +78,68 @@ conda activate 247-cfe
 Third, to run all the scenarios from the study, run the [snakemake](https://snakemake.readthedocs.io/en/stable/) worflow:
 
 ```
-snakemake -call
+snakemake --cores <n>
 ```
+
+where `<n>` is the [number of cores](https://snakemake.readthedocs.io/en/stable/executing/cli.html) to use for the workflow.
 
 - Note that this call requires a high-performance computing environment.
 
-- It is possible to run a smaller version of the model by adjusting the settings in `config.yaml`. For example, changing the config setting `area` from "EU" to "regions" reduces the regional coverage of the model, making the size of the problem feasible to solve on a private laptop with 8GB RAM.
+- It is also possible to run a smaller version of the model by adjusting the settings in `config.yaml`. For example, changing the config setting `area` from "EU" to "regions" reduces the regional coverage of the model, making the size of the problem feasible to solve on a private laptop with 8GB RAM.
 
 Finally, when the workflow is complete, the results will be stored in `results` directory. The directory will contain solved networks, plots, summary csvs and logs.
 
 4. At this point, you can also compile the LaTeX project to reproduce the study .pdf file.
 
+### Studies #2 and #4
 
-## Requirements
-### Data
+These research works are maintained in dedicated repositories, each containing an instruction on how to reproduce the results.
 
-Code is based on the brownfield networks exported from [PyPSA-Eur](https://github.com/PyPSA/pypsa-eur-sec) with `myopic` setting to get brownfield networks for 2025/2030. For convenience, sample networks are provided in the `input/` folder.
+### Study #5
+
+1. Clone the repository:
+
+```
+git clone git@github.com:PyPSA/247-cfe.git
+```
+
+2. Install the necessary dependencies using `environment.yaml` file. The following commands will do the job:
+
+```
+conda env create -f envs/environment.yaml
+conda activate 247-env
+```
+
+3. The results of the paper can be reproduced by running the [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow.  The following commands will run the workflows for the paper:
+
+```
+snakemake --cores <n> --configfile config_247cfe
+snakemake --cores <n> --configfile config_BackgroundSystem.yaml
+```
+
+where `<n>` is the [number of cores](https://snakemake.readthedocs.io/en/stable/executing/cli.html) to use for the workflow.
+
+NB It is possible to reproduce the results on a private laptop with 16GB RAM.
+
+Model results will be stored in the `results` directory. For each workflow, the directory will contain:
+- solved networks (.nc) for individual optimization problems
+- summary (.yaml) for individual optimization problems
+- summary (.csv) for aggregated results
+- log files (memory, python, solver)
+- detailed plots (.pdf) of the results
+
+4. At this point, a curious reader can reproduce the dashboards from the paper with the jupyter notebooks in the `scripts/` directory. You can also compile the LaTeX project `/manuscript/manuscript.tex` to reproduce the paper .pdf file.
+
+## Data
+
+Code uses pre-processed European electricity system data generated through [PyPSA-Eur](https://github.com/PyPSA/pypsa-eur-sec) workflow using the `myopic` configuration. The data represents brownfield network scenarios. For convenience, sample networks for 2025 and 2030 are provided in the `input/` folder.
 
 Technology data assumptions are automatically retrieved from [technology-data](https://github.com/PyPSA/technology-data) repository for `<year>` and `<version>`, as specified in `config.yaml`.
 
 
-### Software
+## Acknowledgments
 
-The code is known to work with python 3.11, PyPSA 0.25, pandas 1.5.3, numpy 1.24.2, linopy 0.2.7, and gurobi 10.0.1.
-
-The complete list of package requirements is in the [envs/environment.yaml](envs/environment.yaml) file. The environment can be installed and activated using:
-
-```
-.../247-cfe % conda env create -f envs/environment.yaml
-.../247-cfe % conda activate 247-env
-```
-
-If you have troubles with a slow [conda](https://docs.conda.io/en/latest/) installation, we recommend to install [mamba](https://mamba.readthedocs.io/en/latest/):
-
-```
-conda install -c conda-forge mamba
-```
-
-and then install the environment with a fast drop-in replacement via
-
-```
-mamba env create -f envs/environment.yaml
-```
+This research was supported by a grant from Google LLC.
 
 ## License
 
