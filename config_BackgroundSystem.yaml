@@ -4,7 +4,7 @@
 
 # Retrieve technology data <version> for <year>
 # Source https://github.com/PyPSA/technology-data
-retrieve_cost_data: True
+retrieve_cost_data: true
 technology_data:
   year: 2030
   version: v0.6.2
@@ -12,78 +12,48 @@ technology_data:
 ###################
 # Scenario controls
 
-run: manuscript-dashboard3
+run: BackgroundSystem
 
 #wildcards
 scenario:
-  policy:  ["ref"] # "ref", "res100", "cfe90", "cfe95", "cfe98",
-  palette: [
-            # "p1", # onwind + solar + battery
-            # "p2", # onwind + solar + battery + LDES (here: iron-air battery)
-            # "p3", # onwind + solar + battery + Allam cycle turbine with CCS
-            "p4", # onwind + solar + battery + LDES + Allam cycle turbine with CCS
-            ]
-  zone: [
-        "DE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
-        ]
-  participation: [
-                '100',
-                '75',
-                '50',
-                '25',
-                ] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
-  year: [
-          #"2025",
-           "2030"
-         ] # controls both the brownfield fleet and tech costs projection
+  policy: ["ref"]  # "ref", "res100", "cfe90", "cfe95", "cfe98",
+  palette: ["p4"]
+  zone: ["DE" #37-node network of ENTSO-E area | possible toy zones: "IE", "DE", "IEDK", "DKDE"
+]
+  participation: ['100', '75', '50', '25'] # participation share of CI load per bidding zone that commit to voluntary CFE procurement [percentage]
+  year: ["2030"] # controls both the brownfield fleet and tech costs projection
 
 # CI consumer settings
 ci:
   datacenters: {"DE1 0": "Germany"} # {"PT1 0": "Portugal"}
   profile_shape: "baseload" #"baseload", "datacenter", "industry"
   #load: 100. # nominal load in MW -> now scaled to match participation share
-  res_techs: ["onwind","solar"]
+  res_techs: ["onwind", "solar"]
   excess_share: 0.  # share of excess CI generation that can be sold to the grid [percentage]
   flexibility: 0. # possible deviation of requested load from nominal level [percentage of nominal load]
-  spatial_shifting: False #turns on/off spatial flexibiilty  (aka virtual links)
-  temporal_shifting: False #turns on/off temporal flexibiilty (aka DSM)
+  spatial_shifting: false #turns on/off spatial flexibiilty  (aka virtual links)
+  temporal_shifting: false #turns on/off temporal flexibiilty (aka DSM)
 
 # learning settings
 ### a workaround to keep same wildcards in all the scenarios
 ### if policy == "ref", CI node is not added, so we can use <participation>*10 as reduction steps of the learning coefficient
 learning_coef: 1 # cost reduction coefficient for advanced tech in 2030
-system_res_constraint: False #turns on/off constraint on RES expansion following NECP targets with *equality* sign
+system_res_constraint: false #turns on/off constraint on RES expansion following NECP targets with *equality* sign
 
 
 ###################
 # Time-series management
 
 time_sampling: "3H" # one of ["1H", "3H"]
-plot_timeseries: False
+plot_timeseries: false
 
 
 ###################
 # Fixed settings
 
-node_suffixes_to_keep: ["H2","battery"] #"low voltage","home battery"]
-carrier_to_keep: [ #generators
-                  "offwind","offwind-ac","offwind-dc","solar", "onwind","ror", #"solar rooftop",
-                  #storage units
-                  "PHS","hydro",
-                  #lines, links
-                  "AC", "DC",
-                  #links
-                  "nuclear", "uranium", "gas","OCGT","CCGT","oil", "lignite", "coal",
-                  # "H2 Electrolysis","H2 Fuel Cell","H2 pipeline",
-                  "battery charger","battery discharger", #"home battery charger","home battery discharger",
-                  "urban central solid biomass CHP", #"electricity distribution grid",
-                  #Stores
-                  # "H2 Store",
-                  "co2","co2 stored","battery", "solid biomass", #"home battery"
-                  #Loads ("industry electricity" is included)
-                  "electricity"
-                    ]
-additional_nodes: ["EU oil","EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere","co2 stored"]
+node_suffixes_to_keep: ["H2", "battery"] #"low voltage","home battery"]
+carrier_to_keep: ["offwind", "offwind-ac", "offwind-dc", "solar", "onwind", "ror", "PHS", "hydro", "AC", "DC", "nuclear", "uranium", "gas", "OCGT", "CCGT", "oil", "lignite", "coal", "battery charger", "battery discharger", "urban central solid biomass CHP", "co2", "co2 stored", "battery", "solid biomass", "electricity"]
+additional_nodes: ["EU oil", "EU gas", "EU lignite", "EU coal", "EU uranium", "EU solid biomass", "co2 atmosphere", "co2 stored"]
 
 
 costs:

@@ -249,9 +249,9 @@ tech_colors:
   "pumped hydro storage": "#51dbcc"
   "PHS": "#51dbcc"
   # Emitters
-  "OCGT": "#d35050"
+  "OCGT": "#CA1F7B"
   "CCGT": "#b20101"
-  "gas OC": "#d35050"
+  "gas OC": "#CA1F7B"
   "gas CC": "#b20101"
   "hard coal": "#545454"
   "lignite": "#826837"
