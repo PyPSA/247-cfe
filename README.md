@@ -21,7 +21,7 @@ You are welcome to visit a [project webpage](https://irieo.github.io/247cfe.gith
 
 Welcome! This project explores the mechanisms, costs, and system-level impacts of 24/7 Carbon-Free Energy (CFE) procurement.
 
-The project comprises five distinct studies, each examining unique aspects of 24/7 CFE. The studies vary in their focus, model formulations, scenarios, and more. Ultimately, we aim to make the entire scientific workflow, from data to final charts, fully reproducible for each study. This repository will include code for three research items linked to GitHub releases. Two other research papers are hosted in dedicated GitHub repositories with their reproducible workflows.
+The project comprises five distinct studies, each examining unique aspects of 24/7 CFE. The studies vary in their focus, model formulations, scenarios, and more. Ultimately, we aim to make the entire scientific workflow, from data to final charts, fully reproducible for each study. This repository includes code for three research items linked to GitHub releases. Two other two research papers are hosted in dedicated GitHub repositories with their reproducible workflows.
 
 ### 1. System-level impacts of 24/7 carbon-free electricity procurement in Europe
 *A study published on Zenodo, October 2022*
@@ -52,6 +52,7 @@ The project comprises five distinct studies, each examining unique aspects of 24
 
 
 ### 5. 24/7 carbon-free electricity matching accelerates adoption of advanced clean energy technologies
+*A commentary paper published in Joule, 2025*
 
 - [DOI](https://doi.org/10.1016/j.joule.2024.101808)
 - Code (`main` branch)
