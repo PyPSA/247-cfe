@@ -55,7 +55,7 @@ The project comprises five distinct studies, each examining unique aspects of 24
 *A commentary paper published in Joule, 2025*
 
 - [DOI](https://doi.org/10.1016/j.joule.2024.101808)
-- Code (`main` branch)
+- [Code (GitHub release)](https://github.com/PyPSA/247-cfe/tree/v0.4)
 
 ## How to reproduce results of a specific study?
 
@@ -98,7 +98,7 @@ These research works are maintained in dedicated repositories, each containing a
 
 ### Study #5
 
-1. Clone the repository:
+1. Clone the repository (the latest release):
 
 ```
 git clone git@github.com:PyPSA/247-cfe.git
