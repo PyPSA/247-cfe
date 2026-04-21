@@ -197,10 +197,13 @@ solving:
     n_iterations: 2  #iterations with CFE factor
 
   solver:
-    name: gurobi
-    options: gurobi-default
+    name: highs
+    options: highs-default
 
   solver_options:
+    highs-default:
+      threads: 4
+      solver: "simplex"
     gurobi-default:
       threads: 4
       method: 2         # barrier
@@ -243,6 +246,9 @@ tech_colors:
   "iron-air": "#d26303"
   "iron-air inverter": "#d26303"
   "iron-air storage": "#d26303"
+  "ironair": "#d26303"
+  "ironair storage": "#d26303"
+  "ironair inverter": "#d26303"
   "hydrogen storage": "#990090"
   "hydrogen fuel cell": "#990090"
   "hydrogen electrolysis": "#550055"

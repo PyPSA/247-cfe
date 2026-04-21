@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2023-2024 Iegor Riepin, Tom Brown
+#
+# SPDX-License-Identifier: MIT
+
+[workspace]
+name = "247-cfe"
+version = "0.1.0"
+description = "PyPSA code for 24/7 Carbon-Free Energy procurement"
+channels = ["conda-forge", "bioconda", "gurobi"]
+
+[dependencies]
+python = ">=3.10,<3.12"
+matplotlib = "*"
+numpy = "<2"
+pandas = ">=2,<3"
+pypsa = "==0.27.1"
+pyyaml = "*"
+ca-certificates = "*"
+certifi = "*"
+openssl = "*"
+pypdf2 = ">=2.0"
+linopy = ">=0.3.7,<0.3.9"
+xarray = "<2025"
+geopandas = "*"
+seaborn = "*"
+snakemake = ">=7,<8"
+ipykernel = "*"
+gurobi = "10.*"
+highspy = "*"
+
+[pypi-dependencies]
+vresutils = "*"

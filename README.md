@@ -104,18 +104,19 @@ These research works are maintained in dedicated repositories, each containing a
 git clone git@github.com:PyPSA/247-cfe.git
 ```
 
-2. Install the necessary dependencies using `environment.yaml` file. The following commands will do the job:
+2. Install [pixi](https://pixi.sh/latest/#installation) (see installation instructions for your platform) and set up the environment:
 
 ```
-conda env create -f envs/environment.yaml
-conda activate 247-env
+pixi install
 ```
 
-3. The results of the paper can be reproduced by running the [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow.  The following commands will run the workflows for the paper:
+This reads `pixi.toml` and resolves all dependencies into an isolated environment. No conda/mamba activation is required.
+
+3. The results of the paper can be reproduced by running the [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow. The following commands will run the workflows for the paper:
 
 ```
-snakemake --cores <n> --configfile config_247cfe
-snakemake --cores <n> --configfile config_BackgroundSystem.yaml
+pixi run snakemake --cores <n> --configfile config_247cfe.yaml
+pixi run snakemake --cores <n> --configfile config_BackgroundSystem.yaml
 ```
 
 where `<n>` is the [number of cores](https://snakemake.readthedocs.io/en/stable/executing/cli.html) to use for the workflow.

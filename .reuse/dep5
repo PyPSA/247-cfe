@@ -22,3 +22,7 @@ License: MIT
 Files: input/*
 Copyright: :  2017-2023 The PyPSA-Eur Authors
 License: CC-BY-4.0
+
+Files: pixi.lock
+Copyright: 2024 Iegor Riepin, Tom Brown
+License: MIT
